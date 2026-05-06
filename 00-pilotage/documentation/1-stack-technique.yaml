@@ -1,0 +1,341 @@
+# STACK TECHNIQUE skalean-insurtech v2.2
+# Version: 2.2.0 / Date: 2026-05-05 / AUCUNE EMOJI
+# Changelog v2.2: ajout mcp-server (port 4001) + packages sky/sky-ui/assure-shared + deps MCP/AI SDK
+
+project:
+  name: skalean-insurtech
+  version: 2.2.0
+  description: Plateforme InsurTech Marocaine -- 2 SaaS B2B + 1 admin + 3 apps clientes + 1 MCP server
+  architecture: Monorepo pnpm workspaces + Turborepo
+  apps_count: 9  # NOUVEAU v2.2 (8 -> 9 avec mcp-server)
+  packages_count: 21  # NOUVEAU v2.2 (15 metier + 6 shared)
+  external_services:
+    - Skalean AI Conversational + Vision API (REST)
+    - Skalean AI Agents via MCP (Model Context Protocol)
+    - Mapbox (cartes garages agrees)
+    - Cloudflare CDN + WAF (Sprint 34)
+    - Datadog/Grafana Cloud APM (Sprint 34)
+
+runtime:
+  node:
+    version: 22.20.0
+    type: LTS
+    note: Jusqu'a avril 2027
+  typescript:
+    version: 5.7.3
+    config: { strict: true, target: ES2024, module: NodeNext, moduleResolution: NodeNext, noUncheckedIndexedAccess: true }
+  package_manager:
+    type: pnpm
+    version: 9.15.0
+    enforce: true
+  build_system:
+    type: Turborepo
+    version: 2.4.0
+  version_manager:
+    type: volta
+    pin: { node: 22.20.0, pnpm: 9.15.0 }
+
+# ==========================================
+# 9 APPS v2.2
+# ==========================================
+
+monorepo:
+  workspaces: [apps/*, packages/*]
+
+  apps:
+    api:
+      package_name: "@insurtech/api"
+      framework: NestJS 10.4 + Fastify
+      port: 4000
+      domain: api.skalean-insurtech.ma
+      auth: varies
+
+    web-insurtech-admin:
+      package_name: "@insurtech/web-insurtech-admin"
+      framework: Next.js 15
+      port: 3000
+      audience: SuperAdminPlatform, AnalystSupport
+      auth: obligatoire + MFA
+      domain: admin.skalean-insurtech.ma
+
+    web-broker:
+      package_name: "@insurtech/web-broker"
+      framework: Next.js 15
+      port: 3001
+      audience: Courtiers, Souscripteurs, Comptables
+      auth: obligatoire
+      domain: broker.skalean-insurtech.ma
+
+    web-garage:
+      package_name: "@insurtech/web-garage"
+      framework: Next.js 15
+      port: 3002
+      audience: ChefAtelier, Receptionniste, Comptable
+      auth: obligatoire
+      domain: garage.skalean-insurtech.ma
+
+    web-garage-mobile:
+      package_name: "@insurtech/web-garage-mobile"
+      framework: Next.js 15 (PWA)
+      port: 3003
+      audience: Technicien
+      auth: obligatoire + WebAuthn biometric (Sprint 23)
+      domain: garage-app.skalean-insurtech.ma
+      pwa: true
+      lighthouse_pwa_target: 95
+
+    web-customer-portal:
+      package_name: "@insurtech/web-customer-portal"
+      framework: Next.js 15
+      port: 3004
+      audience: Prospects publics
+      auth: facultative
+      domain: assurance.skalean-insurtech.ma
+      seo_optimized: true
+      lighthouse_targets: { performance: 95, seo: 100, accessibility: 90 }
+      rendering: [SSG landing, ISR catalogue, SSR cotation]
+
+    web-assure-portal:
+      package_name: "@insurtech/web-assure-portal"
+      framework: Next.js 15
+      port: 3005
+      audience: Assures connectes desktop
+      auth: obligatoire (OTP)
+      domain: mon-espace.skalean-insurtech.ma
+
+    web-assure-mobile:
+      package_name: "@insurtech/web-assure-mobile"
+      framework: Next.js 15 (PWA)
+      port: 3006
+      audience: Assures mobile
+      auth: obligatoire (OTP)
+      domain: mon-espace.skalean-insurtech.ma
+      pwa: true
+      lighthouse_pwa_target: 100
+
+    mcp-server:                     # NOUVEAU v2.2
+      package_name: "@insurtech/mcp-server"
+      framework: standalone Node + "@modelcontextprotocol/sdk"
+      port: 4001
+      audience: Skalean AI agents (Sky chatbot Sprint 31)
+      auth: MCP tokens separate JWT lifecycle
+      domain: mcp.skalean-insurtech.ma
+      tools_count: 15+
+      note: Sprint 30 -- expose tools metier via MCP standard
+
+  packages:
+    # Modules metier (15)
+    auth: { purpose: "Argon2id + JWT + MFA + RBAC + WebAuthn" }
+    database: { purpose: "TypeORM 0.3 + entities + migrations + RLS subscribers" }
+    crm: { purpose: "Contacts + companies + deals + pipelines + interactions" }
+    booking: { purpose: "Rooms + appointments + calendar sync (Google + Outlook)" }
+    comm: { purpose: "WhatsApp + Email + templates 4 locales (fr/ar-MA/ar/en)" }
+    docs: { purpose: "S3 + PDF generator + access logs" }
+    signature: { purpose: "Barid eSign + ANRT TSA RFC 3161" }
+    pay: { purpose: "6 passerelles MA (CMI/YouCan/PayZone/Inwi/Orange/M-Wallet BAM)" }
+    books: { purpose: "Plan CGNC + factures DGI + SAFT-MA + 5 taux TVA MA" }
+    compliance: { purpose: "ACAPS + AMC + CNDP reports" }
+    analytics: { purpose: "ClickHouse OLAP + ETL + dashboards" }
+    insure: { purpose: "Vertical Broker (lifecycle police + connecteurs Sprint 32)" }
+    repair: { purpose: "Vertical Garage (sinistres + reparations + IA Sprint 20+29)" }
+    stock: { purpose: "Stock pieces + FIFO + alertes seuil" }
+    hr: { purpose: "Employees + paie CNSS/AMO/IR" }
+
+    # AI integration v2.2 (NOUVEAU)
+    sky: { purpose: "Agent Sky orchestrator + system prompts + MCP client (Sprint 31)" }
+    sky-ui: { purpose: "Chat widget shared 3 apps + streaming + voice-to-text (Sprint 31)" }
+
+    # Shared (4)
+    assure-shared: { purpose: "Components shared web-assure-portal/mobile (Sprint 18)" }
+    shared-types: { purpose: "Types TypeScript globaux" }
+    shared-config: { purpose: "Env loader Zod runtime" }
+    shared-utils: { purpose: "Pino logger + Redis + S3 + helpers" }
+    shared-events: { purpose: "Schemas Zod + publishers Kafka" }
+    shared-ui: { purpose: "shadcn/ui + theme Sofidemy + layouts" }
+    shared-pwa: { purpose: "Service worker + offline + push (Serwist)" }
+    shared-maps: { purpose: "Wrapper Mapbox GL JS + geolocation hooks" }
+
+# ==========================================
+# BACKEND CORE
+# ==========================================
+
+backend:
+  framework: { type: NestJS, version: 10.4.15 }
+  http_server: { adapter: Fastify, version: 4.28.1 }
+  validation: { type: Zod, version: 3.24.1 }
+  orm:
+    type: TypeORM
+    version: 0.3.20
+    decision_ref: decision-003
+    note: 0.3 (vs Prisma) pour RLS native + Subscriber pattern
+  http_client: { type: undici, version: 7.1.1 }
+  circuit_breaker:
+    type: opossum
+    version: 8.5.0
+    used_by: [Sprint 25 Type 3 partners, Sprint 29 Skalean AI, Sprint 32 connecteurs assureurs]
+  jwt_library: { type: jose, version: "6.x", used_by: [Sprint 5 auth, Sprint 30 MCP tokens] }
+  scheduler: { type: BullMQ, version: 5.34.7, backend: Redis }
+  observability:
+    logger: Pino 9.5.0
+    apm: OpenTelemetry SDK 1.30.0
+    apm_provider: Datadog OR Grafana Cloud (Sprint 34)
+    error_tracking: Sentry 8.45.0
+
+# ==========================================
+# DATABASES & STORAGE
+# ==========================================
+
+databases:
+  postgresql:
+    version: 16.6
+    image: postgres:16-alpine
+    extensions: [pgcrypto, pg_trgm, btree_gist, unaccent, citext]
+    rls_strategy: 3-niveaux (Platform / Tenant / Assure L3)
+    pool_manager: PgBouncer 1.23.1
+    pgbouncer_mode: transaction
+    read_replicas: 2 (Sprint 34)
+  redis:
+    version: 7.4.1
+    image: redis:7.4-alpine
+    cluster_nodes_prod: 3 (Sprint 34)
+    dbs:
+      0: cache general
+      1: BullMQ queues
+      2: rate limiting
+      3: sessions
+      4: capabilities cache (Sprint 25)
+      5: Sky conversations cache (Sprint 31)
+    eviction: allkeys-lru
+  clickhouse:
+    version: 24.10.x
+    purpose: OLAP analytics (Sprint 13)
+  storage:
+    development: MinIO (S3-compatible local)
+    production: Atlas Cloud Services Object Storage Benguerir (cloud souverain MA -- DC1 Tier III + DC2 Tier IV Uptime Institute -- decision-008)
+    encryption: SSE-KMS AES-256-GCM
+
+# ==========================================
+# EVENTS / MESSAGING
+# ==========================================
+
+messaging:
+  kafka:
+    version: 3.7.1
+    distribution: Bitnami
+    mode: KRaft (sans ZooKeeper)
+    decision_ref: decision-004
+    topics_count: 30+
+
+# ==========================================
+# FRONTEND
+# ==========================================
+
+frontend:
+  framework: { type: Next.js, version: 15.0.3, react: 19.0.0, routing: App Router }
+  styling:
+    css: Tailwind 4.0.0-beta.7
+    components: shadcn/ui
+    theme: Skalean Sofidemy (orange E95D2C / navy 1A2730 / sky B0CEE2 / acaps 2D5773)
+    typography: Montserrat 300-900
+  state: { type: TanStack Query, version: 5.62.7 }
+  http_client: { type: Axios, version: 1.7.9 }
+  forms: { type: react-hook-form, version: 7.54.2, resolver: "@hookform/resolvers/zod" }
+  pwa: { type: serwist, version: 9.0.11, used_by: [web-garage-mobile, web-assure-mobile] }
+  maps: { type: mapbox-gl-js, version: 3.8.0 }
+  i18n: { type: next-intl, version: 3.26.1, locales: [fr, ar-MA, ar, en], rtl: true }
+
+  ai_integration_v2_2:                 # NOUVEAU v2.2
+    mcp_sdk: { package: "@modelcontextprotocol/sdk", note: MCP server (Sprint 30) + MCP client (Sprint 31) }
+    ai_sdk_react: { package: "@ai-sdk/react", version: "4.x", note: Vercel AI SDK streaming + chat hooks (Sprint 31) }
+    react_markdown: { package: react-markdown, version: "9.x" }
+    openai_client: { package: openai, version: "4.x", note: Format compatible Skalean AI }
+
+  ui_libraries_v2_2:                    # NOUVEAU v2.2
+    react_pdf: { package: react-pdf, version: "9.x", note: Preview PDF inline (Sprint 18) }
+    dnd_kit: { package: "@dnd-kit/core", version: "6.x", note: Drag-and-drop (Sprint 22) }
+    react_window: { package: react-window, version: "1.x", note: Virtualization listes }
+    qr_scanner: { package: html5-qrcode, version: "2.x", note: Camera QR (Sprint 18 + 23) }
+
+# ==========================================
+# TESTING
+# ==========================================
+
+testing:
+  unit: { type: Vitest, version: 2.1.8, coverage_global: "85%", coverage_critical: "90%" }
+  e2e: { type: Playwright, version: 1.49.1, browsers: [chromium, firefox, webkit], a11y: axe-core 4.10.2 }
+  load: { type: K6, version: "0.55.x", note: Sprint 34, distributed: true }
+  chaos: { type: Chaos Mesh, note: Sprint 34 chaos engineering }
+
+# ==========================================
+# DEVOPS
+# ==========================================
+
+devops:
+  ci_cd:
+    type: GitHub Actions
+    workflows: [ci.yaml, pr-checks.yaml, deploy-staging.yaml, load-tests.yml (Sprint 34), security-ci.yml (Sprint 33)]
+  linting: { type: Biome, version: 1.9.4, note: Replace ESLint+Prettier }
+  git_hooks: { husky: 9.1.7, commitlint: 19.6.1, lint_staged: 15.2.11 }
+  no_emoji_check: { type: Custom script regex unicode 1F000-1FFFF, decision_ref: decision-006 }
+  scaling_v2_2:
+    autoscaling: AWS Auto Scaling Groups OR Kubernetes HPA
+    cdn: Cloudflare (Sprint 34)
+    waf: Cloudflare WAF + OWASP CRS
+
+# ==========================================
+# SECURITY (Sprint 33)
+# ==========================================
+
+security:
+  password_hashing: { algorithm: argon2id, library: argon2, version: 0.41.1 }
+  jwt: { algorithm: RS256, key_size: "2048 bits min", rotation: every 90 days }
+  encryption_at_rest: AES-256-GCM
+  kms: AWS KMS OR Azure Key Vault (Sprint 11)
+  audit_standard: OWASP ASVS Level 2
+  pentest: External firm (Sprint 33)
+  multi_tenant_isolation_tests: 50+ scenarios (Sprint 33)
+
+# ==========================================
+# COMPLIANCE MA
+# ==========================================
+
+compliance:
+  laws:
+    - 09-08 CNDP (data protection)
+    - 43-20 (signature electronique)
+    - 17-99 (assurance MA droit retract 30j)
+    - 9-88 (CGNC plan comptable)
+    - 43-05 (AML)
+  regulators: [ACAPS, DGI, AMC, CNDP]
+  signature_provider: Barid eSign (Poste Maroc)
+  timestamp_authority: ANRT TSA RFC 3161
+  data_residency: Maroc strict (decision-008)
+  vat_rates_ma: [0, 7, 10, 14, 20]
+
+# ==========================================
+# DECISIONS REFERENCEES (10)
+# ==========================================
+
+decisions_referenced:
+  - 001-monorepo-structure
+  - 002-multi-tenant-3-niveaux
+  - 003-typeorm-vs-prisma
+  - 004-kafka-vs-rabbitmq
+  - 005-skalean-ai-frontier
+  - 006-no-emoji-policy
+  - 007-ai-3-deferred-sprints
+  - 008-data-residency-maroc
+  - 009-signature-loi-43-20
+  - 010-insure-connecteurs-deferred  # NOUVEAU v2.2
+
+# ==========================================
+# VERSION HISTORY
+# ==========================================
+
+stack_version_history:
+  v1.0.0: 5 apps SaaS initiales
+  v2.0.0: Ajout 3 apps clientes (8 apps)
+  v2.1.0: Re-densification Option B
+  v2.2.0: 35 sprints livres + ajout mcp-server (9 apps) + decision-010 cascade
+
+# Fin 1-stack-technique.yaml v2.2.0

@@ -1,0 +1,61 @@
+# Decisions Strategiques skalean-insurtech v2.2
+
+Ce dossier contient les **10 decisions strategiques** formalisees du programme.
+
+## Statut : 10/10 COMPLETES
+
+| # | Titre | Statut | Effort impact |
+|---|-------|--------|---|
+| 001 | Monorepo pnpm + Turborepo | OK | Sprint 1 |
+| 002 | Multi-tenant 3 niveaux + RLS | OK | Sprint 1, 6, 25 |
+| 003 | TypeORM 0.3 vs Prisma | OK | Sprint 1, 2 |
+| 004 | Kafka KRaft vs RabbitMQ | OK | Sprint 1, 2 |
+| 005 | Skalean AI Frontier model | OK | Sprint 29-31 |
+| 006 | No-emoji policy absolute | OK | Tous sprints |
+| 007 | AI defere (Mock Sprint 20 -> Real Sprint 29) | OK | Sprint 20, 29 |
+| 008 | Data residency Maroc strict (CNDP loi 09-08) | OK | Sprint 6, 10, 12 |
+| 009 | Signature loi 43-20 (Barid eSign + ANRT) | OK | Sprint 10 |
+| 010 | Insure Connecteurs defere Phase 7 | OK (uploaded user) | Sprint 32 |
+
+## Organisation decisions
+
+Chaque decision suit format standard :
+- **Date + Statut** (Acceptee / Proposee / Depreciee)
+- **Decideurs** (Saad CTO + Abla CEO)
+- **Contexte** : situation business + technique
+- **Probleme adresse** : enjeux a resoudre
+- **Decision** : choix retenu + rationale
+- **Avantages** / **Inconvenients**
+- **Impact technique** : sprints affectes
+- **Communication** : equipe + stakeholders
+- **References** : ADR mirror + sprints + sources externes
+
+## ADR mirror
+
+Chaque decision a son ADR (Architecture Decision Record) dans `repo/docs/architecture/ADR-NNN-*.md` une fois Sprint 1 deploye.
+
+## Categorisation
+
+**Decisions architecture** (ADR mirror direct) :
+- 001 Monorepo, 002 Multi-tenant, 003 TypeORM, 004 Kafka, 005 Skalean AI
+
+**Decisions process / qualite** :
+- 006 No-emoji policy
+
+**Decisions strategiques business / sequencement** :
+- 007 AI defere, 010 Insure Connecteurs defere
+
+**Decisions reglementaires** :
+- 008 Data residency MA (CNDP), 009 Signature 43-20
+
+## Modifications
+
+Toute modification d'une decision doit :
+1. Creer nouvelle version (decision-NNN-v2.md)
+2. Marquer ancienne `Statut: Depreciee + Reason`
+3. Updater references dans sprints + 8-master.md + autres docs
+4. Audit cross-fichiers re-execute
+
+## Reference
+
+Voir `8-skalean-insurtech-prompt-master.md` Section 14 pour vue d'ensemble decisions.

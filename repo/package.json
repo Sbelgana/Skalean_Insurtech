@@ -49,7 +49,7 @@
     "check-no-emoji": "bash infrastructure/scripts/check-no-emoji.sh",
     "clean": "turbo run clean && rimraf node_modules .turbo",
     "clean:all": "pnpm clean && find . -name node_modules -type d -prune -exec rm -rf {} + 2>/dev/null; find . -name .turbo -type d -prune -exec rm -rf {} + 2>/dev/null; find . -name dist -type d -prune -exec rm -rf {} + 2>/dev/null; true",
-    "prepare": "bash -c 'git -C .. config core.hooksPath repo/.husky 2>/dev/null || true'",
+    "prepare": "node -e \"try{require('child_process').execSync('git -C .. config core.hooksPath repo/.husky',{stdio:'ignore'})}catch(e){}\"",
     "preinstall": "npx -y only-allow pnpm",
     "postinstall": "echo Run pnpm docker:up to start dev services"
   },

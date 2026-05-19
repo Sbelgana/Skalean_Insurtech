@@ -8,7 +8,7 @@
     "dev": "tsx watch src/main.ts",
     "start": "node dist/main.js",
     "test": "vitest run",
-    "lint": "biome check src",
+    "lint": "biome check --no-errors-on-unmatched src",
     "clean": "rm -rf dist .next .turbo"
   },
   "devDependencies": {

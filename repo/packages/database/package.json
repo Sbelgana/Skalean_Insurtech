@@ -15,7 +15,7 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "lint": "biome check src",
+    "lint": "biome check --no-errors-on-unmatched src",
     "clean": "rm -rf dist .turbo",
     "migration:create": "tsx node_modules/typeorm/cli.js migration:create",
     "migration:generate": "tsx node_modules/typeorm/cli.js migration:generate -d ./src/data-source.ts",

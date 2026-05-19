@@ -16,7 +16,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest watch",
-    "lint": "biome check src",
+    "lint": "biome check --no-errors-on-unmatched src",
     "clean": "rm -rf dist .turbo"
   },
   "devDependencies": {

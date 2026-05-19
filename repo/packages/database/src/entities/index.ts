@@ -8,3 +8,5 @@ export * from './pay/index.js';
 export * from './books/index.js';
 export * from './compliance/index.js';
 export * from './analytics/index.js';
+export * from './stock/index.js';
+export * from './hr/index.js';

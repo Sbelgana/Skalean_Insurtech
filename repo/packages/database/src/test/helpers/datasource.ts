@@ -8,12 +8,16 @@ import { docsEntities } from '../../entities/docs/index.js';
 import { payEntities } from '../../entities/pay/index.js';
 import { booksEntities } from '../../entities/books/index.js';
 import { complianceEntities } from '../../entities/compliance/index.js';
+import { analyticsEntities } from '../../entities/analytics/index.js';
+import { stockEntities } from '../../entities/stock/index.js';
+import { hrEntities } from '../../entities/hr/index.js';
 import { InitialSystem1735000000001 } from '../../migrations/1735000000001-InitialSystem.js';
 import { CRM1735000000002 } from '../../migrations/1735000000002-CRM.js';
 import { Booking1735000000003 } from '../../migrations/1735000000003-Booking.js';
 import { Communications1735000000004 } from '../../migrations/1735000000004-Communications.js';
 import { DocsPayments1735000000005 } from '../../migrations/1735000000005-DocsPayments.js';
 import { BooksCompliance1735000000006 } from '../../migrations/1735000000006-BooksCompliance.js';
+import { AnalyticsStockHr1735000000007 } from '../../migrations/1735000000007-AnalyticsStockHr.js';
 
 export interface TestDataSourceOptions {
   migrationsRun?: boolean;
@@ -26,8 +30,8 @@ const baseOptions = (): DataSourceOptions => ({
   username: process.env['TEST_DATABASE_USER'] ?? process.env['DATABASE_USER'] ?? 'skalean',
   password: process.env['TEST_DATABASE_PASSWORD'] ?? process.env['DATABASE_PASSWORD'] ?? 'skalean_dev_only',
   database: process.env['TEST_DATABASE_NAME'] ?? process.env['DATABASE_NAME'] ?? 'skalean_insurtech',
-  entities: [...systemEntities, ...crmEntities, ...bookingEntities, ...commEntities, ...docsEntities, ...payEntities, ...booksEntities, ...complianceEntities],
-  migrations: [InitialSystem1735000000001, CRM1735000000002, Booking1735000000003, Communications1735000000004, DocsPayments1735000000005, BooksCompliance1735000000006],
+  entities: [...systemEntities, ...crmEntities, ...bookingEntities, ...commEntities, ...docsEntities, ...payEntities, ...booksEntities, ...complianceEntities, ...analyticsEntities, ...stockEntities, ...hrEntities],
+  migrations: [InitialSystem1735000000001, CRM1735000000002, Booking1735000000003, Communications1735000000004, DocsPayments1735000000005, BooksCompliance1735000000006, AnalyticsStockHr1735000000007],
   migrationsRun: false,
   synchronize: false,
   logging: process.env['TEST_DATABASE_LOG'] === 'true',

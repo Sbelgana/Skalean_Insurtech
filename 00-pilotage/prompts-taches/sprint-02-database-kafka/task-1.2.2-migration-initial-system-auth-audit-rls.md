@@ -2604,7 +2604,7 @@ DATABASE_STATEMENT_TIMEOUT_MS=30000
 DATABASE_IDLE_IN_TRANSACTION_TIMEOUT_MS=60000
 ```
 
-## 10. Annexe A -- Schema SQL complet 5 tables avec commentaires
+## 29. Annexe A -- Schema SQL complet 5 tables avec commentaires
 
 Ce schema est la reference normative ; tout ecart entre ce SQL et la migration TypeORM
 generee doit etre justifie en revue. Les COMMENT sont rapatries dans les vues
@@ -2804,7 +2804,7 @@ COMMENT ON COLUMN audit_log.changes IS 'Diff structure : {"before": {...}, "afte
 COMMENT ON COLUMN audit_log.trace_id IS 'OpenTelemetry trace ID (W3C). Permet correlation log applicatif <-> audit metier <-> APM.';
 ```
 
-## 11. Annexe B -- Pattern argon2id complet (preview Sprint 5)
+## 30. Annexe B -- Pattern argon2id complet (preview Sprint 5)
 
 Cette annexe documente le pattern hashing applicable Sprint 5 (Auth Module). Reference pour
 ne PAS choisir bcrypt aujourd'hui pour les nouveaux users : argon2id est OWASP top
@@ -2932,7 +2932,7 @@ describe('AuthHasherService', () => {
 });
 ```
 
-## 12. Annexe C -- RLS policies template SQL exhaustif
+## 31. Annexe C -- RLS policies template SQL exhaustif
 
 Pattern applicable systematiquement aux 4 tables tenant-isolees. La fonction
 `app_can_access_tenant(uuid)` deja deployee Sprint 1 lit deux session vars
@@ -3076,7 +3076,7 @@ Pattern multi-tenant 3 niveaux explicite :
   La policy SELECT specifique sur `policy` (Sprint 7) ajoutera une branche supplementaire :
   `OR EXISTS (SELECT 1 FROM policies p WHERE p.assure_user_id = current_setting('app.current_user_id')::uuid)`.
 
-## 13. Annexe D -- Tests integration RLS exhaustifs (50+ scenarios)
+## 32. Annexe D -- Tests integration RLS exhaustifs (50+ scenarios)
 
 Liste exhaustive des scenarios a couvrir dans `test/integration/rls-auth-users.spec.ts` et
 les specs adjacents. Cette annexe formalise la matrice ; chaque ligne correspond a un
@@ -3209,7 +3209,7 @@ export async function resetSessionContext(ds: DataSource): Promise<void> {
 }
 ```
 
-## 14. Annexe E -- Rollback strategy migration
+## 33. Annexe E -- Rollback strategy migration
 
 La methode `down()` doit etre **strictement symetrique** a `up()`. Ordre exact reverse,
 DROP CASCADE pour gerer les FK, et ne JAMAIS supprimer une extension PostgreSQL (citext,
@@ -3279,7 +3279,7 @@ Edge cases documentees :
 4. **Backup recommande** : `pg_dump -F c skalean_dev > backup-$(date +%F-%H%M).dump`
    systematique avant tout revert prod.
 
-## 15. Annexe F -- Audit log retention purge job (preview Sprint 18)
+## 34. Annexe F -- Audit log retention purge job (preview Sprint 18)
 
 Job pgcron + service NestJS. Preview Sprint 18, NE PAS implementer dans 1.2.2.
 
@@ -3360,7 +3360,7 @@ Conformite exacte ACAPS Article 12 :
   blockchain notariation (decision-022 Sprint 22).
 - Lieu de stockage : territoire marocain exclusivement (decision-008 data residency).
 
-## 16. Annexe G -- MFA TOTP preview Sprint 5
+## 35. Annexe G -- MFA TOTP preview Sprint 5
 
 Schema base + service. Preview Sprint 5, NE PAS implementer dans 1.2.2.
 
@@ -3474,7 +3474,7 @@ describe('MfaService', () => {
 });
 ```
 
-## 17. Annexe H -- Session token rotation + reuse detection
+## 36. Annexe H -- Session token rotation + reuse detection
 
 Pattern complet. Preview Sprint 5.
 
@@ -3566,7 +3566,7 @@ Sliding vs fixed expiry decision : nous adoptons **sliding 30j** (chaque rotatio
 re-arme le TTL) pour le confort UX broker quotidien. Pour les SuperAdmins, fixed
 12h sans sliding (risque vol token plus critique).
 
-## 18. Annexe I -- Performance benchmarks attendus
+## 37. Annexe I -- Performance benchmarks attendus
 
 Targets SLO Sprint 2 sur poste developpeur (Core i7, 16GB RAM, PostgreSQL 16 local).
 La CI execute ces benchmarks via `vitest bench` et fail-fast si depassement >2x.
@@ -3617,7 +3617,7 @@ SELECT
 FROM generate_series(1,100000) g;
 ```
 
-## 19. Annexe J -- Compliance ACAPS detail
+## 38. Annexe J -- Compliance ACAPS detail
 
 Mapping detaille tables auth_*/audit_log -> articles ACAPS et Loi 09-08.
 
@@ -3655,7 +3655,7 @@ Relevant article extracts :
   des donnees et, notamment, empecher qu'elles soient deformees, endommagees, ou
   que des tiers non autorises y aient acces."
 
-## 20. Annexe K -- Glossaire termes techniques
+## 39. Annexe K -- Glossaire termes techniques
 
 | Terme                          | Definition                                                                  |
 |--------------------------------|-----------------------------------------------------------------------------|
@@ -3692,7 +3692,7 @@ Relevant article extracts :
 | RTO                            | Recovery Time Objective : duree max d'indisponibilite acceptee             |
 | RPO                            | Recovery Point Objective : duree max de donnees perdables                  |
 
-## 21. Annexe L -- FAQ developpeurs
+## 40. Annexe L -- FAQ developpeurs
 
 **Q1. Pourquoi la table auth_users n'a-t-elle pas de colonne tenant_id directe ?**
 Parce qu'un meme user peut appartenir a plusieurs tenants (ex : un courtier multi-cabinets,

@@ -8,7 +8,9 @@
  * DEV ONLY -- Ne jamais executer en production.
  */
 import 'dotenv/config';
-import { Pool, type PoolClient } from 'pg';
+import pg from 'pg';
+import type { PoolClient } from 'pg';
+const { Pool } = pg;
 import { hash as argon2Hash, argon2id } from 'argon2';
 import { faker } from '@faker-js/faker/locale/fr';
 import { pino } from 'pino';

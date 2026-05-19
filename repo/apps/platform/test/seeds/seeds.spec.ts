@@ -5,12 +5,13 @@
  */
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { execSync } from 'node:child_process';
-import { Pool } from 'pg';
+import pg from 'pg';
+const { Pool } = pg;
 
 const DB_AVAILABLE = Boolean(process.env['DATABASE_HOST']);
 
 describe.skipIf(!DB_AVAILABLE)('Seeds dev exhaustifs (integration)', () => {
-  let pool: Pool;
+  let pool: InstanceType<typeof Pool>;
 
   beforeAll(() => {
     pool = new Pool({

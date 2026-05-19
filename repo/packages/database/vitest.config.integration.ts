@@ -7,7 +7,7 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    include: ['test/integration/**/*.spec.ts'],
+    include: ['test/integration/**/*.spec.ts', 'src/test/integration/**/*.spec.ts'],
     globalSetup: ['test/global-setup.ts'],
     setupFiles: ['test/setup-each.ts'],
     testTimeout: 60_000,

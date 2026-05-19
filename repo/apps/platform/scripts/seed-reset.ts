@@ -5,7 +5,9 @@
  * Aucune emoji (decision-006).
  */
 import 'dotenv/config';
-import { Pool, type PoolClient } from 'pg';
+import pg from 'pg';
+import type { PoolClient } from 'pg';
+const { Pool } = pg;
 import { pino } from 'pino';
 
 const log = pino({ level: 'info' });

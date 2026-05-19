@@ -8,7 +8,8 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { Pool } from 'pg';
+import pg from 'pg';
+const { Pool } = pg;
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DB_AVAILABLE = Boolean(process.env['DATABASE_HOST']);
@@ -71,7 +72,7 @@ describe('Faker locale + custom MA data (unit)', () => {
 
 // DB-dependent tests -- skip when no DB
 describe.skipIf(!DB_AVAILABLE)('Faker locale + custom MA data (integration)', () => {
-  let pool: Pool;
+  let pool: InstanceType<typeof Pool>;
   let nomsMa: NomsMaData;
   let villesMa: VilleData[];
 

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client } from 'pg';
+import pg from 'pg';
+const { Client } = pg;
 
 const POSTGRES_URL =
   process.env['DATABASE_URL'] ??

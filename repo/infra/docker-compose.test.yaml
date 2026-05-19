@@ -36,7 +36,7 @@ services:
       - full_page_writes=off
 
   kafka-test:
-    image: bitnami/kafka:3.7
+    image: bitnamilegacy/kafka:3.7.1
     container_name: skalean-kafka-test
     ports:
       - '9093:9093'

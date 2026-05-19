@@ -126,7 +126,7 @@ jobs:
           - 6379:6379
 
       kafka:
-        image: bitnami/kafka:3.7.1
+        image: bitnamilegacy/kafka:3.7.1
         env:
           KAFKA_CFG_NODE_ID: 1
           KAFKA_CFG_PROCESS_ROLES: "controller,broker"

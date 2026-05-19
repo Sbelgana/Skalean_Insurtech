@@ -23,6 +23,8 @@ export default defineConfig({
       '**/coverage/**',
       '**/playwright-report/**',
       '**/e2e/**',
+      '**/test/integration/**',
+      '**/src/test/integration/**',
     ],
 
     // Pool : forks isolation

@@ -162,7 +162,7 @@ services:
   # AUTO_CREATE_TOPICS_ENABLE=false : creation explicite via kafka-init-topics
   # ==========================================================================
   kafka:
-    image: bitnami/kafka:3.7.1
+    image: bitnamilegacy/kafka:3.7.1
     container_name: skalean-kafka
     restart: unless-stopped
     ports:
@@ -339,7 +339,7 @@ services:
   # restart: "no" -- ne doit s'executer qu'une seule fois
   # ==========================================================================
   kafka-init-topics:
-    image: bitnami/kafka:3.7.1
+    image: bitnamilegacy/kafka:3.7.1
     container_name: skalean-kafka-init-topics
     restart: "no"
     depends_on:
@@ -357,7 +357,7 @@ services:
   # restart: "no" -- ne doit s'executer qu'une seule fois
   # ==========================================================================
   minio-init-buckets:
-    image: minio/mc:RELEASE.2024-11-07T00-52-20Z
+    image: minio/mc:latest
     container_name: skalean-minio-init
     restart: "no"
     depends_on:

@@ -80,7 +80,7 @@ services:
       retries: 6
 
   kafka:
-    image: bitnami/kafka:3.7.1
+    image: bitnamilegacy/kafka:3.7.1
     container_name: skalean-kafka-test
     restart: "no"
     ports:

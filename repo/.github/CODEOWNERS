@@ -1,0 +1,30 @@
+# Skalean InsurTech v2.2 -- CODEOWNERS
+# Reference: B-01 Tache 1.1.10
+
+# Default reviewers
+*       @skalean-insurtech/core-team
+
+# Backend (apps/api + packages metier)
+/apps/api/                              @skalean-insurtech/backend-team
+/packages/auth/                         @skalean-insurtech/backend-team @skalean-insurtech/security-team
+/packages/database/                     @skalean-insurtech/backend-team
+/packages/crm/ /packages/booking/       @skalean-insurtech/backend-team
+/packages/comm/                         @skalean-insurtech/backend-team
+/packages/signature/                    @skalean-insurtech/backend-team @skalean-insurtech/security-team @skalean-insurtech/legal-team
+/packages/pay/                          @skalean-insurtech/backend-team @skalean-insurtech/finance-team
+/packages/books/ /packages/compliance/  @skalean-insurtech/backend-team @skalean-insurtech/legal-team
+/packages/insure/ /packages/repair/     @skalean-insurtech/backend-team @skalean-insurtech/product-team
+
+# Frontend
+/apps/web-*/                            @skalean-insurtech/frontend-team
+/packages/shared-ui/                    @skalean-insurtech/frontend-team @skalean-insurtech/design-team
+
+# Infrastructure
+/infrastructure/                        @skalean-insurtech/devops-team @skalean-insurtech/security-team
+/.github/                               @skalean-insurtech/devops-team
+
+# Docs
+/docs/architecture/                     @skalean-insurtech/architects @skalean-insurtech/cto
+
+# Compliance critical
+**/audit/ **/compliance/                @skalean-insurtech/legal-team @skalean-insurtech/security-team

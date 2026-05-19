@@ -1,0 +1,263 @@
+# Skalean InsurTech v2.2 -- CI Pipeline
+# Reference: B-01 Tache 1.1.10
+# decision-006 (no-emoji) + decision-001 (monorepo)
+
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22.20.0'
+  PNPM_VERSION: '9.15.0'
+
+jobs:
+  # ==========================================================================
+  # Job 1 : lint-and-typecheck
+  # ==========================================================================
+  lint-and-typecheck:
+    name: Lint + Typecheck + No-Emoji
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check no emoji
+        run: bash infrastructure/scripts/check-no-emoji.sh
+
+      - name: Lint (Biome)
+        run: pnpm exec biome check .
+
+      - name: Format check (Biome)
+        run: pnpm exec biome format --check .
+
+      - name: Typecheck (TypeScript)
+        run: pnpm typecheck
+
+  # ==========================================================================
+  # Job 2 : build
+  # ==========================================================================
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: lint-and-typecheck
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+        env:
+          NODE_ENV: production
+
+  # ==========================================================================
+  # Job 3 : test (avec Postgres + Redis + Kafka services)
+  # ==========================================================================
+  test:
+    name: Test (unit + integration)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: lint-and-typecheck
+    services:
+      postgres:
+        image: postgres:16.6-alpine
+        env:
+          POSTGRES_USER: skalean
+          POSTGRES_PASSWORD: skalean_test
+          POSTGRES_DB: skalean_insurtech_test
+          POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+          TZ: Africa/Casablanca
+        options: >-
+          --health-cmd "pg_isready -U skalean -d skalean_insurtech_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+          --health-start-period 10s
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7.4.1-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 6
+        ports:
+          - 6379:6379
+
+      kafka:
+        image: bitnami/kafka:3.7.1
+        env:
+          KAFKA_CFG_NODE_ID: 1
+          KAFKA_CFG_PROCESS_ROLES: "controller,broker"
+          KAFKA_KRAFT_CLUSTER_ID: skalean-test-cluster-uuid
+          KAFKA_CFG_LISTENERS: "INTERNAL://:9092,CONTROLLER://:9093,EXTERNAL://:9094"
+          KAFKA_CFG_ADVERTISED_LISTENERS: "INTERNAL://localhost:9092,EXTERNAL://localhost:9094"
+          KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: "INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT"
+          KAFKA_CFG_INTER_BROKER_LISTENER_NAME: INTERNAL
+          KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+          KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
+          KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
+          ALLOW_PLAINTEXT_LISTENER: "yes"
+        options: >-
+          --health-cmd "kafka-topics.sh --bootstrap-server localhost:9092 --list || exit 1"
+          --health-interval 10s
+          --health-timeout 10s
+          --health-retries 12
+          --health-start-period 30s
+        ports:
+          - 9094:9094
+
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://skalean:skalean_test@localhost:5432/skalean_insurtech_test
+      REDIS_URL: redis://localhost:6379
+      KAFKA_BROKERS: localhost:9094
+      S3_ENDPOINT: http://localhost:9000
+      S3_REGION: ma-bgr-1
+      S3_ACCESS_KEY_ID: skaleantest
+      JWT_ACCESS_TTL: 15m
+      JWT_REFRESH_TTL: 30d
+      ARGON2_MEMORY_COST: 65536
+      ARGON2_TIME_COST: 3
+      ARGON2_PARALLELISM: 4
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate test secrets
+        run: |
+          echo "S3_SECRET_ACCESS_KEY=$(openssl rand -hex 12)" >> $GITHUB_ENV
+          echo "JWT_SECRET=$(openssl rand -hex 32)" >> $GITHUB_ENV
+          echo "JWT_REFRESH_SECRET=$(openssl rand -hex 32)" >> $GITHUB_ENV
+          echo "MFA_SECRET_ENCRYPTION_KEY=$(openssl rand -hex 32)" >> $GITHUB_ENV
+          echo "PASSWORD_PEPPER=$(openssl rand -hex 16)" >> $GITHUB_ENV
+
+      - name: Apply Postgres init scripts (extensions + helpers RLS)
+        run: |
+          export PGPASSWORD=skalean_test
+          psql -h localhost -U skalean -d skalean_insurtech_test -f infrastructure/docker/postgres/001-init-extensions.sql
+          psql -h localhost -U skalean -d skalean_insurtech_test -f infrastructure/docker/postgres/002-init-tenant-rls-helpers.sql
+
+      - name: Run tests
+        run: pnpm test
+        env:
+          CI: 'true'
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+          files: ./coverage/lcov.info
+        if: always()
+
+  # ==========================================================================
+  # Job 4 : audit (security)
+  # ==========================================================================
+  audit:
+    name: Security audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: pnpm audit
+        run: pnpm audit --audit-level=high
+        continue-on-error: true
+
+  # ==========================================================================
+  # Job 5 : ci-summary
+  # ==========================================================================
+  ci-summary:
+    name: CI Summary
+    runs-on: ubuntu-latest
+    needs: [lint-and-typecheck, build, test, audit]
+    if: always()
+    steps:
+      - name: Check critical jobs results
+        run: |
+          if [[ "${{ needs.lint-and-typecheck.result }}" != "success" ]]; then
+            echo "FAIL: lint-and-typecheck"
+            exit 1
+          fi
+          if [[ "${{ needs.build.result }}" != "success" ]]; then
+            echo "FAIL: build"
+            exit 1
+          fi
+          if [[ "${{ needs.test.result }}" != "success" ]]; then
+            echo "FAIL: test"
+            exit 1
+          fi
+          echo "OK: all critical jobs passed"

@@ -18,7 +18,13 @@ const KAFKA_AVAILABLE = Boolean(process.env['KAFKA_TEST_BROKERS'] ?? process.env
 const MAX_RETRIES = 3;
 const DLQ_PREFIX = 'dlq:seen:';
 
-describe.skipIf(!KAFKA_AVAILABLE)('kafka DLQ integration', () => {
+// TODO Sprint 21 : rewrite using real KafkaConsumerBase + dlq-publisher.service.ts
+// (not inline simulation). Current spec simulates DLQ routing manually in the
+// eachMessage handler, but the simulation is broken : test sends 1 message and
+// expects 3 retries to trigger DLQ, but Kafka does not re-deliver in same run
+// without rebalance, so message count stays at 1 and DLQ never triggers ->
+// waitFor 45s timeout on every test. See KNOWN-ISSUES.md.
+describe.skip('kafka DLQ integration', () => {
   let producer: Producer;
   let mainConsumer: Consumer;
   let dlqConsumer: Consumer;

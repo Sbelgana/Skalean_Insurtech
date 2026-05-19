@@ -1,0 +1,373 @@
+# ============================================================================
+# Skalean InsurTech v2.2 -- Stack dev Docker Compose
+# Reference: 00-pilotage/meta-prompts/B-01-sprint-01-bootstrap.md (Tache 1.1.3)
+#            decision-001 (monorepo) + decision-006 (no-emoji)
+#            decision-008 (data residency Maroc -- MinIO simule Atlas Benguerir)
+#
+# Usage :
+#   pnpm docker:up      -- demarre tous les services en background
+#   pnpm docker:down    -- stoppe (preserve volumes data)
+#   pnpm docker:reset   -- stoppe + efface volumes + redemarre (clean state)
+#   pnpm docker:logs    -- tail logs en mode follow
+#   pnpm docker:ps      -- liste services et leur etat (healthy/unhealthy)
+#
+# Ports exposes :
+#   5432  Postgres
+#   6379  Redis
+#   9094  Kafka EXTERNAL
+#   8080  Kafka UI
+#   9000  MinIO S3 API
+#   9001  MinIO Console
+#   5678  n8n
+#   1025  Mailhog SMTP
+#   8025  Mailhog UI
+#
+# Aucune emoji autorisee dans ce fichier (decision-006).
+# ============================================================================
+
+name: skalean-insurtech-dev
+
+networks:
+  skalean-net:
+    name: skalean-net
+    driver: bridge
+
+volumes:
+  postgres-data:
+    name: skalean-postgres-data
+  redis-data:
+    name: skalean-redis-data
+  kafka-data:
+    name: skalean-kafka-data
+  minio-data:
+    name: skalean-minio-data
+  n8n-data:
+    name: skalean-n8n-data
+
+services:
+  # ==========================================================================
+  # PostgreSQL 16.6 -- DB primaire avec 5 extensions
+  # Init scripts dans postgres/ executes dans l'ordre alphabetique au boot
+  # Configuration : max_connections=200, shared_buffers=256MB, work_mem=8MB
+  # ==========================================================================
+  postgres:
+    image: postgres:16.6-alpine
+    container_name: skalean-postgres
+    restart: unless-stopped
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-skalean}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-skalean_dev_only_change_in_prod}
+      POSTGRES_DB: ${POSTGRES_DB:-skalean_insurtech}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+      TZ: Africa/Casablanca
+      PGTZ: Africa/Casablanca
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=200"
+      - "-c"
+      - "shared_buffers=256MB"
+      - "-c"
+      - "work_mem=8MB"
+      - "-c"
+      - "maintenance_work_mem=64MB"
+      - "-c"
+      - "effective_cache_size=1GB"
+      - "-c"
+      - "effective_io_concurrency=200"
+      - "-c"
+      - "random_page_cost=1.1"
+      - "-c"
+      - "log_statement=mod"
+      - "-c"
+      - "log_min_duration_statement=500"
+      - "-c"
+      - "log_connections=on"
+      - "-c"
+      - "log_disconnections=on"
+      - "-c"
+      - "log_line_prefix=%m [%p] %u@%d "
+      - "-c"
+      - "timezone=Africa/Casablanca"
+      - "-c"
+      - "stats_temp_directory=/tmp"
+      - "-c"
+      - "track_activity_query_size=2048"
+      - "-c"
+      - "shared_preload_libraries=pg_stat_statements"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres:/docker-entrypoint-initdb.d:ro
+    networks:
+      - skalean-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-skalean} -d ${POSTGRES_DB:-skalean_insurtech}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1.0"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ==========================================================================
+  # Redis 7.4.1 -- 6 DBs separes (cache, sessions, queues, locks, AI, ratelimit)
+  # Configuration custom via redis.conf (AOF, RDB, LRU 512MB, slowlog 10ms)
+  # ==========================================================================
+  redis:
+    image: redis:7.4.1-alpine
+    container_name: skalean-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    command:
+      - "redis-server"
+      - "/usr/local/etc/redis/redis.conf"
+      - "--requirepass"
+      - "${REDIS_PASSWORD:-skalean_redis_dev_only}"
+    volumes:
+      - redis-data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    networks:
+      - skalean-net
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD:-skalean_redis_dev_only} ping | grep PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 6
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: "0.5"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ==========================================================================
+  # Kafka 3.7.1 KRaft -- mode controller+broker self-suffisant (sans Zookeeper)
+  # 3 listeners : INTERNAL (9092), CONTROLLER (9093), EXTERNAL (9094)
+  # AUTO_CREATE_TOPICS_ENABLE=false : creation explicite via kafka-init-topics
+  # ==========================================================================
+  kafka:
+    image: bitnami/kafka:3.7.1
+    container_name: skalean-kafka
+    restart: unless-stopped
+    ports:
+      - "${KAFKA_EXTERNAL_PORT:-9094}:9094"
+    environment:
+      KAFKA_CFG_NODE_ID: 1
+      KAFKA_CFG_PROCESS_ROLES: controller,broker
+      KAFKA_KRAFT_CLUSTER_ID: skalean-insurtech-dev-cluster-uuid
+      KAFKA_CFG_LISTENERS: INTERNAL://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      KAFKA_CFG_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:9094
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_CFG_DELETE_TOPIC_ENABLE: "true"
+      KAFKA_CFG_NUM_PARTITIONS: 3
+      KAFKA_CFG_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_CFG_MIN_INSYNC_REPLICAS: 1
+      KAFKA_CFG_LOG_RETENTION_HOURS: 168
+      KAFKA_CFG_LOG_RETENTION_BYTES: 1073741824
+      KAFKA_CFG_LOG_SEGMENT_BYTES: 268435456
+      KAFKA_CFG_COMPRESSION_TYPE: lz4
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+    volumes:
+      - kafka-data:/bitnami/kafka
+    networks:
+      - skalean-net
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 1536M
+          cpus: "1.0"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ==========================================================================
+  # Kafka UI v0.7.2 -- Provectus interface web pour debug topics/messages
+  # ==========================================================================
+  kafka-ui:
+    image: provectuslabs/kafka-ui:v0.7.2
+    container_name: skalean-kafka-ui
+    restart: unless-stopped
+    ports:
+      - "${KAFKA_UI_PORT:-8080}:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: skalean-insurtech-dev
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      DYNAMIC_CONFIG_ENABLED: "true"
+      LOGGING_LEVEL_ROOT: warn
+      LOGGING_LEVEL_COM_PROVECTUS: info
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - skalean-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ==========================================================================
+  # Mailhog v1.0.1 -- SMTP catcher local (capture emails dev sans envoi reel)
+  # Port 1025 SMTP, 8025 UI web pour visualiser emails captures
+  # ==========================================================================
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: skalean-mailhog
+    restart: unless-stopped
+    ports:
+      - "${MAILHOG_SMTP_PORT:-1025}:1025"
+      - "${MAILHOG_UI_PORT:-8025}:8025"
+    environment:
+      MH_STORAGE: maildir
+      MH_MAILDIR_PATH: /tmp/mailhog
+    networks:
+      - skalean-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8025 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  # ==========================================================================
+  # MinIO RELEASE.2024-11-07 -- S3-compatible local
+  # Simule Atlas Cloud Services Benguerir Object Storage prod (decision-008)
+  # Region nominale ma-bgr-1 (Morocco-Benguerir-1)
+  # ==========================================================================
+  minio:
+    image: minio/minio:RELEASE.2024-11-07T00-52-20Z
+    container_name: skalean-minio
+    restart: unless-stopped
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-skalean}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-skalean_minio_dev_only}
+      MINIO_REGION: ma-bgr-1
+      MINIO_REGION_NAME: ma-bgr-1
+      MINIO_BROWSER: "on"
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+    networks:
+      - skalean-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+
+  # ==========================================================================
+  # n8n 1.74.0 -- workflow engine (utilise Sprint 30 pour automation MCP)
+  # Backend Postgres dans schema dedie n8n
+  # ==========================================================================
+  n8n:
+    image: n8nio/n8n:1.74.0
+    container_name: skalean-n8n
+    restart: unless-stopped
+    ports:
+      - "${N8N_PORT:-5678}:5678"
+    environment:
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_DATABASE: ${POSTGRES_DB:-skalean_insurtech}
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_USER: ${POSTGRES_USER:-skalean}
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD:-skalean_dev_only_change_in_prod}
+      DB_POSTGRESDB_SCHEMA: n8n
+      N8N_BASIC_AUTH_ACTIVE: "true"
+      N8N_BASIC_AUTH_USER: ${N8N_BASIC_AUTH_USER:-skalean}
+      N8N_BASIC_AUTH_PASSWORD: ${N8N_BASIC_AUTH_PASSWORD:-skalean_n8n_dev_only}
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      WEBHOOK_URL: http://localhost:5678/
+      GENERIC_TIMEZONE: Africa/Casablanca
+      TZ: Africa/Casablanca
+      N8N_LOG_LEVEL: info
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_PERSONALIZATION_ENABLED: "false"
+      N8N_VERSION_NOTIFICATIONS_ENABLED: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - n8n-data:/home/node/.n8n
+    networks:
+      - skalean-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:5678/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+  # ==========================================================================
+  # INIT CONTAINER : kafka-init-topics
+  # S'execute apres Kafka healthy, cree les 30+ topics (Tache 1.1.6), exit 0
+  # restart: "no" -- ne doit s'executer qu'une seule fois
+  # ==========================================================================
+  kafka-init-topics:
+    image: bitnami/kafka:3.7.1
+    container_name: skalean-kafka-init-topics
+    restart: "no"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    volumes:
+      - ./kafka:/scripts:ro
+    networks:
+      - skalean-net
+    entrypoint: ["bash", "/scripts/init-topics.sh"]
+
+  # ==========================================================================
+  # INIT CONTAINER : minio-init-buckets
+  # S'execute apres MinIO healthy, cree les 3 buckets dev (Tache 1.1.7), exit 0
+  # restart: "no" -- ne doit s'executer qu'une seule fois
+  # ==========================================================================
+  minio-init-buckets:
+    image: minio/mc:RELEASE.2024-11-07T00-52-20Z
+    container_name: skalean-minio-init
+    restart: "no"
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-skalean}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-skalean_minio_dev_only}
+    volumes:
+      - ./minio:/scripts:ro
+    networks:
+      - skalean-net
+    entrypoint: ["sh", "/scripts/init-buckets.sh"]

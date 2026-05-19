@@ -15,7 +15,7 @@
  *   - cache-strategy.md
  */
 
-import IORedis, { type Redis, type RedisOptions } from 'ioredis';
+import { Redis, type RedisOptions } from 'ioredis';
 import type { Logger } from 'pino';
 
 // ============================================================================
@@ -98,7 +98,7 @@ export function createRedisClient(opts: CreateRedisClientOpts): Redis {
     db,
     connectionName: connectionName ?? `skalean-${db}`,
     lazyConnect,
-    keyPrefix,
+    ...(keyPrefix !== undefined ? { keyPrefix } : {}),
     maxRetriesPerRequest,
     enableReadyCheck: true,
     autoResubscribe: true,
@@ -136,7 +136,7 @@ export function createRedisClient(opts: CreateRedisClientOpts): Redis {
     },
   };
 
-  const client = new IORedis(url, ioRedisOpts);
+  const client = new Redis(url, ioRedisOpts);
 
   // Structured logging on events
   if (logger) {

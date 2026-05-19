@@ -91,7 +91,7 @@ export function getS3Client(): S3Client {
   }
 
   const config: S3Config = {
-    endpoint,
+    ...(endpoint !== undefined ? { endpoint } : {}),
     region,
     accessKeyId,
     secretAccessKey,

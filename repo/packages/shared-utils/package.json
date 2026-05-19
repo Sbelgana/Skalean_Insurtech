@@ -13,6 +13,10 @@
     "./redis": {
       "import": "./dist/redis/index.js",
       "types": "./dist/redis/index.d.ts"
+    },
+    "./telemetry": {
+      "import": "./dist/telemetry/index.js",
+      "types": "./dist/telemetry/index.d.ts"
     }
   },
   "scripts": {

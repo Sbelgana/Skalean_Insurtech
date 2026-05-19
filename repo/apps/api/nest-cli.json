@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json.schemastore.org/nest-cli",
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "src",
+  "entryFile": "main",
+  "compilerOptions": {
+    "deleteOutDir": true,
+    "tsConfigPath": "tsconfig.build.json",
+    "assets": [
+      {
+        "include": "**/*.proto",
+        "outDir": "dist"
+      }
+    ],
+    "watchAssets": true,
+    "manualRestart": false,
+    "preserveWatchOutput": true,
+    "plugins": []
+  },
+  "monorepo": false,
+  "generateOptions": {
+    "spec": true,
+    "flat": false
+  }
+}

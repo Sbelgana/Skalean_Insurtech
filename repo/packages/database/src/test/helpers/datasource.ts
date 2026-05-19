@@ -4,10 +4,13 @@ import { systemEntities } from '../../entities/system/index.js';
 import { crmEntities } from '../../entities/crm/index.js';
 import { bookingEntities } from '../../entities/booking/index.js';
 import { commEntities } from '../../entities/comm/index.js';
+import { docsEntities } from '../../entities/docs/index.js';
+import { payEntities } from '../../entities/pay/index.js';
 import { InitialSystem1735000000001 } from '../../migrations/1735000000001-InitialSystem.js';
 import { CRM1735000000002 } from '../../migrations/1735000000002-CRM.js';
 import { Booking1735000000003 } from '../../migrations/1735000000003-Booking.js';
 import { Communications1735000000004 } from '../../migrations/1735000000004-Communications.js';
+import { DocsPayments1735000000005 } from '../../migrations/1735000000005-DocsPayments.js';
 
 export interface TestDataSourceOptions {
   migrationsRun?: boolean;
@@ -20,8 +23,8 @@ const baseOptions = (): DataSourceOptions => ({
   username: process.env['TEST_DATABASE_USER'] ?? process.env['DATABASE_USER'] ?? 'skalean',
   password: process.env['TEST_DATABASE_PASSWORD'] ?? process.env['DATABASE_PASSWORD'] ?? 'skalean_dev_only',
   database: process.env['TEST_DATABASE_NAME'] ?? process.env['DATABASE_NAME'] ?? 'skalean_insurtech',
-  entities: [...systemEntities, ...crmEntities, ...bookingEntities, ...commEntities],
-  migrations: [InitialSystem1735000000001, CRM1735000000002, Booking1735000000003, Communications1735000000004],
+  entities: [...systemEntities, ...crmEntities, ...bookingEntities, ...commEntities, ...docsEntities, ...payEntities],
+  migrations: [InitialSystem1735000000001, CRM1735000000002, Booking1735000000003, Communications1735000000004, DocsPayments1735000000005],
   migrationsRun: false,
   synchronize: false,
   logging: process.env['TEST_DATABASE_LOG'] === 'true',

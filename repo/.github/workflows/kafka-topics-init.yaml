@@ -1,0 +1,98 @@
+name: kafka-topics-init
+
+on:
+  push:
+    paths:
+      - "infrastructure/docker/kafka/init-topics.sh"
+      - "infrastructure/docker/kafka/verify-topics.sh"
+      - "infrastructure/kafka/topics-config.yaml"
+      - ".github/workflows/kafka-topics-init.yaml"
+  workflow_dispatch:
+
+jobs:
+  validate-shell:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ShellCheck init-topics.sh
+        run: |
+          sudo apt-get install -y shellcheck
+          shellcheck infrastructure/docker/kafka/init-topics.sh
+
+      - name: ShellCheck verify-topics.sh
+        run: shellcheck infrastructure/docker/kafka/verify-topics.sh
+
+      - name: Validate naming regex in topics-config.yaml
+        run: |
+          sudo apt-get install -y python3-yaml
+          python3 -c "
+          import yaml, re, sys
+          regex = re.compile(r'^insurtech\.(events|dlq)\.[a-z]+\.[a-z_]+(\.[a-z_]+)?$')
+          with open('infrastructure/kafka/topics-config.yaml') as f:
+              data = yaml.safe_load(f)
+          count = 0
+          errors = []
+          for module, content in data.get('modules', {}).items():
+              for t in content.get('topics', []):
+                  name = t['name']
+                  if not regex.match(name):
+                      errors.append(f'Topic non-conforme: {name}')
+                  count += 1
+          if errors:
+              for e in errors:
+                  print(e, file=sys.stderr)
+              sys.exit(1)
+          if count < 59:
+              print(f'Total topics {count} < 59', file=sys.stderr)
+              sys.exit(1)
+          print(f'Total topics valides : {count}')
+          "
+
+  init-and-verify-dev:
+    runs-on: ubuntu-22.04
+    needs: validate-shell
+    services:
+      kafka:
+        image: confluentinc/cp-kafka:7.6.0
+        ports:
+          - 9092:9092
+        env:
+          KAFKA_NODE_ID: 1
+          KAFKA_PROCESS_ROLES: broker,controller
+          KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9094"
+          KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092"
+          KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
+          KAFKA_CONTROLLER_QUORUM_VOTERS: "1@localhost:9094"
+          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+          KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+          KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+          KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+          KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+          KAFKA_MIN_INSYNC_REPLICAS: 1
+          CLUSTER_ID: insurtech-kafka-cluster-1
+        options: >-
+          --health-cmd "kafka-topics.sh --bootstrap-server localhost:9092 --list || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+          --health-start-period 30s
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run init-topics.sh
+        env:
+          KAFKA_BROKERS: localhost:9092
+        run: bash infrastructure/docker/kafka/init-topics.sh
+
+      - name: Run verify-topics.sh
+        env:
+          KAFKA_BROKERS: localhost:9092
+        run: bash infrastructure/docker/kafka/verify-topics.sh
+
+      - name: Re-run init-topics (idempotence check)
+        env:
+          KAFKA_BROKERS: localhost:9092
+        run: bash infrastructure/docker/kafka/init-topics.sh

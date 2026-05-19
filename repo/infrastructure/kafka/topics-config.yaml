@@ -1,0 +1,300 @@
+# infrastructure/kafka/topics-config.yaml
+# Skalean Insurtech -- Configuration descriptive 53 topics Kafka
+# Source de verite pour generation init-topics.sh + verify-topics.sh
+# Tache 1.2.10 -- Sprint 2
+# Aucune emoji (decision-006)
+
+version: "1.0.0"
+last_updated: "2026-05-19"
+total_topics: 59
+
+defaults:
+  partitions_standard: 6
+  partitions_dlq: 1
+  retention_standard_ms: 604800000     # 7 jours
+  retention_audit_ms: 2592000000       # 30 jours
+  retention_dlq_ms: 2592000000         # 30 jours
+  replication_factor_dev: 1
+  replication_factor_prod: 3
+  min_insync_replicas_dev: 1
+  min_insync_replicas_prod: 2
+  compression_type: snappy
+  segment_ms: 86400000                  # 1 jour
+  cleanup_policy: delete
+
+modules:
+  auth:
+    description: "Module Authentification, gestion utilisateurs, MFA"
+    sprint: 5
+    retention_days: 7
+    partitions: 6
+    topics:
+      - name: insurtech.events.auth.user.created
+        producer: auth-service
+        consumers: [crm-service, audit-service]
+        schema_zod: UserCreatedEventSchema
+      - name: insurtech.events.auth.user.signed_in
+        producer: auth-service
+        consumers: [audit-service]
+        schema_zod: UserSignedInEventSchema
+      - name: insurtech.events.auth.user.signed_out
+        producer: auth-service
+        consumers: [audit-service]
+        schema_zod: UserSignedOutEventSchema
+      - name: insurtech.events.auth.user.locked
+        producer: auth-service
+        consumers: [audit-service, comm-service]
+        schema_zod: UserLockedEventSchema
+      - name: insurtech.events.auth.user.unlocked
+        producer: auth-service
+        consumers: [audit-service]
+        schema_zod: UserUnlockedEventSchema
+      - name: insurtech.events.auth.user.password_reset_requested
+        producer: auth-service
+        consumers: [comm-service, audit-service]
+        schema_zod: PasswordResetRequestedEventSchema
+      - name: insurtech.events.auth.user.password_changed
+        producer: auth-service
+        consumers: [audit-service]
+        schema_zod: PasswordChangedEventSchema
+      - name: insurtech.events.auth.user.mfa_enabled
+        producer: auth-service
+        consumers: [audit-service]
+        schema_zod: MfaEnabledEventSchema
+      - name: insurtech.events.auth.user.mfa_disabled
+        producer: auth-service
+        consumers: [audit-service]
+        schema_zod: MfaDisabledEventSchema
+
+  crm:
+    description: "Module CRM, contacts, deals, interactions"
+    sprint: 6
+    retention_days: 7
+    partitions: 6
+    topics:
+      - name: insurtech.events.crm.contact.created
+        producer: crm-service
+        consumers: [comm-service, audit-service]
+      - name: insurtech.events.crm.contact.updated
+        producer: crm-service
+        consumers: [audit-service]
+      - name: insurtech.events.crm.deal.created
+        producer: crm-service
+        consumers: [audit-service]
+      - name: insurtech.events.crm.deal.stage_changed
+        producer: crm-service
+        consumers: [audit-service]
+      - name: insurtech.events.crm.interaction.recorded
+        producer: crm-service
+        consumers: [audit-service]
+      - name: insurtech.events.crm.interaction.email_received
+        producer: comm-service
+        consumers: [crm-service, audit-service]
+
+  booking:
+    description: "Module Booking, RDV agents/clients"
+    sprint: 7
+    retention_days: 7
+    partitions: 6
+    topics:
+      - name: insurtech.events.booking.appointment.scheduled
+        producer: booking-service
+        consumers: [comm-service, audit-service]
+      - name: insurtech.events.booking.appointment.confirmed
+        producer: booking-service
+        consumers: [comm-service, audit-service]
+      - name: insurtech.events.booking.appointment.cancelled
+        producer: booking-service
+        consumers: [comm-service, audit-service]
+      - name: insurtech.events.booking.appointment.completed
+        producer: booking-service
+        consumers: [audit-service]
+
+  comm:
+    description: "Module Communication, SMS/Email/WhatsApp"
+    sprint: 8
+    retention_days: 7
+    partitions: 6
+    topics:
+      - name: insurtech.events.comm.message.queued
+        producer: comm-service
+        consumers: [audit-service]
+      - name: insurtech.events.comm.message.sent
+        producer: comm-service
+        consumers: [audit-service]
+      - name: insurtech.events.comm.message.delivered
+        producer: comm-service
+        consumers: [audit-service]
+      - name: insurtech.events.comm.message.read
+        producer: comm-service
+        consumers: [audit-service]
+      - name: insurtech.events.comm.message.failed
+        producer: comm-service
+        consumers: [audit-service, dlq.comm]
+      - name: insurtech.events.comm.template.created
+        producer: comm-service
+        consumers: [audit-service]
+      - name: insurtech.events.comm.template.approved
+        producer: comm-service
+        consumers: [audit-service]
+      - name: insurtech.events.comm.template.rejected
+        producer: comm-service
+        consumers: [audit-service]
+      - name: insurtech.events.comm.optout.recorded
+        producer: comm-service
+        consumers: [audit-service, crm-service]
+      - name: insurtech.events.comm.webhook.received
+        producer: comm-service
+        consumers: [audit-service]
+
+  pay:
+    description: "Module Paiement, transactions CMI/Wafacash/HPS"
+    sprint: 11
+    retention_days: 7
+    partitions: 6
+    topics:
+      - name: insurtech.events.pay.transaction.initiated
+        producer: pay-service
+        consumers: [audit-service, books-service]
+      - name: insurtech.events.pay.transaction.completed
+        producer: pay-service
+        consumers: [audit-service, books-service, crm-service]
+      - name: insurtech.events.pay.transaction.failed
+        producer: pay-service
+        consumers: [audit-service, dlq.pay]
+      - name: insurtech.events.pay.transaction.refunded
+        producer: pay-service
+        consumers: [audit-service, books-service]
+      - name: insurtech.events.pay.reconciliation.matched
+        producer: pay-service
+        consumers: [audit-service, books-service]
+      - name: insurtech.events.pay.reconciliation.discrepancy
+        producer: pay-service
+        consumers: [audit-service, alerting-service]
+
+  insure:
+    description: "Module Insurance (anticipation Sprint 14-16)"
+    sprint: 14
+    retention_days: 7
+    partitions: 6
+    topics:
+      - name: insurtech.events.insure.policy.created
+        producer: insure-service
+        consumers: [audit-service, crm-service]
+      - name: insurtech.events.insure.policy.signed
+        producer: insure-service
+        consumers: [audit-service, comm-service]
+      - name: insurtech.events.insure.policy.renewed
+        producer: insure-service
+        consumers: [audit-service, comm-service]
+      - name: insurtech.events.insure.policy.cancelled
+        producer: insure-service
+        consumers: [audit-service, comm-service]
+
+  repair:
+    description: "Module Repair (anticipation Sprint 20-22)"
+    sprint: 20
+    retention_days: 7
+    partitions: 6
+    topics:
+      - name: insurtech.events.repair.sinistre.declared
+        producer: repair-service
+        consumers: [audit-service, insure-service]
+      - name: insurtech.events.repair.sinistre.dispatched
+        producer: repair-service
+        consumers: [audit-service, comm-service]
+      - name: insurtech.events.repair.sinistre.estimated
+        producer: repair-service
+        consumers: [audit-service, insure-service]
+
+  audit:
+    description: "Module Audit et Compliance ACAPS"
+    sprint: 30
+    retention_days: 30
+    partitions: 6
+    topics:
+      - name: insurtech.events.audit.audit.recorded
+        producer: audit-service
+        consumers: [archival-service]
+      - name: insurtech.events.audit.compliance.data_purged
+        producer: compliance-service
+        consumers: [archival-service]
+      - name: insurtech.events.audit.compliance.acaps_submitted
+        producer: compliance-service
+        consumers: [archival-service]
+
+  books:
+    description: "Module Comptabilite CGNC"
+    sprint: 24
+    retention_days: 7
+    partitions: 6
+    topics:
+      - name: insurtech.events.books.invoice.issued
+        producer: books-service
+        consumers: [audit-service, comm-service]
+      - name: insurtech.events.books.invoice.paid
+        producer: books-service
+        consumers: [audit-service]
+
+  stock:
+    description: "Module Gestion Stock pieces detachees"
+    sprint: 26
+    retention_days: 7
+    partitions: 6
+    topics:
+      - name: insurtech.events.stock.stock.low_threshold
+        producer: stock-service
+        consumers: [audit-service, alerting-service]
+      - name: insurtech.events.stock.stock.movement_recorded
+        producer: stock-service
+        consumers: [audit-service]
+
+  hr:
+    description: "Module RH, presences, salaires"
+    sprint: 28
+    retention_days: 7
+    partitions: 6
+    topics:
+      - name: insurtech.events.hr.attendance.recorded
+        producer: hr-service
+        consumers: [audit-service]
+      - name: insurtech.events.hr.salary.processed
+        producer: hr-service
+        consumers: [audit-service, books-service]
+
+  system:
+    description: "Module System events tenant lifecycle"
+    sprint: 5
+    retention_days: 7
+    partitions: 6
+    topics:
+      - name: insurtech.events.system.tenant.created
+        producer: tenant-service
+        consumers: [audit-service]
+      - name: insurtech.events.system.tenant.settings_changed
+        producer: tenant-service
+        consumers: [audit-service]
+      - name: insurtech.events.system.user.password_reset_requested
+        producer: auth-service
+        consumers: [audit-service, comm-service]
+
+  dlq:
+    description: "Dead Letter Queue topics par domaine fonctionnel"
+    retention_days: 30
+    partitions: 1
+    topics:
+      - name: insurtech.dlq.comm.failed
+        domain: comm
+        sla_replay_minutes: 30
+      - name: insurtech.dlq.pay.failed
+        domain: pay
+        sla_replay_minutes: 5
+      - name: insurtech.dlq.insure.failed
+        domain: insure
+        sla_replay_minutes: 15
+      - name: insurtech.dlq.repair.failed
+        domain: repair
+        sla_replay_minutes: 30
+      - name: insurtech.dlq.compliance.failed
+        domain: compliance
+        sla_replay_minutes: 60

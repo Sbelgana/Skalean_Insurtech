@@ -1,177 +1,195 @@
 #!/usr/bin/env bash
-# ============================================================================
-# Skalean InsurTech v2.2 -- Kafka topics initialization
-# Reference: 00-pilotage/meta-prompts/B-01-sprint-01-bootstrap.md (Tache 1.1.6)
-#            decision-004 (Kafka vs RabbitMQ)
-#            decision-006 (no-emoji)
-# ============================================================================
-# Cree 32 topics Kafka avec convention naming :
-#   insurtech.events.{vertical}.{entity}.{action}
-#
-# Topics par usage :
-#   - 7 Auth   (user signup, login, logout, password, MFA, lock, role)
-#   - 5 CRM    (contact CRUD, deal, interaction)
-#   - 3 Booking (appointment scheduled, cancelled, completed)
-#   - 3 Comm   (message sent, delivered, failed)
-#   - 4 Pay    (transaction lifecycle, refund)
-#   - 4 Insure (quote, police, signed, avenant)
-#   - 3 Repair (sinistre, devis, reparation)
-#   - 1 Audit  (access denied)
-#   - 2 DLQ    (comm, pay)
-#
-# Configuration :
-#   - 3 partitions defaut, 6 pour high-throughput
-#   - retention.ms = 7 jours (604800000), 30 jours pour DLQ
-#   - compression.type = lz4
-#   - replication factor = 1 dev (override 3 via env REPLICATION_FACTOR)
-#
-# Aucune emoji autorisee (decision-006).
-# ============================================================================
+# infrastructure/docker/kafka/init-topics.sh
+# Skalean Insurtech -- Initialisation 53 topics Kafka KRaft 3.7
+# Tache 1.2.10 -- Sprint 2
+# Idempotent : --if-not-exists permet re-execution sans effet de bord
+# Naming convention : insurtech.events.{vertical}.{entity}.{action}
+# Retention differenciee : 7 jours standard / 30 jours audit + DLQ
+# Aucune emoji (decision-006)
 
 set -euo pipefail
 
-KAFKA_BROKER="${KAFKA_BROKER:-kafka:9092}"
-REPLICATION_FACTOR="${REPLICATION_FACTOR:-1}"
-RETENTION_STANDARD_MS="${RETENTION_STANDARD_MS:-604800000}"   # 7 days
-RETENTION_DLQ_MS="${RETENTION_DLQ_MS:-2592000000}"            # 30 days
-COMPRESSION_TYPE="${COMPRESSION_TYPE:-lz4}"
+KAFKA_BROKERS="${KAFKA_BROKERS:-kafka:9092}"
+KAFKA_PARTITIONS_DEFAULT="${KAFKA_PARTITIONS_DEFAULT:-6}"
+KAFKA_PARTITIONS_DLQ="${KAFKA_PARTITIONS_DLQ:-1}"
+KAFKA_RETENTION_STANDARD_MS="${KAFKA_RETENTION_STANDARD_MS:-604800000}"     # 7 jours
+KAFKA_RETENTION_AUDIT_MS="${KAFKA_RETENTION_AUDIT_MS:-2592000000}"           # 30 jours
+KAFKA_RETENTION_DLQ_MS="${KAFKA_RETENTION_DLQ_MS:-2592000000}"               # 30 jours
+KAFKA_REPLICATION_FACTOR="${KAFKA_REPLICATION_FACTOR:-1}"
+KAFKA_MIN_INSYNC_REPLICAS="${KAFKA_MIN_INSYNC_REPLICAS:-1}"
+KAFKA_COMPRESSION="${KAFKA_COMPRESSION:-snappy}"
+KAFKA_SEGMENT_MS="${KAFKA_SEGMENT_MS:-86400000}"                             # 1 jour
+KAFKA_CLEANUP_POLICY="${KAFKA_CLEANUP_POLICY:-delete}"
 
-echo "[kafka-init-topics] starting -- broker=${KAFKA_BROKER}"
-echo "[kafka-init-topics] replication=${REPLICATION_FACTOR} retention_std=${RETENTION_STANDARD_MS} retention_dlq=${RETENTION_DLQ_MS} compression=${COMPRESSION_TYPE}"
+log_info()  { echo "[INFO]  $(date -u +'%Y-%m-%dT%H:%M:%SZ') $*" >&2; }
+log_warn()  { echo "[WARN]  $(date -u +'%Y-%m-%dT%H:%M:%SZ') $*" >&2; }
+log_error() { echo "[ERROR] $(date -u +'%Y-%m-%dT%H:%M:%SZ') $*" >&2; }
 
-# ============================================================================
-# Wait for Kafka to be ready
-# ============================================================================
-echo "[kafka-init-topics] waiting for kafka broker..."
+NAMING_REGEX='^insurtech\.(events|dlq)\.[a-z]+\.[a-z_]+(\.[a-z_]+)?$'
+
+validate_topic_name() {
+  local topic_name="$1"
+  if ! [[ "${topic_name}" =~ ${NAMING_REGEX} ]]; then
+    log_error "Topic name non-conforme : ${topic_name}"
+    log_error "Regex attendue : ${NAMING_REGEX}"
+    exit 1
+  fi
+}
+
+# Helper : creation idempotente d'un topic
+# Args : $1=topic_name, $2=partitions, $3=retention_ms
+create_topic() {
+  local topic_name="$1"
+  local partitions="${2:-${KAFKA_PARTITIONS_DEFAULT}}"
+  local retention_ms="${3:-${KAFKA_RETENTION_STANDARD_MS}}"
+
+  validate_topic_name "${topic_name}"
+
+  log_info "Creation topic : ${topic_name} (partitions=${partitions}, retention_ms=${retention_ms})"
+
+  kafka-topics.sh \
+    --bootstrap-server "${KAFKA_BROKERS}" \
+    --create \
+    --if-not-exists \
+    --topic "${topic_name}" \
+    --partitions "${partitions}" \
+    --replication-factor "${KAFKA_REPLICATION_FACTOR}" \
+    --config "retention.ms=${retention_ms}" \
+    --config "min.insync.replicas=${KAFKA_MIN_INSYNC_REPLICAS}" \
+    --config "compression.type=${KAFKA_COMPRESSION}" \
+    --config "segment.ms=${KAFKA_SEGMENT_MS}" \
+    --config "cleanup.policy=${KAFKA_CLEANUP_POLICY}" \
+    || log_warn "Creation topic ${topic_name} echouee ou existante"
+}
+
+log_info "=== Initialisation 59 topics Kafka Skalean Insurtech ==="
+log_info "Brokers            : ${KAFKA_BROKERS}"
+log_info "Partitions default : ${KAFKA_PARTITIONS_DEFAULT}"
+log_info "Partitions DLQ     : ${KAFKA_PARTITIONS_DLQ}"
+log_info "Replication factor : ${KAFKA_REPLICATION_FACTOR}"
+log_info "Compression        : ${KAFKA_COMPRESSION}"
+
+# Attente readiness Kafka
+log_info "Attente broker Kafka..."
 MAX_WAIT=60
 ELAPSED=0
-until kafka-topics.sh --bootstrap-server "${KAFKA_BROKER}" --list >/dev/null 2>&1; do
+until kafka-topics.sh --bootstrap-server "${KAFKA_BROKERS}" --list >/dev/null 2>&1; do
   if [[ "${ELAPSED}" -ge "${MAX_WAIT}" ]]; then
-    echo "[kafka-init-topics] FAIL: kafka broker not ready after ${MAX_WAIT}s"
+    log_error "Kafka broker non disponible apres ${MAX_WAIT}s"
     exit 1
   fi
   sleep 2
   ELAPSED=$((ELAPSED + 2))
 done
-echo "[kafka-init-topics] kafka broker ready (${ELAPSED}s)"
+log_info "Kafka broker pret (${ELAPSED}s)"
 
-# ============================================================================
-# Helper : create_topic <name> <partitions> [retention_ms]
-# ============================================================================
-create_topic() {
-  local name="$1"
-  local partitions="${2:-3}"
-  local retention_ms="${3:-${RETENTION_STANDARD_MS}}"
+# === Module Auth (9 topics) ===
+log_info "--- Module Auth ---"
+create_topic "insurtech.events.auth.user.created"
+create_topic "insurtech.events.auth.user.signed_in"
+create_topic "insurtech.events.auth.user.signed_out"
+create_topic "insurtech.events.auth.user.locked"
+create_topic "insurtech.events.auth.user.unlocked"
+create_topic "insurtech.events.auth.user.password_reset_requested"
+create_topic "insurtech.events.auth.user.password_changed"
+create_topic "insurtech.events.auth.user.mfa_enabled"
+create_topic "insurtech.events.auth.user.mfa_disabled"
 
-  if kafka-topics.sh --bootstrap-server "${KAFKA_BROKER}" --list 2>/dev/null | grep -qFx "${name}"; then
-    echo "[kafka-init-topics] skip ${name} (already exists)"
-    return 0
-  fi
+# === Module CRM (6 topics) ===
+log_info "--- Module CRM ---"
+create_topic "insurtech.events.crm.contact.created"
+create_topic "insurtech.events.crm.contact.updated"
+create_topic "insurtech.events.crm.deal.created"
+create_topic "insurtech.events.crm.deal.stage_changed"
+create_topic "insurtech.events.crm.interaction.recorded"
+create_topic "insurtech.events.crm.interaction.email_received"
 
-  kafka-topics.sh \
-    --bootstrap-server "${KAFKA_BROKER}" \
-    --create \
-    --if-not-exists \
-    --topic "${name}" \
-    --partitions "${partitions}" \
-    --replication-factor "${REPLICATION_FACTOR}" \
-    --config "compression.type=${COMPRESSION_TYPE}" \
-    --config "retention.ms=${retention_ms}" \
-    --config "retention.bytes=1073741824" \
-    --config "cleanup.policy=delete" \
-    --config "min.insync.replicas=1" \
-    >/dev/null
+# === Module Booking (4 topics) ===
+log_info "--- Module Booking ---"
+create_topic "insurtech.events.booking.appointment.scheduled"
+create_topic "insurtech.events.booking.appointment.confirmed"
+create_topic "insurtech.events.booking.appointment.cancelled"
+create_topic "insurtech.events.booking.appointment.completed"
 
-  echo "[kafka-init-topics] Created : ${name} (partitions=${partitions} retention=${retention_ms}ms)"
-}
+# === Module Communication (10 topics) ===
+log_info "--- Module Communication ---"
+create_topic "insurtech.events.comm.message.queued"
+create_topic "insurtech.events.comm.message.sent"
+create_topic "insurtech.events.comm.message.delivered"
+create_topic "insurtech.events.comm.message.read"
+create_topic "insurtech.events.comm.message.failed"
+create_topic "insurtech.events.comm.template.created"
+create_topic "insurtech.events.comm.template.approved"
+create_topic "insurtech.events.comm.template.rejected"
+create_topic "insurtech.events.comm.optout.recorded"
+create_topic "insurtech.events.comm.webhook.received"
 
-# ============================================================================
-# Topics Auth (7)
-# ============================================================================
-echo "[kafka-init-topics] --- Auth topics ---"
-create_topic "insurtech.events.auth.user_signed_up"     3
-create_topic "insurtech.events.auth.user_signed_in"     6   # high throughput
-create_topic "insurtech.events.auth.user_signed_out"    3
-create_topic "insurtech.events.auth.password_changed"   3
-create_topic "insurtech.events.auth.mfa_setup"          3
-create_topic "insurtech.events.auth.account_locked"     3
-create_topic "insurtech.events.auth.role_changed"       3
+# === Module Pay (6 topics) ===
+log_info "--- Module Pay ---"
+create_topic "insurtech.events.pay.transaction.initiated"
+create_topic "insurtech.events.pay.transaction.completed"
+create_topic "insurtech.events.pay.transaction.failed"
+create_topic "insurtech.events.pay.transaction.refunded"
+create_topic "insurtech.events.pay.reconciliation.matched"
+create_topic "insurtech.events.pay.reconciliation.discrepancy"
 
-# ============================================================================
-# Topics CRM (5)
-# ============================================================================
-echo "[kafka-init-topics] --- CRM topics ---"
-create_topic "insurtech.events.crm.contact_created"     3
-create_topic "insurtech.events.crm.contact_updated"     3
-create_topic "insurtech.events.crm.contact_deleted"     3
-create_topic "insurtech.events.crm.deal_stage_changed"  3
-create_topic "insurtech.events.crm.interaction_logged"  6   # high throughput
+# === Module Insurance (anticipation Sprint 14-16) (4 topics) ===
+log_info "--- Module Insurance (anticipation Sprint 14-16) ---"
+create_topic "insurtech.events.insure.policy.created"
+create_topic "insurtech.events.insure.policy.signed"
+create_topic "insurtech.events.insure.policy.renewed"
+create_topic "insurtech.events.insure.policy.cancelled"
 
-# ============================================================================
-# Topics Booking (3)
-# ============================================================================
-echo "[kafka-init-topics] --- Booking topics ---"
-create_topic "insurtech.events.booking.appointment_scheduled" 3
-create_topic "insurtech.events.booking.appointment_cancelled" 3
-create_topic "insurtech.events.booking.appointment_completed" 3
+# === Module Repair (anticipation Sprint 20-22) (3 topics) ===
+log_info "--- Module Repair (anticipation Sprint 20-22) ---"
+create_topic "insurtech.events.repair.sinistre.declared"
+create_topic "insurtech.events.repair.sinistre.dispatched"
+create_topic "insurtech.events.repair.sinistre.estimated"
 
-# ============================================================================
-# Topics Comm (3)
-# ============================================================================
-echo "[kafka-init-topics] --- Comm topics ---"
-create_topic "insurtech.events.comm.message_sent"      6    # high throughput
-create_topic "insurtech.events.comm.message_delivered" 6    # high throughput
-create_topic "insurtech.events.comm.message_failed"    3
+# === Module Audit (3 topics, retention 30 jours) ===
+log_info "--- Module Audit (retention 30 jours) ---"
+create_topic "insurtech.events.audit.audit.recorded"          "${KAFKA_PARTITIONS_DEFAULT}" "${KAFKA_RETENTION_AUDIT_MS}"
+create_topic "insurtech.events.audit.compliance.data_purged"  "${KAFKA_PARTITIONS_DEFAULT}" "${KAFKA_RETENTION_AUDIT_MS}"
+create_topic "insurtech.events.audit.compliance.acaps_submitted" "${KAFKA_PARTITIONS_DEFAULT}" "${KAFKA_RETENTION_AUDIT_MS}"
 
-# ============================================================================
-# Topics Pay (4)
-# ============================================================================
-echo "[kafka-init-topics] --- Pay topics ---"
-create_topic "insurtech.events.pay.transaction_initiated" 3
-create_topic "insurtech.events.pay.transaction_completed" 3
-create_topic "insurtech.events.pay.transaction_failed"    3
-create_topic "insurtech.events.pay.refund_processed"      3
+# === Module Books (2 topics) ===
+log_info "--- Module Books ---"
+create_topic "insurtech.events.books.invoice.issued"
+create_topic "insurtech.events.books.invoice.paid"
 
-# ============================================================================
-# Topics Insure (4)
-# ============================================================================
-echo "[kafka-init-topics] --- Insure topics ---"
-create_topic "insurtech.events.insure.quote_generated" 3
-create_topic "insurtech.events.insure.police_created"  3
-create_topic "insurtech.events.insure.police_signed"   3
-create_topic "insurtech.events.insure.avenant_created" 3
+# === Module Stock (2 topics) ===
+log_info "--- Module Stock ---"
+create_topic "insurtech.events.stock.stock.low_threshold"
+create_topic "insurtech.events.stock.stock.movement_recorded"
 
-# ============================================================================
-# Topics Repair (3)
-# ============================================================================
-echo "[kafka-init-topics] --- Repair topics ---"
-create_topic "insurtech.events.repair.sinistre_declared"   6  # high throughput
-create_topic "insurtech.events.repair.devis_approved"      3
-create_topic "insurtech.events.repair.reparation_completed" 3
+# === Module HR (2 topics) ===
+log_info "--- Module HR ---"
+create_topic "insurtech.events.hr.attendance.recorded"
+create_topic "insurtech.events.hr.salary.processed"
 
-# ============================================================================
-# Topics Audit (1)
-# ============================================================================
-echo "[kafka-init-topics] --- Audit topics ---"
-create_topic "insurtech.events.audit.access_denied" 3
+# === Module System (3 topics) ===
+log_info "--- Module System ---"
+create_topic "insurtech.events.system.tenant.created"
+create_topic "insurtech.events.system.tenant.settings_changed"
+create_topic "insurtech.events.system.user.password_reset_requested"
 
-# ============================================================================
-# Topics DLQ (2) -- 1 partition (preserve order), 30 days retention
-# ============================================================================
-echo "[kafka-init-topics] --- DLQ topics ---"
-create_topic "insurtech.events.dlq.comm" 1 "${RETENTION_DLQ_MS}"
-create_topic "insurtech.events.dlq.pay"  1 "${RETENTION_DLQ_MS}"
+# === DLQ topics (5 topics, 1 partition, retention 30 jours) ===
+log_info "--- DLQ topics (1 partition, retention 30 jours) ---"
+create_topic "insurtech.dlq.comm.failed"       "${KAFKA_PARTITIONS_DLQ}" "${KAFKA_RETENTION_DLQ_MS}"
+create_topic "insurtech.dlq.pay.failed"        "${KAFKA_PARTITIONS_DLQ}" "${KAFKA_RETENTION_DLQ_MS}"
+create_topic "insurtech.dlq.insure.failed"     "${KAFKA_PARTITIONS_DLQ}" "${KAFKA_RETENTION_DLQ_MS}"
+create_topic "insurtech.dlq.repair.failed"     "${KAFKA_PARTITIONS_DLQ}" "${KAFKA_RETENTION_DLQ_MS}"
+create_topic "insurtech.dlq.compliance.failed" "${KAFKA_PARTITIONS_DLQ}" "${KAFKA_RETENTION_DLQ_MS}"
 
-# ============================================================================
-# Verification
-# ============================================================================
-TOPIC_COUNT=$(kafka-topics.sh --bootstrap-server "${KAFKA_BROKER}" --list 2>/dev/null | grep -cE "^insurtech\.events\." || true)
-echo "[kafka-init-topics] Total topics insurtech.events.*: ${TOPIC_COUNT}"
+log_info "=== Initialisation 59 topics terminee ==="
 
-if [[ "${TOPIC_COUNT}" -lt 30 ]]; then
-  echo "[kafka-init-topics] FAIL: expected at least 30 topics, got ${TOPIC_COUNT}"
+TOPIC_COUNT=$(kafka-topics.sh --bootstrap-server "${KAFKA_BROKERS}" --list | grep -c "^insurtech\." || true)
+log_info "Total topics insurtech.* presents : ${TOPIC_COUNT}"
+
+if [ "${TOPIC_COUNT}" -lt 59 ]; then
+  log_error "Total topics ${TOPIC_COUNT} < 59 attendu, init incomplete"
   exit 1
 fi
 
-echo "[kafka-init-topics] DONE -- ${TOPIC_COUNT} topics created."
+log_info "=== Verification : ${TOPIC_COUNT} topics insurtech.* OK ==="
 exit 0

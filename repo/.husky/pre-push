@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Skalean InsurTech v2.2 -- pre-push hook
+# Reference: B-01 Tache 1.1.14
+# Note: runs from git root (parent of repo/)
+
+cd repo && pnpm typecheck

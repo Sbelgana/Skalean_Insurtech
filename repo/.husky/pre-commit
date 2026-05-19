@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Skalean InsurTech v2.2 -- pre-commit hook
+# Reference: B-01 Tache 1.1.14
+# decision-006 (no-emoji) + Conventional Commits
+# Note: runs from git root (parent of repo/)
+
+set -e
+
+# Step 1 : check-no-emoji (decision-006 ABSOLU)
+bash repo/infrastructure/scripts/check-no-emoji.sh
+
+# Step 2 : lint-staged (Biome auto-fix on staged files)
+cd repo && pnpm lint-staged

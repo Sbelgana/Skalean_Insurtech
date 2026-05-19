@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join, extname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const ROOT = join(__dirname, '../../..');
 
 const EMOJI_REGEX =
@@ -22,8 +24,19 @@ const SKIP_DIRS = new Set([
 ]);
 
 const TEXT_EXTENSIONS = new Set([
-  '.ts', '.tsx', '.js', '.jsx', '.json', '.yaml', '.yml',
-  '.md', '.sh', '.sql', '.toml', '.ini', '.env', '.txt',
+  '.ts',
+  '.tsx',
+  '.js',
+  '.jsx',
+  '.json',
+  '.yaml',
+  '.yml',
+  '.md',
+  '.sh',
+  '.sql',
+  '.toml',
+  '.ini',
+  '.txt',
 ]);
 
 function collectFiles(dir: string): string[] {

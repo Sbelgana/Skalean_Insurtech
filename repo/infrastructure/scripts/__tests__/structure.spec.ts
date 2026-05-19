@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const ROOT = join(__dirname, '../../..');
 
 function exists(rel: string): boolean {
@@ -94,16 +96,19 @@ describe('Monorepo structure', () => {
   });
 
   it('package.json has required fields', () => {
-    const pkg = JSON.parse(
-      require('node:fs').readFileSync(join(ROOT, 'package.json'), 'utf-8'),
-    );
-    expect(pkg.private).toBe(true);
-    expect(pkg.packageManager).toBe('pnpm@9.15.0');
-    expect(pkg.engines?.node).toBeDefined();
-    expect(pkg.scripts?.dev).toBeDefined();
-    expect(pkg.scripts?.build).toBeDefined();
-    expect(pkg.scripts?.typecheck).toBeDefined();
-    expect(pkg.scripts?.test).toBeDefined();
-    expect(pkg.scripts?.['docker:up']).toBeDefined();
+    const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf-8')) as Record<
+      string,
+      unknown
+    >;
+    expect(pkg['private']).toBe(true);
+    expect(pkg['packageManager']).toBe('pnpm@9.15.0');
+    const engines = pkg['engines'] as Record<string, string>;
+    expect(engines?.['node']).toBeDefined();
+    const scripts = pkg['scripts'] as Record<string, string>;
+    expect(scripts?.['dev']).toBeDefined();
+    expect(scripts?.['build']).toBeDefined();
+    expect(scripts?.['typecheck']).toBeDefined();
+    expect(scripts?.['test']).toBeDefined();
+    expect(scripts?.['docker:up']).toBeDefined();
   });
 });

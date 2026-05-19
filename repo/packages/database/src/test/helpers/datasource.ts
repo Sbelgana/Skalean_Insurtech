@@ -1,7 +1,9 @@
 import 'reflect-metadata';
 import { DataSource, type DataSourceOptions, type QueryRunner } from 'typeorm';
 import { systemEntities } from '../../entities/system/index.js';
+import { crmEntities } from '../../entities/crm/index.js';
 import { InitialSystem1735000000001 } from '../../migrations/1735000000001-InitialSystem.js';
+import { CRM1735000000002 } from '../../migrations/1735000000002-CRM.js';
 
 export interface TestDataSourceOptions {
   migrationsRun?: boolean;
@@ -14,8 +16,8 @@ const baseOptions = (): DataSourceOptions => ({
   username: process.env['TEST_DATABASE_USER'] ?? process.env['DATABASE_USER'] ?? 'skalean',
   password: process.env['TEST_DATABASE_PASSWORD'] ?? process.env['DATABASE_PASSWORD'] ?? 'skalean_dev_only',
   database: process.env['TEST_DATABASE_NAME'] ?? process.env['DATABASE_NAME'] ?? 'skalean_insurtech',
-  entities: [...systemEntities],
-  migrations: [InitialSystem1735000000001],
+  entities: [...systemEntities, ...crmEntities],
+  migrations: [InitialSystem1735000000001, CRM1735000000002],
   migrationsRun: false,
   synchronize: false,
   logging: process.env['TEST_DATABASE_LOG'] === 'true',

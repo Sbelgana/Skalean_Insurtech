@@ -1,0 +1,121 @@
+# Skalean InsurTech v2.2 -- .gitignore
+# Aucune emoji autorisee (decision-006).
+
+# ============================================================
+# Dependencies
+# ============================================================
+node_modules/
+.pnpm-store/
+
+# ============================================================
+# Environment variables (JAMAIS committer les secrets)
+# ============================================================
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.staging.local
+
+# ============================================================
+# Build outputs
+# ============================================================
+dist/
+build/
+out/
+.next/
+.next/cache/
+
+# ============================================================
+# TypeScript
+# ============================================================
+*.tsbuildinfo
+*.d.ts.map
+
+# ============================================================
+# Turborepo cache
+# ============================================================
+.turbo/
+.turbo
+
+# ============================================================
+# Test & coverage
+# ============================================================
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+playwright/.cache/
+blob-report/
+
+# ============================================================
+# Docker data volumes
+# ============================================================
+docker-data/
+.docker-data/
+infrastructure/docker/postgres/data/
+infrastructure/docker/redis/data/
+infrastructure/docker/kafka/data/
+infrastructure/docker/minio/data/
+
+# ============================================================
+# IDE & editor
+# ============================================================
+.idea/
+.vscode/_local/
+*.swp
+*.swo
+.project
+.classpath
+.settings/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# ============================================================
+# OS specific
+# ============================================================
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+*.bak
+
+# ============================================================
+# Logs
+# ============================================================
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# ============================================================
+# NX (not used but guard against accidental init)
+# ============================================================
+.nx/
+
+# ============================================================
+# Terraform state (Sprint 35)
+# ============================================================
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+
+# ============================================================
+# Misc
+# ============================================================
+*.pid
+*.seed
+*.pid.lock
+.yarn/
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions

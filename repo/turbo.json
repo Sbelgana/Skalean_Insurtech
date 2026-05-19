@@ -1,0 +1,143 @@
+{
+  "$schema": "https://turbo.build/schema.v2.json",
+  "ui": "tui",
+  "globalDependencies": [
+    "tsconfig.base.json",
+    "biome.json",
+    ".npmrc",
+    ".env",
+    ".env.local",
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml"
+  ],
+  "globalEnv": [
+    "NODE_ENV",
+    "CI",
+    "TURBO_TEAM",
+    "TURBO_TOKEN"
+  ],
+  "globalPassThroughEnv": [
+    "PATH",
+    "HOME",
+    "USER",
+    "SHELL",
+    "TERM",
+    "TZ",
+    "LC_ALL",
+    "LANG"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "src/**/*.{ts,tsx,js,jsx,mjs,cjs}",
+        "package.json",
+        "tsconfig.json",
+        "next.config.{js,mjs,ts}",
+        "vite.config.{js,mjs,ts}",
+        "tailwind.config.{js,mjs,ts}"
+      ],
+      "outputs": [
+        "dist/**",
+        "build/**",
+        ".next/**",
+        "!.next/cache/**"
+      ],
+      "env": ["NODE_ENV", "NEXT_PUBLIC_*"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true,
+      "dependsOn": ["^build"]
+    },
+    "lint": {
+      "inputs": [
+        "src/**/*.{ts,tsx,js,jsx,mjs,cjs}",
+        "biome.json",
+        "package.json"
+      ],
+      "outputs": [],
+      "outputLogs": "new-only"
+    },
+    "lint:fix": {
+      "cache": false,
+      "inputs": [
+        "src/**/*.{ts,tsx,js,jsx,mjs,cjs}",
+        "biome.json"
+      ]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "src/**/*.{ts,tsx}",
+        "tsconfig.json",
+        "tsconfig.base.json"
+      ],
+      "outputs": ["**/*.tsbuildinfo"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "src/**/*.{ts,tsx,js,jsx}",
+        "test/**/*.{ts,tsx,js,jsx}",
+        "vitest.config.{js,mjs,ts}",
+        "package.json"
+      ],
+      "outputs": ["coverage/**"],
+      "env": [
+        "NODE_ENV",
+        "DATABASE_URL",
+        "REDIS_URL",
+        "KAFKA_BROKERS",
+        "S3_ENDPOINT",
+        "S3_ACCESS_KEY_ID",
+        "S3_SECRET_ACCESS_KEY",
+        "JWT_SECRET",
+        "JWT_REFRESH_SECRET",
+        "MFA_SECRET_ENCRYPTION_KEY"
+      ]
+    },
+    "test:watch": {
+      "cache": false,
+      "persistent": true
+    },
+    "test:e2e": {
+      "dependsOn": ["build"],
+      "inputs": [
+        "e2e/**/*.{ts,tsx}",
+        "playwright.config.{js,mjs,ts}",
+        "package.json"
+      ],
+      "outputs": [
+        "playwright-report/**",
+        "test-results/**"
+      ],
+      "env": [
+        "NODE_ENV",
+        "PLAYWRIGHT_BASE_URL",
+        "PLAYWRIGHT_HEADLESS"
+      ]
+    },
+    "test:integration": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "src/**/*.{ts,tsx}",
+        "test/integration/**/*.{ts,tsx}"
+      ],
+      "outputs": [],
+      "env": [
+        "DATABASE_URL",
+        "REDIS_URL",
+        "KAFKA_BROKERS"
+      ]
+    },
+    "clean": {
+      "cache": false
+    }
+  },
+  "remoteCache": {
+    "signature": true,
+    "enabled": false
+  }
+}

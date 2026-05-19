@@ -1,0 +1,50 @@
+# pnpm Workspaces declaration -- Skalean InsurTech v2.2
+# Reference: decision-001 (monorepo structure) + 10-arborescence-projet.md
+# Toute modification doit etre suivie de pnpm install --frozen-lockfile pour valider la coherence du graph.
+# Aucune emoji autorisee dans ce fichier (decision-006).
+
+packages:
+  # Applications deployables (9 apps v2.2)
+  - 'apps/api'                          # Port 4000 -- NestJS 10.4 + Fastify backend unifie -- Sprint 3
+  - 'apps/web-insurtech-admin'          # Port 3000 -- Admin Skalean Platform + MFA obligatoire -- Sprint 4 + 26
+  - 'apps/web-broker'                   # Port 3001 -- SaaS B2B courtiers (Wafa, Atlanta, Saham, RMA) -- Sprint 16
+  - 'apps/web-garage'                   # Port 3002 -- SaaS B2B garages chefs ateliers -- Sprint 22
+  - 'apps/web-garage-mobile'            # Port 3003 -- PWA technicien atelier + WebAuthn biometric -- Sprint 23
+  - 'apps/web-customer-portal'          # Port 3004 -- Prospects publics (SEO + ISR) -- Sprint 17
+  - 'apps/web-assure-portal'            # Port 3005 -- Assures connectes desktop OTP -- Sprint 18
+  - 'apps/web-assure-mobile'            # Port 3006 -- Assures PWA mobile + push -- Sprint 18
+  - 'apps/mcp-server'                   # Port 4001 -- MCP server tools metier (NEW v2.2) -- Sprint 30
+
+  # Packages metier (15 packages)
+  - 'packages/auth'                     # Argon2id + JWT (jose) + MFA + WebAuthn + SSO -- Sprint 5
+  - 'packages/database'                 # TypeORM 0.3 + entities + migrations + RLS subscribers -- Sprint 2
+  - 'packages/crm'                      # Contacts + companies + deals + pipelines + interactions -- Sprint 8
+  - 'packages/booking'                  # Rooms + appointments + calendar Google/Outlook -- Sprint 8
+  - 'packages/comm'                     # WhatsApp + Email + templates 4 locales fr/ar-MA/ar/en -- Sprint 9
+  - 'packages/docs'                     # S3 + PDF generator + access logs + KYC -- Sprint 10
+  - 'packages/signature'                # Barid eSign + ANRT TSA RFC 3161 (loi 43-20) -- Sprint 10
+  - 'packages/pay'                      # 6 passerelles MA (CMI, YouCan, PayZone, Inwi, Orange, M-Wallet BAM) -- Sprint 11
+  - 'packages/books'                    # Plan CGNC + factures DGI + SAFT-MA + 5 taux TVA MA -- Sprint 12
+  - 'packages/compliance'               # ACAPS + AMC + CNDP + audit reports -- Sprint 12
+  - 'packages/analytics'                # ClickHouse OLAP + ETL + dashboards Grafana -- Sprint 13
+  - 'packages/insure'                   # Vertical Broker (lifecycle police + connecteurs Sprint 32) -- Sprint 14-15
+  - 'packages/repair'                   # Vertical Garage (sinistres + reparations + IA Sprint 20+29) -- Sprint 19-21
+  - 'packages/stock'                    # Stock pieces + FIFO + alertes seuil -- Sprint 13
+  - 'packages/hr'                       # Employees + paie CNSS + AMO + IR -- Sprint 13
+
+  # Packages AI integration v2.2 (NEW)
+  - 'packages/sky'                      # Agent Sky orchestrator + system prompts + MCP client -- Sprint 31
+  - 'packages/sky-ui'                   # Chat widget shared 3 apps + streaming + voice-to-text -- Sprint 31
+
+  # Packages shared (8 packages)
+  - 'packages/assure-shared'            # Components shared web-assure-portal + mobile -- Sprint 18
+  - 'packages/shared-types'             # Types globaux (Locale, Money, UUID branded) -- Sprint 1.1.13
+  - 'packages/shared-config'            # Env loader Zod runtime validation -- Sprint 1.1.8
+  - 'packages/shared-utils'             # Pino logger + Redis + S3 + helpers -- Sprint 1.1.5/7/12
+  - 'packages/shared-events'            # Schemas Zod + publishers Kafka topics -- Sprint 2
+  - 'packages/shared-ui'                # shadcn/ui + theme Sofidemy + layouts -- Sprint 4
+  - 'packages/shared-pwa'               # Service worker Serwist + offline + push -- Sprint 18/23
+  - 'packages/shared-maps'              # Wrapper Mapbox GL JS + geolocation hooks -- Sprint 17
+
+# Verification : 9 apps + 25 packages = 34 entrees totales
+# Commande : ls packages/ | wc -l doit retourner 25

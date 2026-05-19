@@ -1,0 +1,71 @@
+{
+  "name": "skalean-insurtech",
+  "version": "2.2.0",
+  "description": "Plateforme InsurTech Marocaine v2.2 -- 9 apps + 23 packages monorepo pnpm + Turborepo. Multi-tenant 3 niveaux (Platform / Customer Tenant / Assure). Conformite ACAPS + DGI + CNDP + AMC + Loi 43-20 signature electronique. Atlas Cloud Services Benguerir (souverainete Maroc).",
+  "private": true,
+  "license": "PROPRIETARY",
+  "author": "Skalean SARL <contact@skalean.ma>",
+  "homepage": "https://skalean-insurtech.ma",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/skalean/insurtech.git"
+  },
+  "engines": {
+    "node": ">=22.20.0",
+    "pnpm": ">=9.15.0 <10.0.0"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "volta": {
+    "node": "22.22.1",
+    "pnpm": "9.15.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev --parallel --concurrency=15",
+    "build": "turbo run build",
+    "build:affected": "turbo run build --filter=...[origin/main]",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint:fix",
+    "format": "biome format --write .",
+    "format:check": "biome format --check .",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:watch": "turbo run test -- --watch",
+    "test:coverage": "turbo run test -- --coverage",
+    "test:e2e": "turbo run test:e2e",
+    "test:integration": "turbo run test:integration",
+    "test:structure": "vitest run infrastructure/scripts/__tests__/structure.spec.ts",
+    "docker:up": "docker compose -f infrastructure/docker/docker-compose.dev.yaml up -d",
+    "docker:down": "docker compose -f infrastructure/docker/docker-compose.dev.yaml down",
+    "docker:reset": "docker compose -f infrastructure/docker/docker-compose.dev.yaml down -v && docker compose -f infrastructure/docker/docker-compose.dev.yaml up -d",
+    "docker:logs": "docker compose -f infrastructure/docker/docker-compose.dev.yaml logs -f --tail=100",
+    "docker:ps": "docker compose -f infrastructure/docker/docker-compose.dev.yaml ps",
+    "bootstrap": "pnpm install --frozen-lockfile && pnpm typecheck && pnpm lint && echo Bootstrap completed",
+    "verify-env": "tsx infrastructure/scripts/verify-env.ts",
+    "check-no-emoji": "bash infrastructure/scripts/check-no-emoji.sh",
+    "clean": "turbo run clean && rimraf node_modules .turbo",
+    "clean:all": "pnpm clean && find . -name node_modules -type d -prune -exec rm -rf {} + 2>/dev/null; find . -name .turbo -type d -prune -exec rm -rf {} + 2>/dev/null; find . -name dist -type d -prune -exec rm -rf {} + 2>/dev/null; true",
+    "prepare": "husky",
+    "preinstall": "npx -y only-allow pnpm",
+    "postinstall": "echo Run pnpm docker:up to start dev services"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.5",
+    "husky": "9.1.7",
+    "rimraf": "6.0.1",
+    "tsx": "4.19.2",
+    "turbo": "2.4.0",
+    "typescript": "5.7.3",
+    "vitest": "2.1.8"
+  },
+  "pnpm": {
+    "overrides": {},
+    "peerDependencyRules": {
+      "allowedVersions": {},
+      "ignoreMissing": []
+    }
+  }
+}

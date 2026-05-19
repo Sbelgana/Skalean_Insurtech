@@ -13,6 +13,10 @@
     "./kafka-publisher": {
       "import": "./dist/kafka-publisher/index.js",
       "types": "./dist/kafka-publisher/index.d.ts"
+    },
+    "./kafka-consumer": {
+      "import": "./dist/kafka-consumer/index.js",
+      "types": "./dist/kafka-consumer/index.d.ts"
     }
   },
   "scripts": {

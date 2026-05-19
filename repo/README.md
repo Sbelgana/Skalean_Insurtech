@@ -1,178 +1,51 @@
-# repo/ -- Code Source skalean-insurtech (a construire Sprint 1)
+# Skalean InsurTech v2.2
 
-**Version** : v2.2
-**Date** : Mai 2026
-**Statut** : VIDE -- a construire Sprint 1 par Cowork
-**AUCUNE EMOJI AUTORISEE**
+Plateforme InsurTech Marocaine -- 9 apps + 23 packages monorepo (pnpm + Turborepo).
 
----
+## Stack technique
 
-## Vue d'ensemble
+- **Runtime** : Node.js 22.20 LTS, TypeScript 5.7 strict
+- **Backend** : NestJS 10.4 + Fastify, TypeORM 0.3, Postgres 16, Redis 7.4, Kafka 3.7 KRaft
+- **Frontend** : Next.js 15, React 18, Tailwind CSS, shadcn/ui
+- **Infrastructure** : Docker Compose (dev), Atlas Cloud Services Benguerir (prod)
+- **Tests** : Vitest 2.1 + Playwright 1.49
+- **Tooling** : pnpm 9.15 + Turborepo 2.4 + Biome 1.9 + Husky 9
 
-Ce dossier `repo/` est le **CODE SOURCE du produit** Skalean InsurTech construit par Cowork au cours des 35 sprints.
-
-**Tres important** :
-- `00-pilotage/` est la zone de pilotage (meta-prompts, decisions, audits) -- **non versionne** dans le Git du produit
-- `repo/` est le code source -- **versionne** dans Git du produit (depot separe)
-
-Cowork ne modifie JAMAIS `00-pilotage/`. Il LIT les meta-prompts B-XX et ECRIT dans `repo/`.
-
----
-
-## Structure cible (apres execution complete des 35 sprints)
-
-```
-repo/                                                 # 9 apps + 21 packages + infrastructure + docs
-│
-├── apps/                                             # 9 apps deployables v2.2
-│   ├── api/                                          # NestJS backend (port 4000)
-│   ├── web-insurtech-admin/                          # port 3000 -- Admin Skalean
-│   ├── web-broker/                                   # port 3001 -- Courtiers
-│   ├── web-garage/                                   # port 3002 -- Chefs garages
-│   ├── web-garage-mobile/                            # port 3003 -- PWA technicien + WebAuthn
-│   ├── web-customer-portal/                          # port 3004 -- Prospects SEO
-│   ├── web-assure-portal/                            # port 3005 -- Assures desktop
-│   ├── web-assure-mobile/                            # port 3006 -- PWA assure mobile
-│   └── mcp-server/                                   # port 4001 -- MCP tools metier (NEW v2.2)
-│
-├── packages/                                         # ~21 packages partages
-│   │  Modules metier
-│   ├── auth/                                         # Argon2 + JWT + MFA + WebAuthn
-│   ├── database/                                     # TypeORM 0.3 + RLS multi-tenant
-│   ├── crm/                                          # Contacts + companies + deals
-│   ├── booking/                                      # Rooms + appointments + calendar
-│   ├── comm/                                         # WhatsApp + Email + 4 locales
-│   ├── docs/                                         # S3 + PDF + access logs
-│   ├── signature/                                    # Barid eSign + ANRT TSA
-│   ├── pay/                                          # 6 passerelles MA
-│   ├── books/                                        # CGNC + factures DGI
-│   ├── compliance/                                   # ACAPS + AMC + CNDP
-│   ├── analytics/                                    # ClickHouse + dashboards
-│   ├── insure/                                       # Vertical Broker
-│   ├── repair/                                       # Vertical Garage
-│   ├── stock/                                        # Stock pieces
-│   ├── hr/                                           # Employees + paie
-│   │  AI integration v2.2
-│   ├── sky/                                          # Agent Sky orchestrator
-│   ├── sky-ui/                                       # Chat widget shared
-│   │  Shared
-│   ├── shared-types/
-│   ├── shared-config/
-│   ├── shared-utils/
-│   ├── shared-ui/                                    # shadcn/ui + theme Sofidemy
-│   ├── shared-pwa/                                   # Service worker + offline
-│   └── shared-maps/                                  # Mapbox GL JS wrapper
-│
-├── infrastructure/
-│   ├── docker/                                       # docker-compose + dockerfiles
-│   ├── scripts/                                      # bootstrap.sh + seeds
-│   ├── observability/                                # Datadog + Sentry (Sprint 34)
-│   ├── cloudflare/                                   # CDN config (Sprint 34)
-│   └── terraform/                                    # Atlas Cloud Services (Sprint 35)
-│
-├── docs/
-│   ├── architecture/                                 # ADR-001 a ADR-010
-│   ├── api/                                          # Swagger generated
-│   ├── runbooks/                                     # Operations (Sprint 33+)
-│   ├── security/                                     # Pentest reports (Sprint 33)
-│   └── pilote/                                       # Pilote Marrakech (Sprint 35)
-│
-├── load-tests/                                       # K6 + chaos (Sprint 34)
-│
-├── .github/workflows/                                # CI/CD + security
-├── .husky/                                           # Git hooks
-├── .vscode/
-│
-├── package.json                                      # Racine monorepo pnpm
-├── pnpm-workspace.yaml
-├── turbo.json
-├── tsconfig.base.json
-├── biome.json
-├── commitlint.config.cjs
-├── .lintstagedrc.cjs
-├── .npmrc
-├── .nvmrc                                            # 22.11.0
-├── .gitignore
-├── .env.example
-├── .editorconfig
-├── README.md
-├── CLAUDE.md                                         # Guide AI assistants (incl. Cowork)
-├── CONTRIBUTING.md
-└── LICENSE                                           # Proprietary
-```
-
----
-
-## Demarrage Sprint 1 (premier peuplement repo/)
-
-Sprint 1 (Bootstrap Infrastructure) cree :
-- Structure monorepo pnpm + Turborepo
-- 9 apps stubs vides (apps/)
-- 21 packages stubs vides (packages/)
-- Docker Compose dev (7 services)
-- TypeScript strict + Biome
-- GitHub Actions CI
-- Vitest + Playwright frameworks
-- Pino logger + OpenTelemetry
-- Husky + commitlint + check-no-emoji
-- 6 ADR initiaux + README + CLAUDE.md + CONTRIBUTING.md
-
-Voir `../00-pilotage/meta-prompts/B-01-sprint-01-bootstrap.md` pour specifications detaillees.
-
----
-
-## Initialisation Git
-
-Au demarrage Sprint 1 :
+## Quick start (5 commandes)
 
 ```bash
-cd repo/
-git init
-git remote add origin git@github.com:skalean/skalean-insurtech.git
-
-# Ne PAS versionner 00-pilotage/ (pas de symbolic link, pas d'inclusion)
-echo "/00-pilotage/" >> .gitignore
-
-# Initial commit Sprint 1.1.1
-git add .
-git commit -m "feat(sprint-01): initialisation monorepo pnpm + turborepo + structure
-
-Task: 1.1.1
-Sprint: 1 (Phase 1 / Sprint 1)
-Phase: 1 -- Bootstrap Infrastructure"
+git clone git@github.com:skalean-insurtech/insurtech.git
+cd insurtech/repo
+pnpm install --frozen-lockfile     # 60-90s
+pnpm docker:up                     # demarre 7 services en background
+pnpm dev                           # lance toutes les apps en parallele
 ```
 
----
+URLs accessibles :
+- API : http://localhost:4000
+- Web Broker : http://localhost:3001
+- Web Garage : http://localhost:3002
+- Customer Portal : http://localhost:3004
+- Mailhog UI : http://localhost:8025
+- Kafka UI : http://localhost:8080
+- MinIO console : http://localhost:9001
 
-## Frontiere stricte 00-pilotage/ <-> repo/
+## Documentation
 
-**Ce que Cowork peut faire** :
-- Lire `../00-pilotage/meta-prompts/B-XX-*.md` (meta-prompts sprint)
-- Lire `../00-pilotage/orchestrateurs/C-XX-*.md` (orchestration sprint)
-- Lire `../00-pilotage/verifications/V-XX-*.md` (verification sprint)
-- Lire `../00-pilotage/documentation/*.md` (documentation reference)
-- Lire `../00-pilotage/decisions/*.md` (decisions strategiques)
-- **Ecrire dans `repo/`** (code source produit)
+- Architecture : `docs/architecture/`
+- ADRs : `docs/architecture/ADR-*.md`
+- API : `docs/api/`
+- Conventions : `CONTRIBUTING.md`
+- IA assistantes : `CLAUDE.md`
 
-**Ce que Cowork ne doit JAMAIS faire** :
-- Modifier `00-pilotage/` (zone pilotage protege)
-- Inclure `00-pilotage/` dans `repo/` (separation stricte)
+## Conformite
 
----
+Programme conforme :
+- Loi 09-08 CNDP (data residency Maroc)
+- Loi 17-99 ACAPS (assurances)
+- Loi 43-20 (signature electronique)
+- Decret 2-09-165 (TZ Africa/Casablanca)
 
-## Statut actuel
+## Licence
 
-VIDE -- pret pour Sprint 1.
-
-Cowork commande au demarrage :
-
-```bash
-claude-code \
-  --orchestrator ../00-pilotage/orchestrateurs/C-01-sprint-01-bootstrap.md \
-  --reference-prompt ../00-pilotage/meta-prompts/B-01-sprint-01-bootstrap.md \
-  --verification ../00-pilotage/verifications/V-01-sprint-01-bootstrap.md
-```
-
----
-
-**Fin du README repo/ v2.2 -- a construire Sprint 1.**
+Proprietary -- Skalean SARL. Voir `LICENSE`.

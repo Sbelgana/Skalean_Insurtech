@@ -19,7 +19,7 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "lint": "biome check --no-errors-on-unmatched ./src",
-    "test": "vitest run",
+    "test": "vitest run --config vitest.config.ts --passWithNoTests",
     "test:watch": "vitest",
     "clean": "rimraf dist"
   },

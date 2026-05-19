@@ -22,8 +22,10 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run --config vitest.config.ts --passWithNoTests",
     "test:watch": "vitest watch",
+    "test:integration": "vitest run --config vitest.config.integration.ts",
+    "test:integration:coverage": "vitest run --config vitest.config.integration.ts --coverage",
     "lint": "biome check --no-errors-on-unmatched src",
     "clean": "rm -rf dist .turbo"
   },
@@ -40,6 +42,7 @@
   "devDependencies": {
     "@nestjs/testing": "10.4.15",
     "@types/node": "22.10.5",
+    "ioredis": "5.4.2",
     "typescript": "5.7.3",
     "vitest": "2.1.8"
   }

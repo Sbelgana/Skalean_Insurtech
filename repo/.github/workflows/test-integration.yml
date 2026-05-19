@@ -1,0 +1,105 @@
+name: test-integration
+
+# Runs on PRs touching database/events packages and on main push.
+# Uses GitHub Actions services (Postgres + Redis) + docker for Kafka.
+# Aucune emoji (decision-006).
+
+on:
+  pull_request:
+    paths:
+      - 'packages/database/**'
+      - 'packages/shared-events/**'
+      - 'apps/platform/**'
+      - 'infra/docker-compose.test.yaml'
+      - '.github/workflows/test-integration.yml'
+  push:
+    branches: [main]
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: skalean_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6380:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 3s
+          --health-timeout 2s
+          --health-retries 10
+    env:
+      DATABASE_TEST_URL: postgres://test:test@localhost:5433/skalean_test
+      DATABASE_URL: postgres://test:test@localhost:5433/skalean_test
+      KAFKA_TEST_BROKERS: localhost:9093
+      REDIS_TEST_URL: redis://localhost:6380
+      OTEL_TRACES_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
+      OTEL_METRICS_EXPORTER: none
+      NODE_ENV: test
+      SKALEAN_CI: 'true'
+      TEST_LOG_LEVEL: error
+      FAKER_SEED: '42'
+      SEED_RANDOM_SEED: '42'
+      SEED_PASSWORD_DEFAULT: Demo!2026Skalean
+      SEED_TIMEZONE: Africa/Casablanca
+      DATABASE_HOST: localhost
+      DATABASE_PORT: '5433'
+      DATABASE_USER: test
+      DATABASE_PASSWORD: test
+      DATABASE_NAME: skalean_test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Start Kafka via docker compose
+        run: |
+          docker compose -f infra/docker-compose.test.yaml up -d kafka-test
+          docker compose -f infra/docker-compose.test.yaml wait kafka-test || true
+          sleep 15
+
+      - name: Run integration tests
+        run: pnpm test:integration
+
+      - name: Run integration tests with coverage
+        run: pnpm test:integration:coverage
+        continue-on-error: true
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: >-
+            ./packages/database/coverage/lcov.info,
+            ./packages/shared-events/coverage/lcov.info
+          fail_ci_if_error: false
+
+      - name: Stop Kafka
+        if: always()
+        run: docker compose -f infra/docker-compose.test.yaml down kafka-test

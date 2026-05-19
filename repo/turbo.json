@@ -120,16 +120,35 @@
       ]
     },
     "test:integration": {
+      "cache": false,
       "dependsOn": ["^build"],
       "inputs": [
         "src/**/*.{ts,tsx}",
-        "test/integration/**/*.{ts,tsx}"
+        "test/**/*.{ts,tsx}",
+        "vitest.config.integration.ts"
       ],
-      "outputs": [],
+      "outputs": ["coverage/**"],
       "env": [
+        "NODE_ENV",
+        "DATABASE_TEST_URL",
         "DATABASE_URL",
+        "DATABASE_HOST",
+        "DATABASE_PORT",
+        "DATABASE_USER",
+        "DATABASE_PASSWORD",
+        "DATABASE_NAME",
+        "KAFKA_TEST_BROKERS",
+        "KAFKA_BROKERS",
+        "REDIS_TEST_URL",
         "REDIS_URL",
-        "KAFKA_BROKERS"
+        "OTEL_TRACES_EXPORTER",
+        "OTEL_LOGS_EXPORTER",
+        "OTEL_METRICS_EXPORTER",
+        "SKIP_INTEGRATION",
+        "SKALEAN_CI",
+        "CI",
+        "FAKER_SEED",
+        "SEED_RANDOM_SEED"
       ]
     },
     "clean": {

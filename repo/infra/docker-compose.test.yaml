@@ -1,0 +1,69 @@
+version: '3.9'
+
+# Test containers -- decales sur ports 5433, 9093, 6380
+# pour eviter collisions avec les conteneurs dev (5432, 9092, 6379).
+# Usage : docker compose -f infra/docker-compose.test.yaml up -d --wait
+# Aucune emoji (decision-006).
+
+services:
+  postgres-test:
+    image: postgres:16-alpine
+    container_name: skalean-postgres-test
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: skalean_test
+    ports:
+      - '5433:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U test -d skalean_test']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    tmpfs:
+      - /var/lib/postgresql/data
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_stat_statements
+      - -c
+      - max_connections=200
+      - -c
+      - fsync=off
+      - -c
+      - synchronous_commit=off
+      - -c
+      - full_page_writes=off
+
+  kafka-test:
+    image: bitnami/kafka:3.7
+    container_name: skalean-kafka-test
+    ports:
+      - '9093:9093'
+    environment:
+      KAFKA_CFG_NODE_ID: 1
+      KAFKA_CFG_PROCESS_ROLES: controller,broker
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9093,CONTROLLER://:9094
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9093
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka-test:9094
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      ALLOW_PLAINTEXT_LISTENER: 'yes'
+      KAFKA_KRAFT_CLUSTER_ID: skalean-test-cluster
+    healthcheck:
+      test: ['CMD-SHELL', 'kafka-topics.sh --bootstrap-server localhost:9093 --list || exit 1']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  redis-test:
+    image: redis:7-alpine
+    container_name: skalean-redis-test
+    ports:
+      - '6380:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 3s
+      timeout: 2s
+      retries: 10

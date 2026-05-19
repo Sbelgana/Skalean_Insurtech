@@ -305,6 +305,9 @@ importers:
       '@insurtech/shared-config':
         specifier: workspace:*
         version: link:../shared-config
+      '@insurtech/shared-utils':
+        specifier: workspace:*
+        version: link:../shared-utils
       pg:
         specifier: 8.13.1
         version: 8.13.1

@@ -3,16 +3,20 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./src/index.ts"
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     },
     "./redis": {
-      "import": "./src/redis/index.ts"
+      "import": "./dist/redis/index.js",
+      "types": "./dist/redis/index.d.ts"
     }
   },
   "scripts": {
-    "build": "tsc --noEmit",
+    "build": "tsc",
     "typecheck": "tsc --noEmit",
     "lint": "biome check --no-errors-on-unmatched ./src",
     "test": "vitest run",

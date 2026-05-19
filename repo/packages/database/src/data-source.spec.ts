@@ -2,6 +2,7 @@ import { vi, describe, it, expect, beforeAll, afterAll } from 'vitest';
 
 // Set required env vars before data-source module loads (hoisted execution)
 vi.hoisted(() => {
+  process.env['SKIP_INTEGRATION'] ??= 'true';
   process.env['DATABASE_URL'] ??= 'postgresql://skalean:skalean_dev_only@localhost:5432/skalean_insurtech';
   process.env['REDIS_URL'] ??= 'redis://localhost:6379';
   process.env['KAFKA_BROKERS'] ??= 'localhost:9094';

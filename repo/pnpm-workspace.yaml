@@ -4,8 +4,9 @@
 # Aucune emoji autorisee dans ce fichier (decision-006).
 
 packages:
-  # Applications deployables (9 apps v2.2)
+  # Applications deployables (9 apps v2.2 + 1 scripts app)
   - 'apps/api'                          # Port 4000 -- NestJS 10.4 + Fastify backend unifie -- Sprint 3
+  - 'apps/platform'                     # Scripts plateforme : seeds dev exhaustifs MA -- Sprint 2
   - 'apps/web-insurtech-admin'          # Port 3000 -- Admin Skalean Platform + MFA obligatoire -- Sprint 4 + 26
   - 'apps/web-broker'                   # Port 3001 -- SaaS B2B courtiers (Wafa, Atlanta, Saham, RMA) -- Sprint 16
   - 'apps/web-garage'                   # Port 3002 -- SaaS B2B garages chefs ateliers -- Sprint 22

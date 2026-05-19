@@ -1,0 +1,227 @@
+[
+  {
+    "assureur_acaps_code": "ASR-WAF-001",
+    "code": "WAF-AUTO-TR",
+    "name": "Wafa Auto Tous Risques",
+    "type": "auto_tr",
+    "premium_min_mad": 4500,
+    "premium_max_mad": 18000,
+    "garanties": ["RC obligatoire", "Dommages collision", "Vol", "Incendie", "Bris de glace", "Defense recours", "Assistance 24h", "Conducteur"]
+  },
+  {
+    "assureur_acaps_code": "ASR-WAF-001",
+    "code": "WAF-AUTO-TP",
+    "name": "Wafa Auto Tiers Plus",
+    "type": "auto_tp",
+    "premium_min_mad": 1800,
+    "premium_max_mad": 5500,
+    "garanties": ["RC obligatoire", "Vol", "Incendie", "Bris de glace"]
+  },
+  {
+    "assureur_acaps_code": "ASR-WAF-001",
+    "code": "WAF-HAB-STD",
+    "name": "Wafa Habitation Standard",
+    "type": "habitation",
+    "premium_min_mad": 800,
+    "premium_max_mad": 4500,
+    "garanties": ["Incendie", "Degats des eaux", "Vol", "RC vie privee", "Bris de glace"]
+  },
+  {
+    "assureur_acaps_code": "ASR-WAF-001",
+    "code": "WAF-VIE-EPG",
+    "name": "Wafa Epargne Vie",
+    "type": "vie",
+    "premium_min_mad": 3000,
+    "premium_max_mad": 50000,
+    "garanties": ["Capital deces", "Capital invalidite", "Epargne retraite"]
+  },
+  {
+    "assureur_acaps_code": "ASR-WAF-001",
+    "code": "WAF-SAN-FAM",
+    "name": "Wafa Sante Famille",
+    "type": "sante",
+    "premium_min_mad": 2500,
+    "premium_max_mad": 25000,
+    "garanties": ["Hospitalisation", "Consultations", "Medicaments", "Optique", "Dentaire", "Maternite"]
+  },
+  {
+    "assureur_acaps_code": "ASR-ATS-002",
+    "code": "ATS-AUTO-TR",
+    "name": "Atlanta Sanad Auto Premium",
+    "type": "auto_tr",
+    "premium_min_mad": 5000,
+    "premium_max_mad": 20000,
+    "garanties": ["RC obligatoire", "Tous risques", "Vol", "Incendie", "Bris de glace", "Vehicule de remplacement"]
+  },
+  {
+    "assureur_acaps_code": "ASR-ATS-002",
+    "code": "ATS-AUTO-TP",
+    "name": "Atlanta Sanad Auto Eco",
+    "type": "auto_tp",
+    "premium_min_mad": 1900,
+    "premium_max_mad": 5800,
+    "garanties": ["RC obligatoire", "Vol", "Incendie"]
+  },
+  {
+    "assureur_acaps_code": "ASR-ATS-002",
+    "code": "ATS-HAB-PLUS",
+    "name": "Atlanta Sanad Habitation Plus",
+    "type": "habitation",
+    "premium_min_mad": 950,
+    "premium_max_mad": 5500,
+    "garanties": ["Incendie", "Degats des eaux", "Vol", "RC vie privee", "Catastrophes naturelles"]
+  },
+  {
+    "assureur_acaps_code": "ASR-ATS-002",
+    "code": "ATS-VIE-CAP",
+    "name": "Atlanta Sanad Capital Vie",
+    "type": "vie",
+    "premium_min_mad": 2800,
+    "premium_max_mad": 45000,
+    "garanties": ["Capital deces", "Rente conjoint", "Education enfants"]
+  },
+  {
+    "assureur_acaps_code": "ASR-ATS-002",
+    "code": "ATS-SAN-IND",
+    "name": "Atlanta Sanad Sante Individuelle",
+    "type": "sante",
+    "premium_min_mad": 1800,
+    "premium_max_mad": 18000,
+    "garanties": ["Hospitalisation", "Consultations", "Medicaments", "Optique"]
+  },
+  {
+    "assureur_acaps_code": "ASR-SAH-003",
+    "code": "SAH-AUTO-TR",
+    "name": "Saham Auto Securite Plus",
+    "type": "auto_tr",
+    "premium_min_mad": 4800,
+    "premium_max_mad": 19000,
+    "garanties": ["RC obligatoire", "Tous risques", "Vol", "Incendie", "Bris de glace", "Assistance"]
+  },
+  {
+    "assureur_acaps_code": "ASR-SAH-003",
+    "code": "SAH-AUTO-TP",
+    "name": "Saham Auto Tiers Confort",
+    "type": "auto_tp",
+    "premium_min_mad": 1750,
+    "premium_max_mad": 5400,
+    "garanties": ["RC obligatoire", "Vol", "Incendie", "Bris de glace"]
+  },
+  {
+    "assureur_acaps_code": "ASR-SAH-003",
+    "code": "SAH-HAB-CONF",
+    "name": "Saham Habitation Confort",
+    "type": "habitation",
+    "premium_min_mad": 850,
+    "premium_max_mad": 4800,
+    "garanties": ["Incendie", "Degats des eaux", "Vol", "RC vie privee"]
+  },
+  {
+    "assureur_acaps_code": "ASR-SAH-003",
+    "code": "SAH-VIE-EPG",
+    "name": "Saham Epargne Plus",
+    "type": "vie",
+    "premium_min_mad": 3200,
+    "premium_max_mad": 48000,
+    "garanties": ["Capital deces", "Epargne retraite", "Rente"]
+  },
+  {
+    "assureur_acaps_code": "ASR-SAH-003",
+    "code": "SAH-SAN-FAM",
+    "name": "Saham Sante Famille Plus",
+    "type": "sante",
+    "premium_min_mad": 2400,
+    "premium_max_mad": 24000,
+    "garanties": ["Hospitalisation", "Consultations", "Medicaments", "Optique", "Dentaire"]
+  },
+  {
+    "assureur_acaps_code": "ASR-RMA-004",
+    "code": "RMA-AUTO-TR",
+    "name": "RMA Auto Excellence",
+    "type": "auto_tr",
+    "premium_min_mad": 5200,
+    "premium_max_mad": 21000,
+    "garanties": ["RC obligatoire", "Tous risques", "Vol", "Incendie", "Bris de glace", "Vehicule remplacement", "Assistance 24h"]
+  },
+  {
+    "assureur_acaps_code": "ASR-RMA-004",
+    "code": "RMA-AUTO-TP",
+    "name": "RMA Auto Tiers",
+    "type": "auto_tp",
+    "premium_min_mad": 1850,
+    "premium_max_mad": 5600,
+    "garanties": ["RC obligatoire", "Vol", "Incendie"]
+  },
+  {
+    "assureur_acaps_code": "ASR-RMA-004",
+    "code": "RMA-HAB-PRE",
+    "name": "RMA Habitation Premium",
+    "type": "habitation",
+    "premium_min_mad": 900,
+    "premium_max_mad": 5200,
+    "garanties": ["Incendie", "Degats des eaux", "Vol", "RC vie privee", "Catastrophes naturelles", "Bris de glace"]
+  },
+  {
+    "assureur_acaps_code": "ASR-RMA-004",
+    "code": "RMA-VIE-CAP",
+    "name": "RMA Capital Famille",
+    "type": "vie",
+    "premium_min_mad": 3100,
+    "premium_max_mad": 47000,
+    "garanties": ["Capital deces", "Capital invalidite", "Education enfants"]
+  },
+  {
+    "assureur_acaps_code": "ASR-RMA-004",
+    "code": "RMA-SAN-PRE",
+    "name": "RMA Sante Premium",
+    "type": "sante",
+    "premium_min_mad": 2600,
+    "premium_max_mad": 26000,
+    "garanties": ["Hospitalisation", "Consultations", "Medicaments", "Optique", "Dentaire", "Maternite", "Specialistes"]
+  },
+  {
+    "assureur_acaps_code": "ASR-AXA-005",
+    "code": "AXA-AUTO-TR",
+    "name": "AXA Auto Confort",
+    "type": "auto_tr",
+    "premium_min_mad": 5100,
+    "premium_max_mad": 20500,
+    "garanties": ["RC obligatoire", "Tous risques", "Vol", "Incendie", "Bris de glace", "Assistance"]
+  },
+  {
+    "assureur_acaps_code": "ASR-AXA-005",
+    "code": "AXA-AUTO-TP",
+    "name": "AXA Auto Essentiel",
+    "type": "auto_tp",
+    "premium_min_mad": 1950,
+    "premium_max_mad": 5900,
+    "garanties": ["RC obligatoire", "Vol", "Incendie", "Bris de glace"]
+  },
+  {
+    "assureur_acaps_code": "ASR-AXA-005",
+    "code": "AXA-HAB-STD",
+    "name": "AXA Habitation Standard",
+    "type": "habitation",
+    "premium_min_mad": 880,
+    "premium_max_mad": 5000,
+    "garanties": ["Incendie", "Degats des eaux", "Vol", "RC vie privee"]
+  },
+  {
+    "assureur_acaps_code": "ASR-AXA-005",
+    "code": "AXA-VIE-PRE",
+    "name": "AXA Vie Prevoyance",
+    "type": "vie",
+    "premium_min_mad": 3300,
+    "premium_max_mad": 50000,
+    "garanties": ["Capital deces", "Capital invalidite", "Epargne", "Rente"]
+  },
+  {
+    "assureur_acaps_code": "ASR-AXA-005",
+    "code": "AXA-SAN-INT",
+    "name": "AXA Sante Internationale",
+    "type": "sante",
+    "premium_min_mad": 3500,
+    "premium_max_mad": 35000,
+    "garanties": ["Hospitalisation Maroc et International", "Consultations", "Medicaments", "Optique", "Dentaire", "Maternite"]
+  }
+]

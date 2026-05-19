@@ -1,0 +1,26 @@
+{
+  "prenoms": [
+    "Mohamed", "Ahmed", "Hassan", "Hussein", "Ali", "Omar", "Youssef", "Karim", "Said", "Driss",
+    "Khalid", "Rachid", "Abdelaziz", "Abdellah", "Abderrahmane", "Abdelkader", "Mustapha", "Mehdi", "Anas", "Ilyas",
+    "Adam", "Yassine", "Bilal", "Othmane", "Soufiane", "Ismail", "Tarik", "Fouad", "Brahim", "Hicham",
+    "Nabil", "Jamal", "Reda", "Walid", "Marouane", "Imad", "Aymane", "Ayoub", "Zakaria", "Yahya",
+    "Hamza", "Ayman", "Salim", "Sami", "Anouar", "Mounir", "Redouane", "Saad", "Najim", "Faycal",
+    "Fatima", "Khadija", "Aicha", "Zineb", "Salma", "Naima", "Houda", "Mounia", "Samira", "Sanaa",
+    "Souad", "Wafaa", "Asmae", "Hanane", "Imane", "Loubna", "Karima", "Najwa", "Kaoutar", "Meryem",
+    "Yasmina", "Soukaina", "Hajar", "Sara", "Nadia", "Latifa", "Rajaa", "Bouchra", "Zahra", "Amina",
+    "Malika", "Leila", "Saida", "Rkia", "Halima", "Habiba", "Touria", "Najat", "Oumaima", "Inas",
+    "Chaimae", "Ghita", "Doha", "Lina", "Maria", "Rania", "Nouhaila", "Salwa", "Manal", "Nora"
+  ],
+  "noms": [
+    "El Alaoui", "Bennani", "Tazi", "Berrada", "Lamrini", "Chraibi", "Fassi", "Skalli", "Idrissi", "Cherkaoui",
+    "Bennis", "Alami", "Benjelloun", "Sebti", "Mouline", "Kettani", "Filali", "Squalli", "El Fassi", "Lahlou",
+    "Ouazzani", "Zniber", "Tahiri", "El Yazidi", "Slaoui", "El Ghazi", "Rhaoui", "Benkirane", "El Mansouri", "El Khattabi",
+    "Bennouna", "El Hadji", "Sefrioui", "El Habti", "El Idrissi", "Bouayad", "El Wazani", "Rachdi", "Lazrak", "El Khazzane",
+    "El Ouafi", "Bouzoubaa", "El Houari", "El Bekkali", "Drissi", "Naciri", "Lahbabi", "Belarbi", "Berrechid", "El Jamali",
+    "El Bouhmadi", "El Bahraoui", "El Marrakchi", "Senhaji", "El Kabbaj", "Belkadi", "El Ouali", "El Kortbi", "Boumahdi", "El Kouhen",
+    "El Manjra", "El Hassani", "Ben Abdellah", "El Mokri", "Andaloussi", "Bouhsini", "Sefraoui", "Demnati", "El Maaroufi", "Akabli",
+    "Boutaleb", "Daoudi", "Ennaji", "Fakhri", "Ghazi", "Habibi", "Iraqi", "Jaafari", "Kabbaj", "Lahcen",
+    "Maamri", "Nejjar", "Oudghiri", "Pacha", "Qadiri", "Raji", "Saidi", "Tabbaa", "Wahbi", "Yacoubi",
+    "Zerouali", "El Mansour", "Belhaj", "Cherradi", "El Bouri", "El Otmani", "Tijani", "Ziani", "Amrani", "Hajji"
+  ]
+}

@@ -1,0 +1,22 @@
+[
+  { "name": "Casablanca", "region": "Casablanca-Settat", "population": 3359818, "is_economic_capital": true },
+  { "name": "Rabat", "region": "Rabat-Sale-Kenitra", "population": 577827, "is_administrative_capital": true },
+  { "name": "Marrakech", "region": "Marrakech-Safi", "population": 928850, "is_tourist_hub": true },
+  { "name": "Fes", "region": "Fes-Meknes", "population": 1112072, "is_cultural_capital": true },
+  { "name": "Tanger", "region": "Tanger-Tetouan-Al Hoceima", "population": 947952, "is_industrial_hub": true },
+  { "name": "Agadir", "region": "Souss-Massa", "population": 421844, "is_tourist_hub": true },
+  { "name": "Meknes", "region": "Fes-Meknes", "population": 632079, "is_imperial_city": true },
+  { "name": "Oujda", "region": "Oriental", "population": 494252, "is_border_city": true },
+  { "name": "Kenitra", "region": "Rabat-Sale-Kenitra", "population": 431282, "is_industrial": true },
+  { "name": "Tetouan", "region": "Tanger-Tetouan-Al Hoceima", "population": 380787, "is_cultural": true },
+  { "name": "Sale", "region": "Rabat-Sale-Kenitra", "population": 890403, "twin_city": "Rabat" },
+  { "name": "El Jadida", "region": "Casablanca-Settat", "population": 194934, "is_coastal": true },
+  { "name": "Beni Mellal", "region": "Beni Mellal-Khenifra", "population": 192676, "is_agricultural": true },
+  { "name": "Nador", "region": "Oriental", "population": 161726, "is_border_city": true },
+  { "name": "Khouribga", "region": "Beni Mellal-Khenifra", "population": 196196, "is_mining": true },
+  { "name": "Settat", "region": "Casablanca-Settat", "population": 142250, "is_agricultural": true },
+  { "name": "Mohammedia", "region": "Casablanca-Settat", "population": 208612, "is_coastal": true },
+  { "name": "Khemisset", "region": "Rabat-Sale-Kenitra", "population": 131542, "is_agricultural": true },
+  { "name": "Berrechid", "region": "Casablanca-Settat", "population": 136634, "is_industrial": true },
+  { "name": "Taza", "region": "Fes-Meknes", "population": 148456, "is_strategic": true }
+]

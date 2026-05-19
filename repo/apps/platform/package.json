@@ -1,0 +1,32 @@
+{
+  "name": "@insurtech/platform",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "echo 'No build for platform scripts app'",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "lint": "biome check --no-errors-on-unmatched scripts",
+    "clean": "rm -rf .turbo",
+    "seeds:run": "tsx scripts/seed-dev.ts",
+    "seeds:reset": "tsx scripts/seed-reset.ts",
+    "seeds:dev": "pnpm seeds:reset && pnpm seeds:run",
+    "seeds:test": "vitest run test/seeds"
+  },
+  "dependencies": {
+    "@faker-js/faker": "9.8.0",
+    "argon2": "0.41.1",
+    "dotenv": "16.4.7",
+    "pg": "8.13.1",
+    "pino": "9.5.0",
+    "ulid": "2.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.5",
+    "@types/pg": "8.11.10",
+    "tsx": "4.19.2",
+    "typescript": "5.7.3",
+    "vitest": "2.1.8"
+  }
+}

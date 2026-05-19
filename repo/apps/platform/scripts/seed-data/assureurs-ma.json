@@ -1,0 +1,82 @@
+[
+  {
+    "name": "Wafa Assurance",
+    "acaps_code": "ASR-WAF-001",
+    "ice": "001500000000091",
+    "address": "1 Boulevard Abdelmoumen",
+    "city": "Casablanca",
+    "phone": "+212522545555",
+    "email": "contact@wafaassurance.ma",
+    "website": "https://www.wafaassurance.ma",
+    "metadata": {
+      "groupe": "Attijariwafa Bank",
+      "fonde": 1972,
+      "part_marche_pct": 22.5,
+      "rating": "AAA"
+    }
+  },
+  {
+    "name": "Atlanta Sanad",
+    "acaps_code": "ASR-ATS-002",
+    "ice": "001600000000093",
+    "address": "181 Boulevard Zerktouni",
+    "city": "Casablanca",
+    "phone": "+212522464646",
+    "email": "contact@atlantasanad.ma",
+    "website": "https://www.atlantasanad.ma",
+    "metadata": {
+      "groupe": "Holmarcom",
+      "fonde": 2018,
+      "part_marche_pct": 15.2,
+      "rating": "AA+"
+    }
+  },
+  {
+    "name": "Saham Assurance",
+    "acaps_code": "ASR-SAH-003",
+    "ice": "001700000000095",
+    "address": "216 Boulevard Zerktouni",
+    "city": "Casablanca",
+    "phone": "+212522989898",
+    "email": "contact@saham.ma",
+    "website": "https://www.saham.ma",
+    "metadata": {
+      "groupe": "Sanlam",
+      "fonde": 1949,
+      "part_marche_pct": 14.8,
+      "rating": "AA"
+    }
+  },
+  {
+    "name": "RMA Assurance",
+    "acaps_code": "ASR-RMA-004",
+    "ice": "001800000000097",
+    "address": "83 Avenue de l'Armee Royale",
+    "city": "Casablanca",
+    "phone": "+212522207474",
+    "email": "contact@rma.ma",
+    "website": "https://www.rma.ma",
+    "metadata": {
+      "groupe": "FinanceCom",
+      "fonde": 1949,
+      "part_marche_pct": 13.4,
+      "rating": "AA"
+    }
+  },
+  {
+    "name": "AXA Assurance Maroc",
+    "acaps_code": "ASR-AXA-005",
+    "ice": "001900000000099",
+    "address": "120 Avenue Hassan II",
+    "city": "Casablanca",
+    "phone": "+212522202020",
+    "email": "contact@axa.ma",
+    "website": "https://www.axa.ma",
+    "metadata": {
+      "groupe": "AXA Group",
+      "fonde": 1958,
+      "part_marche_pct": 11.7,
+      "rating": "AA"
+    }
+  }
+]

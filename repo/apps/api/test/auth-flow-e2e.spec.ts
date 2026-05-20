@@ -21,12 +21,15 @@ import {
   EncryptionService,
   HashingService,
   JwtService,
+  LockoutService,
   MfaService,
   NoOpSessionRepository,
   PepperService,
+  type RedisHashLike,
   type RedisLike,
   SessionService,
 } from '@insurtech/auth';
+import { AuditAuthService, PinoAuditPublisher } from '../src/modules/auth/audit-auth.service';
 import { AuthService } from '../src/modules/auth/auth.service';
 import { InMemoryEmailVerificationRepository } from '../src/modules/auth/email-verification.repository';
 import { StubEmailService } from '../src/modules/auth/email.service';
@@ -90,6 +93,9 @@ describe('Auth flow E2E (15 scenarios)', () => {
     emailVerifyRepo = new InMemoryEmailVerificationRepository();
     emailService = new StubEmailService();
     recoveryRepo = new InMemoryPasswordRecoveryRepository();
+    const lockout = new LockoutService(redis as unknown as RedisHashLike);
+    lockout.onModuleInit();
+    const audit = new AuditAuthService(new PinoAuditPublisher());
     service = new AuthService(
       userRepo,
       argon2,
@@ -100,6 +106,8 @@ describe('Auth flow E2E (15 scenarios)', () => {
       emailVerifyRepo,
       emailService,
       recoveryRepo,
+      lockout,
+      audit,
     );
   }, 30000);
 

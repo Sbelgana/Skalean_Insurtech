@@ -33,6 +33,14 @@ export { PepperService } from './services/pepper.service.js';
 export { EncryptionService } from './services/encryption.service.js';
 export { HashingService } from './services/hashing.service.js';
 export { JwtService } from './services/jwt.service.js';
+export { LockoutService } from './services/lockout.service.js';
+export type { RedisHashLike } from './services/lockout.service.js';
+export {
+  LockoutError,
+  AccountLockedError as LockoutAccountLockedError,
+  AccountPermanentlyLockedError,
+} from './errors/lockout-errors.js';
+
 export { SessionService, REDIS_TOKEN } from './services/session.service.js';
 export type { RedisLike, RedisMulti } from './services/session.service.js';
 export {

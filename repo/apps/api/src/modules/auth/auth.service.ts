@@ -1,20 +1,22 @@
 /**
  * apps/api/src/modules/auth/auth.service
  *
- * Orchestrator service for signin/signout/refresh/MFA flows.
- * Sprint 5 Tache 2.1.6 + 2.1.7 + 2.1.8.
- * Sprint 5 Tache 2.1.10 will plug in LockoutService.
- * Sprint 5 Tache 2.1.12 will plug in AuditAuthService + Kafka events.
+ * Orchestrator service for signin/signout/refresh/MFA/recovery flows.
+ * Sprint 5 Taches 2.1.6 + 2.1.7 + 2.1.8 + 2.1.9 + 2.1.11.
+ * Sprint 5 closure : LockoutService + AuditAuthService wired into every flow.
  */
 
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import {
+  AccountPermanentlyLockedError as DomainAccountPermanentlyLocked,
   Argon2Service,
   type AuthRole,
   HashingService,
   isMfaMandatory,
   JwtService,
   JWT_PARAMS,
+  LockoutAccountLockedError as DomainLockoutAccountLocked,
+  LockoutService,
   MfaChallengeExpiredError as DomainMfaChallengeExpired,
   MfaInvalidCodeError as DomainMfaInvalidCode,
   MfaService,
@@ -69,6 +71,7 @@ import {
   type UserRepository,
   USER_REPOSITORY_TOKEN,
 } from './user.repository.js';
+import { AuditAuthService, type AuditContextBase } from './audit-auth.service.js';
 
 export interface SigninContext {
   ip: string;
@@ -94,7 +97,41 @@ export class AuthService {
     @Inject(EMAIL_SERVICE_TOKEN) private readonly emailService: EmailService,
     @Inject(PASSWORD_RECOVERY_REPOSITORY_TOKEN)
     private readonly recoveryRepo: PasswordRecoveryRepository,
+    private readonly lockout: LockoutService,
+    private readonly audit: AuditAuthService,
   ) {}
+
+  /**
+   * Translates a LockoutAccountLockedError / AccountPermanentlyLockedError
+   * thrown by LockoutService into the ApiAuthError shape consumed by HTTP.
+   */
+  private translateLockoutError(err: unknown): never {
+    if (err instanceof DomainAccountPermanentlyLocked) {
+      throw AccountLockedError(null);
+    }
+    if (err instanceof DomainLockoutAccountLocked) {
+      throw AccountLockedError(new Date(err.locked_until * 1000));
+    }
+    throw err;
+  }
+
+  /** Builds an AuditContextBase from a SigninContext + AuthUser. */
+  private auditCtx(
+    user: { id: string; email: string; tenant_id: string | null; role: AuthRole } | null,
+    ctx: { ip: string; user_agent: string; request_id: string },
+    sessionId: string | null = null,
+  ): AuditContextBase {
+    return {
+      tenant_id: user?.tenant_id ?? null,
+      user_id: user?.id ?? null,
+      user_email: user?.email ?? null,
+      user_role: user?.role ?? null,
+      session_id: sessionId,
+      ip: ctx.ip,
+      user_agent: ctx.user_agent,
+      request_id: ctx.request_id,
+    };
+  }
 
   /** Anti-enumeration : same response whether email exists or not. */
   async forgotPassword(
@@ -131,6 +168,10 @@ export class AuthService {
       token: rawToken,
     });
     this.logger.log({ action: 'forgot_password_sent', user_id: user.id });
+    await this.audit.logRecoveryCompleted(
+      this.auditCtx(user, { ip: ctx.ip, user_agent: ctx.user_agent, request_id: 'forgot-pwd' }),
+      { email: user.email },
+    );
     return sameResponse;
   }
 
@@ -168,6 +209,14 @@ export class AuthService {
       display_name: user.display_name,
     });
     this.logger.log({ action: 'password_reset_success', user_id: user.id });
+    await this.audit.logRecoveryCompleted(
+      this.auditCtx(user, {
+        ip: record.ip_at_creation ?? 'unknown',
+        user_agent: record.user_agent_at_creation ?? 'unknown',
+        request_id: 'reset-pwd',
+      }),
+      { email: user.email },
+    );
     return { reset: true, message: 'Password updated. Please sign in with your new password.' };
   }
 
@@ -236,6 +285,18 @@ export class AuthService {
       display_name: input.display_name,
     });
     this.logger.log({ action: 'signup_completed', user_id: userId, email });
+    const auditBase: AuditContextBase = {
+      tenant_id: null,
+      user_id: userId,
+      user_email: email,
+      user_role: role,
+      session_id: null,
+      ip: ctx.ip,
+      user_agent: ctx.user_agent,
+      request_id: ctx.request_id,
+    };
+    await this.audit.logSignupStarted(auditBase, { email, locale: input.locale });
+    await this.audit.logSignupCompleted(auditBase, { email, role });
     return {
       message: 'If your email is not yet registered, a verification email has been sent.',
     };
@@ -251,6 +312,15 @@ export class AuthService {
     await this.userRepo.markEmailVerified(record.user_id, new Date());
     await this.emailVerifyRepo.markConsumed(record.id);
     this.logger.log({ action: 'email_verified', user_id: record.user_id });
+    const user = await this.userRepo.findById(record.user_id);
+    await this.audit.logEmailVerified(
+      this.auditCtx(user, {
+        ip: record.ip_at_creation ?? 'unknown',
+        user_agent: record.user_agent_at_creation ?? 'unknown',
+        request_id: 'verify-email',
+      }),
+      { email: user?.email ?? 'unknown' },
+    );
     return { verified: true, message: 'Email verified. You can now sign in.' };
   }
 
@@ -315,6 +385,17 @@ export class AuthService {
       throw AccountLockedError(user.locked_until);
     }
 
+    // LockoutService check : throws if user is within an active lock window
+    try {
+      await this.lockout.assertNotLocked(user.id);
+    } catch (err: unknown) {
+      await this.audit.logSigninLocked(this.auditCtx(user, ctx), {
+        tier: 1,
+        locked_until: new Date().toISOString(),
+      });
+      this.translateLockoutError(err);
+    }
+
     const valid = await this.argon2.verify(user.password_hash, input.password);
     if (!valid) {
       this.logger.warn({
@@ -322,10 +403,33 @@ export class AuthService {
         user_id: user.id,
         ip: ctx.ip,
       });
+      // Record failed attempt -- throws AccountLockedError on tier transition
+      try {
+        await this.lockout.recordFailedAttempt({
+          user_id: user.id,
+          ip: ctx.ip,
+          email: user.email,
+        });
+      } catch (err: unknown) {
+        await this.audit.logSigninLocked(this.auditCtx(user, ctx), {
+          tier: 1,
+          locked_until: new Date().toISOString(),
+        });
+        this.translateLockoutError(err);
+      }
+      await this.audit.logSigninFailed(this.auditCtx(user, ctx), {
+        reason: 'invalid_credentials',
+      });
       throw InvalidCredentialsError();
     }
 
+    // Successful password verify : reset lockout counter
+    await this.lockout.recordSuccess(user.id);
+
     if (user.email_verified_at === null) {
+      await this.audit.logSigninFailed(this.auditCtx(user, ctx), {
+        reason: 'email_not_verified',
+      });
       throw EmailNotVerifiedError();
     }
 
@@ -395,12 +499,19 @@ export class AuthService {
       user: this.toPublicUser(user),
     };
     this.logger.log({ action: 'signin_success', user_id: user.id, sid });
+    await this.audit.logSigninSuccess(this.auditCtx(user, ctx, sid), {
+      mfa_required: false,
+      remember_me: ctx.remember_me,
+    });
     return response;
   }
 
-  async signout(sid: string): Promise<void> {
+  async signout(sid: string, auditMeta?: AuditContextBase): Promise<void> {
     await this.session.revokeSession(sid);
     this.logger.log({ action: 'signout', sid });
+    if (auditMeta) {
+      await this.audit.logSignout(auditMeta, { session_id: sid });
+    }
   }
 
   async signoutAll(userId: string): Promise<{ sessions_revoked: number }> {
@@ -434,9 +545,25 @@ export class AuthService {
       });
     } catch (err: unknown) {
       if (err instanceof RefreshReplayDetectedError) {
+        await this.audit.logRefreshReplayDetected(
+          this.auditCtx(null, ctx, payload.sid),
+          {
+            token_family: payload.token_family,
+            expected_generation: payload.generation,
+            presented_generation: payload.generation,
+          },
+        );
         throw TokenReuseDetectedError();
       }
       if (err instanceof SessionNotFoundError) {
+        await this.audit.logRefreshReplayDetected(
+          this.auditCtx(null, ctx, payload.sid),
+          {
+            token_family: payload.token_family,
+            expected_generation: payload.generation,
+            presented_generation: payload.generation,
+          },
+        );
         throw TokenReuseDetectedError();
       }
       throw err;
@@ -514,6 +641,14 @@ export class AuthService {
     await this.session.revokeUserSessions(user.id);
 
     this.logger.log({ action: 'mfa_setup_confirmed', user_id: input.user_id });
+    await this.audit.logMfaSetupCompleted(
+      this.auditCtx(user, {
+        ip: 'mfa-setup',
+        user_agent: 'mfa-setup',
+        request_id: 'mfa-setup',
+      }),
+      { method: 'totp', recovery_codes_count: result.recovery_codes_clear.length },
+    );
 
     return {
       mfa_enabled: true,
@@ -609,6 +744,14 @@ export class AuthService {
     const now = Math.floor(Date.now() / 1000);
 
     this.logger.log({ action: 'mfa_verify_success', user_id: user.id });
+    await this.audit.logMfaVerifySuccess(
+      this.auditCtx(
+        user,
+        { ip: input.ip, user_agent: input.user_agent, request_id: input.request_id },
+        sid,
+      ),
+      { method: usedRecoveryIndex !== undefined ? 'recovery_code' : 'totp' },
+    );
 
     return {
       access_token: accessToken,

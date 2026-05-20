@@ -13,12 +13,15 @@ import {
   EncryptionService,
   HashingService,
   JwtService,
+  LockoutService,
   MfaService,
   NoOpSessionRepository,
   PepperService,
-  SessionService,
+  type RedisHashLike,
   type RedisLike,
+  SessionService,
 } from '@insurtech/auth';
+import { AuditAuthService, PinoAuditPublisher } from './audit-auth.service';
 import { AuthService } from './auth.service';
 import { InMemoryUserRepository, type AuthUser } from './user.repository';
 
@@ -79,6 +82,9 @@ describe('AuthService', () => {
     const emailVerifyRepo = new InMemoryEmailVerificationRepository();
     const emailService = new StubEmailService();
     const recoveryRepo = new InMemoryPasswordRecoveryRepository();
+    const lockout = new LockoutService(redis as unknown as RedisHashLike);
+    lockout.onModuleInit();
+    const audit = new AuditAuthService(new PinoAuditPublisher());
     service = new AuthService(
       userRepo,
       argon2,
@@ -89,6 +95,8 @@ describe('AuthService', () => {
       emailVerifyRepo,
       emailService,
       recoveryRepo,
+      lockout,
+      audit,
     );
   }, 30000);
 

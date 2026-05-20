@@ -168,8 +168,8 @@ async function bootstrap(): Promise<void> {
         prefix: '/admin/queues',
         basePath: '/admin/queues',
       });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? (err as Error).message : String(err);
       const logger = app.get(Logger);
       logger.warn(`[JobsModule] BullBoard register skipped : ${msg}`);
     }

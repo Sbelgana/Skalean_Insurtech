@@ -41,6 +41,9 @@ import { HealthModule } from './modules/health/health.module';
 // === BullMQ Jobs queue Redis-backed (Tache 1.3.11) ===
 import { JobsModule } from './modules/jobs/jobs.module';
 
+// === Sentry error monitoring (Tache 1.3.12) ===
+import { SentryNestModule } from './sentry/sentry.module';
+
 // === Modules transverses globaux ===
 import { ConfigModule } from './config/config.module';
 import { DatabaseModule } from './database/database.module';
@@ -84,6 +87,9 @@ import { TenantModule } from './modules/tenant/tenant.module';
 
     // === BullMQ Jobs queue Redis-backed (Tache 1.3.11) ===
     JobsModule,
+
+    // === Sentry error monitoring (Tache 1.3.12) ===
+    SentryNestModule,
 
     // === Transverses globaux (ordre : Config -> Database -> Redis -> Kafka) ===
     ConfigModule.forRoot(),

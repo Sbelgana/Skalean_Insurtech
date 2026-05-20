@@ -60,6 +60,9 @@ import { SwaggerModule } from './swagger/swagger.module';
 // BullMQ BullBoard UI setup (Tache 1.3.11).
 import { bullBoardAdapter } from './modules/jobs/jobs.module';
 
+// Sentry error monitoring (Tache 1.3.12).
+import { initSentry } from './sentry/sentry.config';
+
 // App module (skeleton -- 1.3.2 enrichit)
 import { AppModule } from './app.module';
 
@@ -70,6 +73,13 @@ import { AppModule } from './app.module';
 async function bootstrap(): Promise<void> {
   // Mesure du boot time (warn si > 5s).
   const bootStart = process.hrtime.bigint();
+
+  // === ETAPE 0.5 : Sentry AVANT NestFactory ===
+  // Sentry.init() doit preceder toute creation d'instance NestJS
+  // pour capturer les erreurs de boot.
+  // No-op si SENTRY_DSN absent (log warn uniquement).
+  // Tache 1.3.12.
+  initSentry();
 
   // === ETAPE 1 : Telemetry FIRST ===
   // Sans cette etape avant tout import NestJS, l'auto-instrumentation

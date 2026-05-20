@@ -16,8 +16,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { HttpException, HttpStatus, Logger } from '@nestjs/common';
 import type { ArgumentsHost } from '@nestjs/common';
+
+// Mock sentry.config pour eviter l'import @sentry/nestjs en tests unitaires.
+// Hoiste automatiquement par Vitest avant les imports du module.
+vi.mock('../sentry/sentry.config', () => ({
+  sentryCaptureException: vi.fn(),
+  initSentry: vi.fn(),
+  isSentryInitialized: vi.fn(() => false),
+  resetSentryStateForTesting: vi.fn(),
+}));
+
 import { AllExceptionsFilter, type ApiErrorResponse } from './all-exceptions.filter';
 import { requestContextStorage } from '../request-context/request-context';
+import { sentryCaptureException } from '../sentry/sentry.config';
 
 // ============================================================================
 // Helpers
@@ -374,5 +385,47 @@ describe('AllExceptionsFilter -- Logging', () => {
     const logPayload = warnSpy.mock.calls[0]?.[0] as Record<string, unknown>;
     expect(logPayload['method']).toBe('POST');
     expect(logPayload['url']).toBe('/api/test');
+  });
+});
+
+describe('AllExceptionsFilter -- Sentry capture (Tache 1.3.12)', () => {
+  let filter: AllExceptionsFilter;
+
+  beforeEach(() => {
+    filter = new AllExceptionsFilter();
+    Object.defineProperty(filter, 'isProduction', { value: false, writable: true });
+    vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+    vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => {});
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('appelle sentryCaptureException pour erreur 5xx', () => {
+    const host = makeMockHost({});
+    const err = new Error('Internal boom');
+    filter.catch(err, host);
+    expect(sentryCaptureException).toHaveBeenCalledWith(err, expect.any(Object));
+  });
+
+  it('NE appelle PAS sentryCaptureException pour erreur 4xx', () => {
+    const host = makeMockHost({});
+    filter.catch(new HttpException('Not found', HttpStatus.NOT_FOUND), host);
+    expect(sentryCaptureException).not.toHaveBeenCalled();
+  });
+
+  it('NE appelle PAS sentryCaptureException pour erreur 400', () => {
+    const host = makeMockHost({});
+    filter.catch(new HttpException('Bad request', HttpStatus.BAD_REQUEST), host);
+    expect(sentryCaptureException).not.toHaveBeenCalled();
+  });
+
+  it('appelle sentryCaptureException pour HttpException 503', () => {
+    const host = makeMockHost({});
+    const err = new HttpException('Service unavailable', HttpStatus.SERVICE_UNAVAILABLE);
+    filter.catch(err, host);
+    expect(sentryCaptureException).toHaveBeenCalledWith(err, expect.any(Object));
   });
 });

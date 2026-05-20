@@ -77,6 +77,55 @@ vi.mock('kafkajs', () => ({
   })),
 }));
 
+// Mock @nestjs/bullmq + bullmq : evite connexion Redis DB 2 pour queues.
+vi.mock('@nestjs/bullmq', () => ({
+  BullModule: {
+    forRoot: vi.fn(() => ({
+      module: class MockBullCoreModule {},
+      global: true,
+      imports: [],
+      providers: [],
+      exports: [],
+    })),
+    registerQueue: vi.fn(() => ({
+      module: class MockBullModule {},
+      imports: [],
+      providers: [],
+      exports: [],
+    })),
+  },
+}));
+vi.mock('bullmq', () => ({
+  Queue: vi.fn(() => ({
+    add: vi.fn().mockResolvedValue({ id: '1' }),
+    close: vi.fn().mockResolvedValue(undefined),
+    getJobCounts: vi.fn().mockResolvedValue({}),
+  })),
+}));
+vi.mock('@bull-board/api', () => ({
+  createBullBoard: vi.fn(() => ({ addQueue: vi.fn(), removeQueue: vi.fn() })),
+}));
+vi.mock('@bull-board/api/bullMQAdapter', () => ({
+  BullMQAdapter: vi.fn(),
+}));
+vi.mock('@bull-board/fastify', () => ({
+  FastifyAdapter: vi.fn(() => ({
+    setBasePath: vi.fn(),
+    registerPlugin: vi.fn(),
+    getRouter: vi.fn(),
+  })),
+}));
+
+// Mock @sentry/nestjs + @sentry/nestjs/nestjs + @sentry/profiling-node.
+vi.mock('@sentry/nestjs', () => ({
+  init: vi.fn(),
+  captureException: vi.fn(),
+  withScope: vi.fn((cb: (scope: unknown) => void) => cb({ setTag: vi.fn(), setUser: vi.fn() })),
+}));
+vi.mock('@sentry/profiling-node', () => ({
+  nodeProfilingIntegration: vi.fn(() => ({})),
+}));
+
 // ============================================================================
 // Tests
 // ============================================================================

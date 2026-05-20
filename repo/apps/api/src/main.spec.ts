@@ -137,6 +137,13 @@ function setupCommonMocks(options: { listenFn?: (port: number, host: string) => 
       registerPlugin: vi.fn(() => async () => {}),
     },
   }));
+  // Mock Sentry initSentry (Tache 1.3.12) : evite SDK Sentry en tests bootstrap.
+  vi.doMock('./sentry/sentry.config', () => ({
+    initSentry: vi.fn(),
+    sentryCaptureException: vi.fn(),
+    isSentryInitialized: vi.fn(() => false),
+    resetSentryStateForTesting: vi.fn(),
+  }));
   return { createSpy };
 }
 
@@ -222,6 +229,12 @@ describe('main.ts bootstrap', () => {
       JobsModule: class MockJobsModule {},
       bullBoardAdapter: { setBasePath: vi.fn(), registerPlugin: vi.fn(() => async () => {}) },
     }));
+    vi.doMock('./sentry/sentry.config', () => ({
+      initSentry: vi.fn(),
+      sentryCaptureException: vi.fn(),
+      isSentryInitialized: vi.fn(() => false),
+      resetSentryStateForTesting: vi.fn(),
+    }));
 
     const { ready } = await import('./main');
     await ready;
@@ -306,6 +319,12 @@ describe('main.ts bootstrap', () => {
       JobsModule: class MockJobsModule {},
       bullBoardAdapter: { setBasePath: vi.fn(), registerPlugin: vi.fn(() => async () => {}) },
     }));
+    vi.doMock('./sentry/sentry.config', () => ({
+      initSentry: vi.fn(),
+      sentryCaptureException: vi.fn(),
+      isSentryInitialized: vi.fn(() => false),
+      resetSentryStateForTesting: vi.fn(),
+    }));
 
     const { ready } = await import('./main');
     await ready;
@@ -388,6 +407,12 @@ describe('main.ts bootstrap', () => {
     vi.doMock('./modules/jobs/jobs.module', () => ({
       JobsModule: class MockJobsModule {},
       bullBoardAdapter: { setBasePath: vi.fn(), registerPlugin: vi.fn(() => async () => {}) },
+    }));
+    vi.doMock('./sentry/sentry.config', () => ({
+      initSentry: vi.fn(),
+      sentryCaptureException: vi.fn(),
+      isSentryInitialized: vi.fn(() => false),
+      resetSentryStateForTesting: vi.fn(),
     }));
 
     const { ready } = await import('./main');

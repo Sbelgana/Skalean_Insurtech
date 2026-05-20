@@ -42,6 +42,7 @@ import {
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { getRequestContext } from '../request-context/request-context';
 import type { ZodValidationErrorResponse } from '../pipes/zod-validation.pipe';
+import { sentryCaptureException } from '../sentry/sentry.config';
 
 /** Corps de reponse erreur standardise. */
 export interface ApiErrorBody {
@@ -198,6 +199,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     if (statusCode >= 500) {
       this.logger.error(logPayload, `[AllExceptionsFilter] ${errorBody.code}`);
+      // Capture Sentry pour les erreurs 5xx (no-op si SENTRY_DSN absent).
+      // Tache 1.3.12.
+      sentryCaptureException(exception, {
+        tenantId: requestCtx?.tenant_id,
+        userId: requestCtx?.user_id,
+        requestId: requestCtx?.request_id,
+      });
     } else {
       this.logger.warn(logPayload, `[AllExceptionsFilter] ${errorBody.code}`);
     }

@@ -35,6 +35,9 @@ import { RequestContextModule } from './request-context/request-context.module';
 // === Swagger OpenAPI (Tache 1.3.9) ===
 import { SwaggerModule } from './swagger/swagger.module';
 
+// === Health probes K8s (Tache 1.3.10) ===
+import { HealthModule } from './modules/health/health.module';
+
 // === Modules transverses globaux ===
 import { ConfigModule } from './config/config.module';
 import { DatabaseModule } from './database/database.module';
@@ -72,6 +75,9 @@ import { TenantModule } from './modules/tenant/tenant.module';
 
     // === Swagger OpenAPI (Tache 1.3.9) ===
     SwaggerModule,
+
+    // === Health probes K8s (Tache 1.3.10) ===
+    HealthModule,
 
     // === Transverses globaux (ordre : Config -> Database -> Redis -> Kafka) ===
     ConfigModule.forRoot(),

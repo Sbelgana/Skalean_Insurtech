@@ -29,13 +29,16 @@
  */
 import {
   Injectable,
+  Optional,
   type NestInterceptor,
   type ExecutionContext,
   type CallHandler,
 } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { type Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { getRequestContext } from '../request-context/request-context';
+import { SKIP_RESPONSE_WRAP } from '../response/decorators/skip-response-wrap.decorator';
 
 /** Metadonnees incluses dans chaque reponse API. */
 export interface ApiResponseMeta {
@@ -74,18 +77,27 @@ function isAlreadyWrapped(value: unknown): boolean {
 
 @Injectable()
 export class ResponseInterceptor<T> implements NestInterceptor<T, ApiResponse<T>> {
+  constructor(@Optional() private readonly reflector?: Reflector) {}
+
   intercept(
-    _context: ExecutionContext,
+    context: ExecutionContext,
     next: CallHandler<T>,
   ): Observable<ApiResponse<T>> {
     const startTime = Date.now();
     const requestId = getRequestContext()?.request_id;
     const version = process.env['APP_VERSION'] ?? '2.2.0';
 
+    // Verifier si le handler marque @SkipResponseWrap().
+    const skipWrap =
+      this.reflector?.getAllAndOverride<boolean>(SKIP_RESPONSE_WRAP, [
+        context.getHandler(),
+        context.getClass(),
+      ]) ?? false;
+
     return next.handle().pipe(
       map((data): ApiResponse<T> => {
-        // Si deja enveloppe, ne pas re-envelopper.
-        if (isAlreadyWrapped(data)) {
+        // Skip wrapping si @SkipResponseWrap() ou si deja enveloppe.
+        if (skipWrap || isAlreadyWrapped(data)) {
           return data as ApiResponse<T>;
         }
 

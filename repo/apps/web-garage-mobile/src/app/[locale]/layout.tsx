@@ -19,12 +19,9 @@ import { notFound } from 'next/navigation';
 import { Montserrat, Noto_Naskh_Arabic, Geist_Mono } from 'next/font/google';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from 'next-themes';
-import { MobileLayout, LocaleSwitcher } from '@insurtech/shared-ui';
 import { Providers } from '@/components/providers';
-import { OfflineBanner } from '@/components/OfflineBanner';
-import { UpdateAvailableBanner } from '@/components/UpdateAvailableBanner';
+import { MobileShell } from '@/components/mobile-shell';
 import { routing } from '@/i18n/routing';
-import { garageMobileTabs } from '@/config/tabs';
 import '@/app/globals.css';
 
 const montserrat = Montserrat({
@@ -127,11 +124,7 @@ export default async function RootLayout({ children, params }: RootLayoutProps) 
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <NextIntlClientProvider locale={locale} messages={messages} timeZone="Africa/Casablanca">
             <Providers locale={locale}>
-              <MobileLayout tabs={garageMobileTabs} localeSwitcher={<LocaleSwitcher />}>
-                <OfflineBanner />
-                {children}
-                <UpdateAvailableBanner />
-              </MobileLayout>
+              <MobileShell>{children}</MobileShell>
             </Providers>
           </NextIntlClientProvider>
           <Toaster position={dir === 'rtl' ? 'top-left' : 'top-right'} richColors />

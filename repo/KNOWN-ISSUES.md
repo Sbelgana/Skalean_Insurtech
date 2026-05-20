@@ -316,3 +316,83 @@ Erreur boot : `FastifyError: fastify-plugin: @fastify/X - expected '5.x' fastify
 **Plan de fix** : Documenter dans `repo/CONTRIBUTING.md` que Node 25 doit etre desinstalle du chemin `C:\Program Files\nodejs\` OU placer Volta avant nodejs dans le Windows PATH systeme (regedit). Pas un bug du projet, juste du dev environment local.
 
 **Decouvert lors** : pause technique #2 (entre Sprint 4 et Sprint 5).
+
+## Sprint 4 frontends -- RSC icon serialization across server/client boundary (Mai 2026)
+
+**Status** : RESOLVED
+
+**Probleme** : Le layout racine `[locale]/layout.tsx` est un Server Component qui importait `brokerSidebarItems` / `garageSidebarItems` / `adminSidebarItems` / `garageMobileTabs` / `assureMobileTabs` depuis `@/config/`. Ces tableaux contiennent des objets avec `icon: LayoutDashboard` (composant React lucide-react). Le layout passait ces tableaux comme prop a `DashboardLayout` ou `MobileLayout` qui sont des Client Components (`'use client'`).
+
+Next.js 15 RSC refuse :
+```
+Error: Functions cannot be passed directly to Client Components unless you 
+explicitly expose it by marking it with "use server". Or maybe you meant 
+to call this function rather than return it.
+  {$$typeof: ..., render: function FileText}
+```
+
+Cause : les icones lucide-react sont des fonctions React (forwardRef). Les fonctions ne peuvent pas etre serialisees a travers la frontiere server/client. Resultat : pages `/fr`, `/ar`, `/ar-MA` retournent 500 au compile / 404 apres cache clean.
+
+**Solution appliquee** : Pattern "Client Shell Wrapper".
+
+Cree pour chaque app un Client Component intermediaire (`'use client'`) qui :
+1. Importe les sidebar/tabs items DANS le client world (icons restent en client)
+2. Rend `DashboardLayout` ou `MobileLayout` avec les items
+3. Accepte uniquement `children` comme prop (serialisable)
+
+Le Server Component (`layout.tsx`) importe juste ce wrapper et lui passe `children`. Aucune fonction ne traverse la frontiere.
+
+**Fichiers crees (5)** :
+- `apps/web-broker/src/components/dashboard-shell.tsx` (broker)
+- `apps/web-garage/src/components/dashboard-shell.tsx` (garage)
+- `apps/web-insurtech-admin/src/components/dashboard-shell.tsx` (admin)
+- `apps/web-garage-mobile/src/components/mobile-shell.tsx` (garage mobile)
+- `apps/web-assure-mobile/src/components/mobile-shell.tsx` (assure mobile)
+
+**Fichiers modifies (5)** :
+- `apps/web-broker/src/app/[locale]/layout.tsx`
+- `apps/web-garage/src/app/[locale]/layout.tsx`
+- `apps/web-insurtech-admin/src/app/[locale]/layout.tsx`
+- `apps/web-garage-mobile/src/app/[locale]/layout.tsx`
+- `apps/web-assure-mobile/src/app/[locale]/layout.tsx`
+
+**Apps deja correctes** :
+- `web-customer-portal` : utilise `PublicLayout` sans icones, OK
+- `web-assure-portal` : utilise `SelfServiceLayout` sans sidebar items, OK
+
+**Validation** : 7/7 apps frontend en dev mode renvoient `/fr` -> HTTP 200 :
+- web-insurtech-admin :3000
+- web-broker :3001
+- web-garage :3002
+- web-garage-mobile :3003
+- web-customer-portal :3004
+- web-assure-portal :3005
+- web-assure-mobile :3006
+
+**Decouvert lors** : pause technique #2 bis (entre Sprint 4 et Sprint 5).
+
+## Sprint 4 frontends -- @vercel/og Invalid URL on Windows production build (Mai 2026)
+
+**Status** : OPEN -- production build only, dev mode OK
+
+**Probleme** : `pnpm build` (production) echoue sur le route `/icon` (Next.js dynamic icon via `next/og`) :
+```
+Error occurred prerendering page "/icon".
+TypeError: Invalid URL
+    at new URL (node:internal/url:828:25)
+    at fileURLToPath (node:internal/url:1609:12)
+    at file:///C:/.../next/dist/compiled/@vercel/og/index.node.js:18929:32
+```
+
+Cause : @vercel/og (bundle dans Next 15) appelle `fileURLToPath()` sur quelque chose qui n'est pas un valid file URL au moment de la generation statique de la page icon. Probleme Windows-specifique (separateurs path) ou cas particulier @vercel/og + Next 15.
+
+7 apps affectees (toutes ont `src/app/icon.tsx` utilisant `ImageResponse`).
+
+**Impact** : `pnpm dev` fonctionne (tests ETAPE 7 7/7). `pnpm build` echoue avant deploiement prod.
+
+**Plan de fix Sprint 16 pre-pause** :
+- Option A : Supprimer `icon.tsx` et utiliser un fichier statique `favicon.ico` + `apple-icon.png` dans `public/`
+- Option B : Forcer `export const runtime = 'nodejs'` dans chaque `icon.tsx` (peut ne pas suffire)
+- Option C : Investiguer fix amont next.js / vercel/og + creer override pnpm
+
+**Decouvert lors** : pause technique #2 bis (entre Sprint 4 et Sprint 5).

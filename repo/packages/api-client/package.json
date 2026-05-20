@@ -10,26 +10,39 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./client": {
       "types": "./dist/client.d.ts",
-      "import": "./dist/client.js"
+      "import": "./dist/client.js",
+      "require": "./dist/client.js",
+      "default": "./dist/client.js"
     },
     "./hooks": {
       "types": "./dist/hooks/index.d.ts",
-      "import": "./dist/hooks/index.js"
+      "import": "./dist/hooks/index.js",
+      "require": "./dist/hooks/index.js",
+      "default": "./dist/hooks/index.js"
     },
     "./types": {
       "types": "./dist/types.gen.d.ts",
-      "import": "./dist/types.gen.js"
+      "import": "./dist/types.gen.js",
+      "require": "./dist/types.gen.js",
+      "default": "./dist/types.gen.js"
     },
     "./zod-schemas": {
       "types": "./dist/zod-schemas/index.d.ts",
-      "import": "./dist/zod-schemas/index.js"
+      "import": "./dist/zod-schemas/index.js",
+      "require": "./dist/zod-schemas/index.js",
+      "default": "./dist/zod-schemas/index.js"
     }
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "generate": "tsx scripts/generate.ts",
     "validate": "tsx scripts/validate.ts",
@@ -52,8 +65,12 @@
     "react": "19.0.0"
   },
   "peerDependenciesMeta": {
-    "@tanstack/react-query": { "optional": false },
-    "react": { "optional": false }
+    "@tanstack/react-query": {
+      "optional": false
+    },
+    "react": {
+      "optional": false
+    }
   },
   "devDependencies": {
     "@testing-library/react": "16.1.0",

@@ -8,15 +8,21 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./kafka-publisher": {
+      "types": "./dist/kafka-publisher/index.d.ts",
       "import": "./dist/kafka-publisher/index.js",
-      "types": "./dist/kafka-publisher/index.d.ts"
+      "require": "./dist/kafka-publisher/index.js",
+      "default": "./dist/kafka-publisher/index.js"
     },
     "./kafka-consumer": {
+      "types": "./dist/kafka-consumer/index.d.ts",
       "import": "./dist/kafka-consumer/index.js",
-      "types": "./dist/kafka-consumer/index.d.ts"
+      "require": "./dist/kafka-consumer/index.js",
+      "default": "./dist/kafka-consumer/index.js"
     }
   },
   "scripts": {

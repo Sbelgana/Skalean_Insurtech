@@ -11,7 +11,7 @@
  * logs that downstream observability (loki/elk + SIEM) can ingest already.
  */
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import {
   type AuthEventEnvelope,
   AuthEventKind,
@@ -63,7 +63,7 @@ export class AuditAuthService {
   private readonly sprint = 5;
 
   constructor(
-    private readonly publisher: AuditPublisher = new PinoAuditPublisher(),
+    @Inject(AUDIT_PUBLISHER_TOKEN) private readonly publisher: AuditPublisher,
   ) {}
 
   setPublisher(publisher: AuditPublisher): void {

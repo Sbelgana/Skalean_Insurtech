@@ -93,6 +93,7 @@ export class StubEmailService implements EmailService {
       action: 'email_send_verification_stub',
       to: input.to,
       locale: input.locale,
+      ...(this.logToken ? { x_dev_value: input.token } : {}),
     });
   }
 
@@ -108,6 +109,7 @@ export class StubEmailService implements EmailService {
       action: 'email_send_recovery_stub',
       to: input.to,
       locale: input.locale,
+      ...(this.logToken ? { x_dev_value: input.token } : {}),
     });
   }
 

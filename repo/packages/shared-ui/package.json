@@ -7,8 +7,10 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./tailwind-preset": {
       "import": "./src/tailwind-preset.ts",
@@ -19,10 +21,12 @@
     "./styles/fonts.css": "./src/styles/fonts.css",
     "./components/locale-switcher": {
       "import": "./src/components/locale-switcher.tsx",
+      "require": "./src/components/locale-switcher.tsx",
       "default": "./src/components/locale-switcher.tsx"
     },
     "./components/theme-toggle": {
       "import": "./src/components/theme-toggle.tsx",
+      "require": "./src/components/theme-toggle.tsx",
       "default": "./src/components/theme-toggle.tsx"
     },
     "./i18n/routing": "./src/i18n/routing.ts",

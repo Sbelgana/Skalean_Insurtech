@@ -19,13 +19,15 @@
  */
 
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common';
-import jwt, {
-  JsonWebTokenError,
-  NotBeforeError,
-  TokenExpiredError as JwtTokenExpiredError,
-  type SignOptions,
-  type VerifyOptions,
-} from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
+import type { SignOptions, VerifyOptions } from 'jsonwebtoken';
+
+// CJS/ESM interop : Node 22+ runtime only resolves the default export of
+// jsonwebtoken. Named imports for the error classes fail with
+// "does not provide an export named X". We resolve them through the default.
+const JsonWebTokenError = jwt.JsonWebTokenError;
+const NotBeforeError = jwt.NotBeforeError;
+const JwtTokenExpiredError = jwt.TokenExpiredError;
 import { randomUUID } from 'node:crypto';
 import { ulid } from 'ulid';
 import { JWT_PARAMS } from '../constants/jwt-params.js';

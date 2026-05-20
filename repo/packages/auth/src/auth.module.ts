@@ -25,6 +25,7 @@ import { Argon2Service } from './services/argon2.service.js';
 import { EncryptionService } from './services/encryption.service.js';
 import { HashingService } from './services/hashing.service.js';
 import { JwtService } from './services/jwt.service.js';
+import { LockoutService } from './services/lockout.service.js';
 import { MfaService } from './services/mfa.service.js';
 import { PepperService } from './services/pepper.service.js';
 import { REDIS_TOKEN, SessionService } from './services/session.service.js';
@@ -63,6 +64,7 @@ const sessionRepoProvider: Provider = {
     sessionRepoProvider,
     SessionService,
     MfaService,
+    LockoutService,
   ],
   controllers: [],
   exports: [
@@ -73,6 +75,7 @@ const sessionRepoProvider: Provider = {
     JwtService,
     SessionService,
     MfaService,
+    LockoutService,
     REDIS_TOKEN,
     SESSION_REPOSITORY_TOKEN,
   ],

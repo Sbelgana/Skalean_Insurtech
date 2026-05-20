@@ -23,6 +23,8 @@ export interface AuthUser {
   email_verified_at: Date | null;
   mfa_enabled: boolean;
   mfa_secret_encrypted: string | null;
+  mfa_recovery_codes_hashes: (string | null)[] | null;
+  mfa_setup_completed_at: Date | null;
   is_active: boolean;
   deleted_at: Date | null;
   locked_until: Date | null;
@@ -43,6 +45,8 @@ export interface UserRepository {
   setFailedLogin(id: string, attempts: number, lockedUntil: Date | null): Promise<void>;
   resetFailedLogin(id: string): Promise<void>;
   setMfaEnabled(id: string, enabled: boolean, secretEncrypted: string | null): Promise<void>;
+  setMfaRecoveryCodes(id: string, hashes: (string | null)[] | null): Promise<void>;
+  consumeMfaRecoveryCode(id: string, index: number): Promise<void>;
 }
 
 @Injectable()
@@ -104,6 +108,20 @@ export class InMemoryUserRepository implements UserRepository {
     if (!u) return;
     u.mfa_enabled = enabled;
     u.mfa_secret_encrypted = secretEncrypted;
+    u.mfa_setup_completed_at = enabled ? new Date() : null;
+  }
+
+  async setMfaRecoveryCodes(id: string, hashes: (string | null)[] | null): Promise<void> {
+    const u = this.users.get(id);
+    if (!u) return;
+    u.mfa_recovery_codes_hashes = hashes;
+  }
+
+  async consumeMfaRecoveryCode(id: string, index: number): Promise<void> {
+    const u = this.users.get(id);
+    if (!u || !u.mfa_recovery_codes_hashes) return;
+    if (index < 0 || index >= u.mfa_recovery_codes_hashes.length) return;
+    u.mfa_recovery_codes_hashes[index] = null;
   }
 
   /** Test helper -- clears all data. */

@@ -10,8 +10,10 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import {
   Argon2Service,
   AuthRole,
+  EncryptionService,
   HashingService,
   JwtService,
+  MfaService,
   NoOpSessionRepository,
   PepperService,
   SessionService,
@@ -66,8 +68,12 @@ describe('AuthService', () => {
     await (redis as unknown as { flushall(): Promise<string> }).flushall();
     session = new SessionService(redis as unknown as RedisLike, new NoOpSessionRepository());
     session.onModuleInit();
+    const encryption = new EncryptionService();
+    encryption.onModuleInit();
+    const mfa = new MfaService(redis as unknown as RedisLike, argon2, encryption, hashing);
+    mfa.onModuleInit();
     userRepo = new InMemoryUserRepository();
-    service = new AuthService(userRepo, argon2, jwt, session, hashing);
+    service = new AuthService(userRepo, argon2, jwt, session, hashing, mfa);
   }, 30000);
 
   async function seedUser(overrides: Partial<AuthUser> = {}): Promise<AuthUser> {
@@ -82,6 +88,8 @@ describe('AuthService', () => {
       email_verified_at: new Date(),
       mfa_enabled: false,
       mfa_secret_encrypted: null,
+      mfa_recovery_codes_hashes: null,
+      mfa_setup_completed_at: null,
       is_active: true,
       deleted_at: null,
       locked_until: null,

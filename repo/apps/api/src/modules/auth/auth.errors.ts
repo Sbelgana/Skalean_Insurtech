@@ -44,3 +44,21 @@ export const MfaRequiredError = (): ApiAuthError =>
 
 export const InvalidRefreshTokenError = (detail?: string): ApiAuthError =>
   new ApiAuthError('INVALID_REFRESH_TOKEN', detail ?? 'Refresh token invalid or expired');
+
+export const MfaNotEnabledError = (): ApiAuthError =>
+  new ApiAuthError('MFA_NOT_ENABLED', 'MFA is not enabled for this account', HttpStatus.BAD_REQUEST);
+
+export const MfaAlreadyEnabledError = (): ApiAuthError =>
+  new ApiAuthError('MFA_ALREADY_ENABLED', 'MFA is already enabled', HttpStatus.CONFLICT);
+
+export const MfaInvalidCodeError = (): ApiAuthError =>
+  new ApiAuthError('MFA_INVALID_CODE', 'Invalid MFA code or recovery code');
+
+export const MfaChallengeExpiredError = (): ApiAuthError =>
+  new ApiAuthError(
+    'MFA_CHALLENGE_EXPIRED',
+    'MFA challenge token expired -- restart signin',
+  );
+
+export const MfaSetupExpiredError = (): ApiAuthError =>
+  new ApiAuthError('MFA_SETUP_EXPIRED', 'MFA setup token expired -- restart setup');

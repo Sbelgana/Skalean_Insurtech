@@ -11,11 +11,16 @@ export * from './constants/index.js';
 export { Argon2Service } from './services/argon2.service.js';
 export type { PolicyValidationContext } from './services/argon2.service.js';
 export { PepperService } from './services/pepper.service.js';
+export { EncryptionService } from './services/encryption.service.js';
+export { HashingService } from './services/hashing.service.js';
+
 export type {
   PasswordPolicyReason,
   PasswordPolicyResult,
 } from './types/password-policy-result.js';
 export { ALL_PASSWORD_POLICY_REASONS } from './types/password-policy-result.js';
+
+export type { EncryptedPayload, EncryptedString } from './types/encrypted-payload.js';
 
 export { AuthModule } from './auth.module.js';
 

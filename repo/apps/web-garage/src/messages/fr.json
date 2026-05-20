@@ -1,0 +1,74 @@
+{
+  "meta": {
+    "title": {
+      "default": "Skalean Garage -- Espace garage partenaire",
+      "brand": "Skalean Garage"
+    },
+    "description": "Portail garage partenaire Skalean InsurTech : ordres de travail, devis, sinistres, reparation auto."
+  },
+  "home": {
+    "title": "Bienvenue sur Skalean Garage",
+    "palette": {
+      "primary": "Orange Sofidemy",
+      "secondary": "Navy Sofidemy",
+      "accent": "ACAPS Teal",
+      "sky": "Sky Blue"
+    },
+    "placeholder": {
+      "banner": "Cette page sera remplacee par le tableau de bord garage dans le Sprint 21."
+    }
+  },
+  "common": {
+    "loading": "Chargement",
+    "error": "Une erreur est survenue",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Precedent",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "sort": "Trier",
+    "refresh": "Rafraichir",
+    "export": "Exporter"
+  },
+  "garage": {
+    "workshop": "Atelier",
+    "technician": "Technicien",
+    "claim": "Sinistre",
+    "quote": "Devis",
+    "workOrder": "Ordre de travail",
+    "part": "Piece detachee",
+    "expertise": "Expertise auto",
+    "repairStatus": "Statut reparation",
+    "vehicleIntake": "Entree vehicule",
+    "delivery": "Livraison vehicule"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "claims": "Sinistres",
+    "quotes": "Devis",
+    "workOrders": "Ordres de travail",
+    "workshop": "Atelier",
+    "technicians": "Techniciens",
+    "reports": "Rapports",
+    "settings": "Parametres"
+  },
+  "auth": {
+    "login": "Connexion",
+    "logout": "Deconnexion",
+    "signin": "Se connecter",
+    "signup": "Creer un compte",
+    "forgotPassword": "Mot de passe oublie"
+  },
+  "errors": {
+    "network": "Connexion reseau impossible",
+    "unauthorized": "Authentification requise",
+    "forbidden": "Acces refuse",
+    "notFound": "Element non trouve",
+    "serverError": "Erreur serveur",
+    "validation": "Donnees invalides"
+  }
+}

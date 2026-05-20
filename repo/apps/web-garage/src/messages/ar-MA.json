@@ -1,0 +1,74 @@
+{
+  "meta": {
+    "title": {
+      "default": "Skalean Garage -- فضاء الكاراج الشريك",
+      "brand": "Skalean Garage"
+    },
+    "description": "بورتال Skalean InsurTech ديال الكاراجات الشريكة : الأوردر ديال الإصلاح، الديفيس، الحوادث."
+  },
+  "home": {
+    "title": "مرحبا بيك فـ Skalean Garage",
+    "palette": {
+      "primary": "البرتقالي ديال Sofidemy",
+      "secondary": "الكحل ديال Sofidemy",
+      "accent": "أزرق ACAPS",
+      "sky": "السماوي"
+    },
+    "placeholder": {
+      "banner": "هاد الصفحة غادي تتبدل بـ Dashboard ديال الكاراج فـ Sprint 21."
+    }
+  },
+  "common": {
+    "loading": "جاري التحميل",
+    "error": "وقع شي مشكل",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "confirm": "تأكيد",
+    "close": "إغلاق",
+    "back": "رجوع",
+    "next": "التالي",
+    "previous": "السابق",
+    "search": "بحث",
+    "filter": "تصفية",
+    "sort": "ترتيب",
+    "refresh": "تحديث",
+    "export": "تصدير"
+  },
+  "garage": {
+    "workshop": "الأتيليي",
+    "technician": "التيكنيسيان",
+    "claim": "الحادثة",
+    "quote": "الديفيس",
+    "workOrder": "أوردر الإصلاح",
+    "part": "قطعة غيار",
+    "expertise": "معاينة السيارة",
+    "repairStatus": "حالة الإصلاح",
+    "vehicleIntake": "استقبال السيارة",
+    "delivery": "تسليم السيارة"
+  },
+  "nav": {
+    "dashboard": "لوحة القيادة",
+    "claims": "الحوادث",
+    "quotes": "الديفيسات",
+    "workOrders": "أواردر الإصلاح",
+    "workshop": "الأتيليي",
+    "technicians": "التيكنيسيانية",
+    "reports": "التقارير",
+    "settings": "الإعدادات"
+  },
+  "auth": {
+    "login": "دخول",
+    "logout": "خروج",
+    "signin": "تسجيل الدخول",
+    "signup": "إنشاء حساب",
+    "forgotPassword": "نسيت كلمة السر"
+  },
+  "errors": {
+    "network": "كاينة مشكلة فـ الشبكة",
+    "unauthorized": "خاصك تسجل الدخول",
+    "forbidden": "ما عندكش الإذن",
+    "notFound": "ما لقيناش هاد الحاجة",
+    "serverError": "مشكل فـ السيرفر",
+    "validation": "المعطيات غالط"
+  }
+}

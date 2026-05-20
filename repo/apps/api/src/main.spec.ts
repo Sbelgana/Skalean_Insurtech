@@ -42,11 +42,14 @@ function makeMockApp(listenFn?: (port: number, host: string) => Promise<void>) {
   const pinoLogger = makeMockPinoLogger();
   return {
     useLogger: vi.fn(),
+    useGlobalPipes: vi.fn(),
     enableShutdownHooks: vi.fn(),
     listen: vi.fn(listenFn ?? ((_p: number, _h: string) => Promise.resolve())),
     close: vi.fn(() => Promise.resolve()),
     // app.get(Logger) retourne le mock Pino logger (Tache 1.3.3).
     get: vi.fn(() => pinoLogger),
+    // app.register() pour les plugins Fastify (security -- Tache 1.3.5).
+    register: vi.fn(async () => {}),
   };
 }
 
@@ -94,6 +97,12 @@ function setupCommonMocks(options: { listenFn?: (port: number, host: string) => 
   // Mock security bootstrap (Tache 1.3.5) : evite les plugins Fastify reels.
   vi.doMock('./bootstrap/security', () => ({
     registerSecurity: vi.fn(async () => {}),
+  }));
+  // Mock ZodValidationPipe (Tache 1.3.6) : evite import zod dans bootstrap tests.
+  vi.doMock('./pipes/zod-validation.pipe', () => ({
+    ZodValidationPipe: class MockZodValidationPipe {
+      transform = vi.fn((v: unknown) => v);
+    },
   }));
   return { createSpy };
 }
@@ -158,6 +167,11 @@ describe('main.ts bootstrap', () => {
     vi.doMock('./bootstrap/security', () => ({
       registerSecurity: vi.fn(async () => {}),
     }));
+    vi.doMock('./pipes/zod-validation.pipe', () => ({
+      ZodValidationPipe: class MockZodValidationPipe {
+        transform = vi.fn((v: unknown) => v);
+      },
+    }));
 
     const { ready } = await import('./main');
     await ready;
@@ -220,6 +234,11 @@ describe('main.ts bootstrap', () => {
     vi.doMock('./bootstrap/security', () => ({
       registerSecurity: vi.fn(async () => {}),
     }));
+    vi.doMock('./pipes/zod-validation.pipe', () => ({
+      ZodValidationPipe: class MockZodValidationPipe {
+        transform = vi.fn((v: unknown) => v);
+      },
+    }));
 
     const { ready } = await import('./main');
     await ready;
@@ -280,6 +299,11 @@ describe('main.ts bootstrap', () => {
     }));
     vi.doMock('./bootstrap/security', () => ({
       registerSecurity: vi.fn(async () => {}),
+    }));
+    vi.doMock('./pipes/zod-validation.pipe', () => ({
+      ZodValidationPipe: class MockZodValidationPipe {
+        transform = vi.fn((v: unknown) => v);
+      },
     }));
 
     const { ready } = await import('./main');

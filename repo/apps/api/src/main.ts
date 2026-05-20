@@ -9,13 +9,14 @@
  *   3. loadEnv() (Zod runtime validation)
  *   4. NestFactory.create<NestFastifyApplication>(AppModule, FastifyAdapter, { bufferLogs: true })
  *   5. app.useLogger(app.get(Logger)) (nestjs-pino -- remplace logger default, flush bufferLogs)
- *   6. registerSecurity(app, env) (Helmet, CORS, Compress -- Tache 1.3.5)
- *   7. app.enableShutdownHooks() (active onModuleDestroy providers)
- *   8. registerGracefulShutdown() (handlers SIGTERM/SIGINT chain)
- *   9. app.listen(port, '0.0.0.0') (bind 0.0.0.0 pour Docker)
+ *   6. app.useGlobalPipes(new ZodValidationPipe()) (pass-through global -- Tache 1.3.6)
+ *   7. registerSecurity(app, env) (Helmet, CORS, Compress -- Tache 1.3.5)
+ *   8. app.enableShutdownHooks() (active onModuleDestroy providers)
+ *   9. registerGracefulShutdown() (handlers SIGTERM/SIGINT chain)
+ *  10. app.listen(port, '0.0.0.0') (bind 0.0.0.0 pour Docker)
  *
  * Reference : decision-003 (NestJS Fastify) + decision-006 (no-emoji ABSOLUE).
- * Tache : 1.3.1 + 1.3.3 + 1.3.5 (Sprint 3 / Phase 1).
+ * Tache : 1.3.1 + 1.3.3 + 1.3.5 + 1.3.6 (Sprint 3 / Phase 1).
  */
 
 // Polyfill DI -- DOIT etre la TOUTE PREMIERE ligne avant tout autre import.
@@ -42,6 +43,9 @@ import { Logger } from 'nestjs-pino';
 
 // Env loader Zod (Sprint 2 Tache 1.2.14)
 import { loadEnv } from '@insurtech/shared-config';
+
+// Pipe de validation Zod global (Tache 1.3.6).
+import { ZodValidationPipe } from './pipes/zod-validation.pipe';
 
 // App module (skeleton -- 1.3.2 enrichit)
 import { AppModule } from './app.module';
@@ -99,16 +103,22 @@ async function bootstrap(): Promise<void> {
   const logger = app.get(Logger);
   app.useLogger(logger);
 
-  // === ETAPE 5 : Plugins de securite Fastify ===
+  // === ETAPE 5 : Pipe de validation Zod global ===
+  // Pass-through global (sans schema) -- les routes individuelles utilisent
+  // @Body(new ZodValidationPipe(schema)) pour une validation schema-specifique.
+  // Tache 1.3.6.
+  app.useGlobalPipes(new ZodValidationPipe());
+
+  // === ETAPE 7 : Plugins de securite Fastify ===
   // Helmet (en-tetes HTTP), CORS (origines env.CORS_ORIGINS), Compress (gzip).
   // Tache 1.3.5 -- ordre : helmet -> cors -> compress (requis par Fastify encap).
   await registerSecurity(app, env);
 
-  // === ETAPE 6 : Active shutdown hooks NestJS ===
+  // === ETAPE 8 : Active shutdown hooks NestJS ===
   // Sans cela, les providers @OnModuleDestroy ne sont jamais appeles.
   app.enableShutdownHooks();
 
-  // === ETAPE 7 : Graceful shutdown handlers ===
+  // === ETAPE 9 : Graceful shutdown handlers ===
   // Chain : app.close() -> telemetry.shutdown() -> process.exit(0)
   // DB, Redis, Kafka geres via leurs hooks onModuleDestroy dans app.close().
   const timeoutMs = Number(process.env['GRACEFUL_SHUTDOWN_TIMEOUT_MS'] ?? '30000');
@@ -118,7 +128,7 @@ async function bootstrap(): Promise<void> {
     logger,
   });
 
-  // === ETAPE 8 : Listen sur API_PORT, bind 0.0.0.0 ===
+  // === ETAPE 10 : Listen sur API_PORT, bind 0.0.0.0 ===
   // Bind 0.0.0.0 EXPLICITEMENT (pas localhost) sinon Docker port mapping fail.
   const port = env.API_PORT ?? 4000;
   const host = process.env['API_HOST'] ?? '0.0.0.0';

@@ -6,8 +6,12 @@ import { describe, it, expect } from 'vitest';
 import { JWT_PARAMS } from '../../src/constants/jwt-params.js';
 
 describe('JWT_PARAMS', () => {
-  it('uses HS256 in Sprint 5', () => {
-    expect(JWT_PARAMS.algorithm).toBe('HS256');
+  it('uses RS256 asymmetric in Sprint 5', () => {
+    expect(JWT_PARAMS.algorithm).toBe('RS256');
+  });
+
+  it('uses 2048-bit RSA modulus', () => {
+    expect(JWT_PARAMS.rsa_modulus_bits).toBe(2048);
   });
 
   it('access TTL is 15 minutes (900 seconds)', () => {

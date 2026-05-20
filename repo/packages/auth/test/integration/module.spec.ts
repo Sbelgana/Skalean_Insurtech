@@ -4,23 +4,38 @@
  */
 
 import 'reflect-metadata';
+import { generateKeyPairSync } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Test } from '@nestjs/testing';
 import { AuthModule } from '../../src/auth.module.js';
 import { Argon2Service } from '../../src/services/argon2.service.js';
 import { EncryptionService } from '../../src/services/encryption.service.js';
 import { HashingService } from '../../src/services/hashing.service.js';
+import { JwtService } from '../../src/services/jwt.service.js';
 import { PepperService } from '../../src/services/pepper.service.js';
 
 describe('AuthModule (integration smoke)', () => {
   const SAVED: Record<string, string | undefined> = {};
-  const KEYS = ['PASSWORD_PEPPER', 'PASSWORD_PEPPER_VERSION', 'MFA_SECRET_ENCRYPTION_KEY'];
+  const KEYS = [
+    'PASSWORD_PEPPER',
+    'PASSWORD_PEPPER_VERSION',
+    'MFA_SECRET_ENCRYPTION_KEY',
+    'JWT_PRIVATE_KEY',
+    'JWT_PUBLIC_KEY',
+  ];
 
   beforeAll(() => {
     for (const k of KEYS) SAVED[k] = process.env[k];
     process.env['PASSWORD_PEPPER'] = 'a'.repeat(48);
     process.env['PASSWORD_PEPPER_VERSION'] = '1';
     process.env['MFA_SECRET_ENCRYPTION_KEY'] = 'b'.repeat(64);
+    const kp = generateKeyPairSync('rsa', {
+      modulusLength: 2048,
+      publicKeyEncoding: { type: 'spki', format: 'pem' },
+      privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+    });
+    process.env['JWT_PRIVATE_KEY'] = kp.privateKey;
+    process.env['JWT_PUBLIC_KEY'] = kp.publicKey;
   });
 
   afterAll(() => {
@@ -39,6 +54,7 @@ describe('AuthModule (integration smoke)', () => {
     expect(moduleRef.get(Argon2Service)).toBeInstanceOf(Argon2Service);
     expect(moduleRef.get(EncryptionService)).toBeInstanceOf(EncryptionService);
     expect(moduleRef.get(HashingService)).toBeInstanceOf(HashingService);
+    expect(moduleRef.get(JwtService)).toBeInstanceOf(JwtService);
     await moduleRef.close();
   });
 

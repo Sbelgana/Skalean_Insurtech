@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /
+
+# broker.skalean-insurtech.ma is a private application -- no public indexing

@@ -9,7 +9,21 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
-    }
+    },
+    "./tailwind-preset": {
+      "import": "./tailwind-preset.ts",
+      "require": "./tailwind-preset.ts",
+      "default": "./tailwind-preset.ts"
+    },
+    "./components/locale-switcher": {
+      "import": "./src/components/locale-switcher.tsx",
+      "default": "./src/components/locale-switcher.tsx"
+    },
+    "./components/theme-toggle": {
+      "import": "./src/components/theme-toggle.tsx",
+      "default": "./src/components/theme-toggle.tsx"
+    },
+    "./styles/theme.css": "./styles/theme.css"
   },
   "scripts": {
     "build": "tsc",
@@ -19,8 +33,15 @@
     "lint": "biome check --no-errors-on-unmatched src",
     "clean": "rm -rf dist .turbo"
   },
+  "peerDependencies": {
+    "next": ">=15.0.0",
+    "next-intl": ">=3.0.0",
+    "next-themes": ">=0.4.0",
+    "react": ">=19.0.0"
+  },
   "devDependencies": {
     "@types/node": "22.10.5",
+    "@types/react": "19.0.2",
     "typescript": "5.7.3",
     "vitest": "2.1.8"
   }

@@ -1,0 +1,61 @@
+{
+  "meta": {
+    "title": {
+      "default": "Skalean Broker -- Espace courtier",
+      "brand": "Skalean Broker"
+    },
+    "description": "Plateforme de gestion courtage en assurance Skalean InsurTech : contacts, polices, sinistres, commissions."
+  },
+  "home": {
+    "title": "Bienvenue sur Skalean Broker",
+    "palette": {
+      "primary": "Orange Sofidemy",
+      "secondary": "Navy Sofidemy",
+      "accent": "Sky Blue",
+      "acaps": "ACAPS Teal"
+    },
+    "placeholder": {
+      "banner": "Cette page sera remplacee par le tableau de bord courtier dans le Sprint 17."
+    }
+  },
+  "common": {
+    "loading": "Chargement",
+    "error": "Une erreur est survenue",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Precedent",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "sort": "Trier",
+    "refresh": "Rafraichir",
+    "export": "Exporter"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "contacts": "Contacts",
+    "policies": "Polices",
+    "claims": "Sinistres",
+    "commissions": "Commissions",
+    "reports": "Rapports",
+    "settings": "Parametres"
+  },
+  "auth": {
+    "login": "Connexion",
+    "logout": "Deconnexion",
+    "signin": "Se connecter",
+    "signup": "Creer un compte",
+    "forgotPassword": "Mot de passe oublie"
+  },
+  "errors": {
+    "network": "Connexion reseau impossible",
+    "unauthorized": "Authentification requise",
+    "forbidden": "Acces refuse",
+    "notFound": "Ressource introuvable",
+    "serverError": "Erreur serveur",
+    "validation": "Donnees invalides"
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "meta": {
+    "title": {
+      "default": "Skalean Broker -- فضاء السمسار",
+      "brand": "Skalean Broker"
+    },
+    "description": "منصة Skalean InsurTech ديال السماسرة ديال التامين : العملاء، العقود، الحوادث، العمولات."
+  },
+  "home": {
+    "title": "مرحبا بيك فـ Skalean Broker",
+    "palette": {
+      "primary": "البرتقالي ديال Sofidemy",
+      "secondary": "الكحل ديال Sofidemy",
+      "accent": "السماوي",
+      "acaps": "أخضر ACAPS"
+    },
+    "placeholder": {
+      "banner": "هاد الصفحة غادي تتبدل بـ Dashboard ديال السمسار فـ Sprint 17."
+    }
+  },
+  "common": {
+    "loading": "جاري التحميل",
+    "error": "وقع شي مشكل",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "confirm": "تأكيد",
+    "close": "إغلاق",
+    "back": "رجوع",
+    "next": "التالي",
+    "previous": "السابق",
+    "search": "بحث",
+    "filter": "تصفية",
+    "sort": "ترتيب",
+    "refresh": "تحديث",
+    "export": "تصدير"
+  },
+  "nav": {
+    "dashboard": "لوحة القيادة",
+    "contacts": "العملاء",
+    "policies": "العقود",
+    "claims": "الحوادث",
+    "commissions": "العمولات",
+    "reports": "التقارير",
+    "settings": "الإعدادات"
+  },
+  "auth": {
+    "login": "دخول",
+    "logout": "خروج",
+    "signin": "تسجيل الدخول",
+    "signup": "إنشاء حساب",
+    "forgotPassword": "نسيت كلمة السر"
+  },
+  "errors": {
+    "network": "كاينة مشكلة فـ الشبكة",
+    "unauthorized": "خاصك تسجل الدخول",
+    "forbidden": "ما عندكش الإذن",
+    "notFound": "ما لقيناش هاد الحاجة",
+    "serverError": "مشكل فـ السيرفر",
+    "validation": "المعطيات غالط"
+  }
+}

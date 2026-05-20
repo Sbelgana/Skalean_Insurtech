@@ -1,0 +1,17 @@
+/**
+ * API mock helpers -- web-broker
+ * Reference : task-1.4.1 Sprint 4 Phase 1
+ */
+
+export const mockApiResponses = {
+  health: { status: 'ok', timestamp: new Date().toISOString() },
+  contacts: { data: [], meta: { total: 0, page: 1 } },
+  policies: { data: [], meta: { total: 0, page: 1 } },
+};
+
+export const mockApiErrors = {
+  unauthorized: { success: false, error: { code: 'UNAUTHORIZED', message: 'Authentification requise', statusCode: 401 } },
+  forbidden: { success: false, error: { code: 'FORBIDDEN', message: 'Acces refuse', statusCode: 403 } },
+  notFound: { success: false, error: { code: 'NOT_FOUND', message: 'Ressource introuvable', statusCode: 404 } },
+  serverError: { success: false, error: { code: 'INTERNAL_SERVER_ERROR', message: 'Erreur serveur', statusCode: 500 } },
+};

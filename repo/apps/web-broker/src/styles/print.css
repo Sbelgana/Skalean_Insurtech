@@ -1,0 +1,20 @@
+@media print {
+  @page {
+    size: A4;
+    margin: 1.5cm;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #1A2730 !important;
+    font-family: "Times New Roman", Georgia, serif;
+    font-size: 11pt;
+    line-height: 1.4;
+  }
+
+  nav, aside, [data-print="hidden"], .no-print { display: none !important; }
+  a[href]:after { content: " (" attr(href) ")"; font-size: 9pt; color: #555; }
+  table { page-break-inside: avoid; }
+  h1, h2, h3 { page-break-after: avoid; }
+  img { max-width: 100%; page-break-inside: avoid; }
+}

@@ -1,0 +1,34 @@
+/*
+ * @insurtech/shared-ui -- Theme CSS variables Skalean Sofidemy
+ * Tache 1.4.8 completera ce theme. Ce stub initialise les variables CSS fondamentales.
+ */
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 210 29% 15%;
+  --card: 0 0% 100%;
+  --card-foreground: 210 29% 15%;
+  --muted: 210 10% 95%;
+  --muted-foreground: 210 10% 40%;
+  --border: 210 10% 88%;
+  --input: 210 10% 88%;
+  --ring: 18 84% 54%;
+  --radius: 0.5rem;
+  --color-primary: #E95D2C;
+  --color-secondary: #1A2730;
+  --color-accent: #B0CEE2;
+  --color-acaps: #2D5773;
+  --color-muted: hsl(210, 10%, 95%);
+}
+
+.dark {
+  --background: 210 29% 10%;
+  --foreground: 0 0% 95%;
+  --card: 210 29% 14%;
+  --card-foreground: 0 0% 95%;
+  --muted: 210 20% 20%;
+  --muted-foreground: 210 10% 65%;
+  --border: 210 20% 25%;
+  --input: 210 20% 25%;
+  --ring: 18 84% 54%;
+}

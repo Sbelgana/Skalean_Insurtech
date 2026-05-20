@@ -1,0 +1,48 @@
+/**
+ * Global styles -- web-assure-mobile
+ * Reference : task-1.4.7 Sprint 4 Phase 1
+ *
+ * Tailwind v4 directives + CSS custom properties pour le theme assure-mobile.
+ * decision-006 : aucune emoji dans les commentaires ou contenus.
+ */
+@import "tailwindcss";
+
+:root {
+  /* Skalean assure-mobile color palette */
+  --color-primary: #2D5773;
+  --color-primary-light: #B0CEE2;
+  --color-navy: #1A2730;
+  --color-accent: #E95D2C;
+
+  /* Safe area insets for iOS notch / Android bottom nav */
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Smooth scroll + font rendering */
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Mobile-first body reset */
+body {
+  overscroll-behavior-y: contain;
+}
+
+/* Bottom safe area for mobile bottom navigation */
+.pb-safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* RTL support */
+[dir="rtl"] {
+  font-family: var(--font-arabic), system-ui, sans-serif;
+}
+
+/* Print reset */
+@media print {
+  * { background: transparent !important; color: black !important; }
+  nav, aside, footer { display: none !important; }
+}

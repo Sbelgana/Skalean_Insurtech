@@ -1,0 +1,93 @@
+{
+  "meta": {
+    "title": {
+      "default": "سكاليان المؤمَّن -- تطبيق موبايل",
+      "brand": "سكاليان المؤمَّن"
+    },
+    "description": "تطبيق موبايل ديال سكاليان للتأمين: صرح بحادث، تبع بوليصاتك، دوز على كاراج."
+  },
+  "home": {
+    "title": "مرحباً بكم في سكاليان المؤمَّن",
+    "palette": {
+      "primary": "الأزرق السماوي",
+      "secondary": "الكحلي",
+      "accent": "البرتقالي",
+      "acaps": "أخضر المراقبة"
+    },
+    "placeholder": {
+      "banner": "هاد الصفحة غادي تتبدل بداشبورد المؤمَّن الموبايل فـ النسخة 21."
+    }
+  },
+  "common": {
+    "loading": "جاري التحميل",
+    "error": "كاين مشكلة",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "confirm": "تأكيد",
+    "close": "قفل",
+    "back": "رجوع",
+    "next": "التالي",
+    "previous": "السابق",
+    "search": "بحث",
+    "filter": "تصفية",
+    "sort": "ترتيب",
+    "refresh": "تحديث",
+    "export": "تصدير"
+  },
+  "mobile": {
+    "declarerSinistre": "صرح بحادث",
+    "mesAssurances": "التأميناتي",
+    "localiserGarage": "دوز على كاراج",
+    "photosAccident": "صور الحادث",
+    "geolocalisation": "الموقع الجغرافي",
+    "horsLigne": "بلا انترنت",
+    "modehorsLigneActif": "وضع بلا انترنت",
+    "pendingSync": "في انتظار المزامنة",
+    "syncComplete": "المزامنة كملات",
+    "installApp": "حمل التطبيق",
+    "updateAvailable": "كاين تحديث جديد",
+    "installLater": "من بعد",
+    "installNow": "حمل دابا",
+    "updateNow": "حدث دابا",
+    "dismiss": "تجاهل",
+    "offlineModeActive": "وضع بلا انترنت فعال",
+    "bottomNav": {
+      "home": "الرئيسية",
+      "claims": "الحوادث",
+      "policies": "البوليصات",
+      "garage": "الكاراج",
+      "profile": "البروفيل"
+    }
+  },
+  "nav": {
+    "policies": "بوليصاتي",
+    "claims": "صرح بحادث",
+    "payments": "مدفوعاتي",
+    "profile": "البروفيل",
+    "history": "التاريخ",
+    "documents": "الوثائق",
+    "help": "المساعدة",
+    "logout": "خروج"
+  },
+  "auth": {
+    "login": "دخول",
+    "logout": "خروج",
+    "signin": "دخول للحساب",
+    "signup": "حساب جديد",
+    "forgotPassword": "نسيت كلمة السر"
+  },
+  "errors": {
+    "network": "كاينة مشكلة فـ الشبكة",
+    "unauthorized": "خاصك تدخل أولاً",
+    "forbidden": "ما عندكش الصلاحية",
+    "notFound": "العنصر ما كاينش",
+    "serverError": "مشكلة فـ السيرفر",
+    "validation": "المعطيات ما صحيحاش"
+  },
+  "offline": {
+    "title": "بلا انترنت",
+    "description": "انت بلا انترنت. التغييرات غادي تتزامن ملي ترجع الشبكة.",
+    "retry": "عاود المحاولة",
+    "goBack": "ارجع"
+  }
+}

@@ -1,0 +1,36 @@
+/**
+ * Print styles -- web-assure-mobile
+ * Reference : task-1.4.7 Sprint 4 Phase 1
+ */
+@media print {
+  *,
+  *::before,
+  *::after {
+    background: transparent !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  nav,
+  aside,
+  footer,
+  [role="navigation"],
+  [data-theme] > header {
+    display: none !important;
+  }
+
+  body {
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+  }
+
+  @page {
+    margin: 2cm;
+  }
+}

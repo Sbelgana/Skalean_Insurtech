@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /
+
+# web-assure-mobile : portail prive assure, indexation interdite

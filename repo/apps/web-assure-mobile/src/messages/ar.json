@@ -1,0 +1,93 @@
+{
+  "meta": {
+    "title": {
+      "default": "سكاليان المؤمَّن -- تطبيق المحمول",
+      "brand": "سكاليان المؤمَّن"
+    },
+    "description": "تطبيق المحمول للمؤمَّن في سكاليان للتأمين: الإبلاغ عن الحوادث، متابعة الوثائق، تحديد موقع الكراج."
+  },
+  "home": {
+    "title": "مرحباً بكم في سكاليان المؤمَّن",
+    "palette": {
+      "primary": "الأزرق السماوي",
+      "secondary": "الأزرق الداكن",
+      "accent": "البرتقالي المؤسسي",
+      "acaps": "أخضر هيئة المراقبة"
+    },
+    "placeholder": {
+      "banner": "ستُستبدل هذه الصفحة بلوحة قيادة المؤمَّن المحمولة في النسخة 21."
+    }
+  },
+  "common": {
+    "loading": "جارٍ التحميل",
+    "error": "حدث خطأ",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "confirm": "تأكيد",
+    "close": "إغلاق",
+    "back": "رجوع",
+    "next": "التالي",
+    "previous": "السابق",
+    "search": "بحث",
+    "filter": "تصفية",
+    "sort": "ترتيب",
+    "refresh": "تحديث",
+    "export": "تصدير"
+  },
+  "mobile": {
+    "declarerSinistre": "الإبلاغ عن حادث",
+    "mesAssurances": "وثائق تأميني",
+    "localiserGarage": "تحديد موقع كراج",
+    "photosAccident": "صور الحادث",
+    "geolocalisation": "تحديد الموقع الجغرافي",
+    "horsLigne": "غير متصل",
+    "modehorsLigneActif": "وضع عدم الاتصال نشط",
+    "pendingSync": "في انتظار المزامنة",
+    "syncComplete": "اكتملت المزامنة",
+    "installApp": "تثبيت التطبيق",
+    "updateAvailable": "تحديث متاح",
+    "installLater": "لاحقاً",
+    "installNow": "تثبيت الآن",
+    "updateNow": "تحديث الآن",
+    "dismiss": "تجاهل",
+    "offlineModeActive": "وضع عدم الاتصال نشط",
+    "bottomNav": {
+      "home": "الرئيسية",
+      "claims": "الحوادث",
+      "policies": "الوثائق",
+      "garage": "الكراج",
+      "profile": "الملف الشخصي"
+    }
+  },
+  "nav": {
+    "policies": "وثائقي",
+    "claims": "الإبلاغ عن حادث",
+    "payments": "مدفوعاتي",
+    "profile": "ملفي الشخصي",
+    "history": "السجل",
+    "documents": "المستندات",
+    "help": "المساعدة",
+    "logout": "تسجيل الخروج"
+  },
+  "auth": {
+    "login": "تسجيل الدخول",
+    "logout": "تسجيل الخروج",
+    "signin": "الدخول",
+    "signup": "إنشاء حساب",
+    "forgotPassword": "نسيت كلمة المرور"
+  },
+  "errors": {
+    "network": "تعذّر الاتصال بالشبكة",
+    "unauthorized": "يلزم التسجيل",
+    "forbidden": "الوصول مرفوض",
+    "notFound": "العنصر غير موجود",
+    "serverError": "خطأ في الخادم",
+    "validation": "بيانات غير صالحة"
+  },
+  "offline": {
+    "title": "وضع عدم الاتصال",
+    "description": "أنت غير متصل حالياً. سيتم مزامنة التغييرات عند استعادة الاتصال.",
+    "retry": "إعادة المحاولة",
+    "goBack": "رجوع"
+  }
+}

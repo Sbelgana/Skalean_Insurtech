@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js build output
+.next/
+out/
+
+# Production build
+dist/
+
+# PWA generated files
+public/sw.js
+public/sw.js.map
+public/workbox-*.js
+public/workbox-*.js.map
+public/worker-*.js
+public/worker-*.js.map
+public/fallback-*.js
+public/fallback-*.js.map
+
+# Test coverage
+coverage/
+playwright-report/
+test-results/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Turbo
+.turbo/
+
+# TypeScript
+*.tsbuildinfo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*

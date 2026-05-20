@@ -9,12 +9,13 @@
  *   3. loadEnv() (Zod runtime validation)
  *   4. NestFactory.create<NestFastifyApplication>(AppModule, FastifyAdapter, { bufferLogs: true })
  *   5. app.useLogger(app.get(Logger)) (nestjs-pino -- remplace logger default, flush bufferLogs)
- *   6. app.enableShutdownHooks() (active onModuleDestroy providers)
- *   7. registerGracefulShutdown() (handlers SIGTERM/SIGINT chain)
- *   8. app.listen(port, '0.0.0.0') (bind 0.0.0.0 pour Docker)
+ *   6. registerSecurity(app, env) (Helmet, CORS, Compress -- Tache 1.3.5)
+ *   7. app.enableShutdownHooks() (active onModuleDestroy providers)
+ *   8. registerGracefulShutdown() (handlers SIGTERM/SIGINT chain)
+ *   9. app.listen(port, '0.0.0.0') (bind 0.0.0.0 pour Docker)
  *
  * Reference : decision-003 (NestJS Fastify) + decision-006 (no-emoji ABSOLUE).
- * Tache : 1.3.1 + 1.3.3 (Sprint 3 / Phase 1).
+ * Tache : 1.3.1 + 1.3.3 + 1.3.5 (Sprint 3 / Phase 1).
  */
 
 // Polyfill DI -- DOIT etre la TOUTE PREMIERE ligne avant tout autre import.
@@ -27,6 +28,7 @@ import { startTelemetry } from '@insurtech/shared-utils/telemetry';
 // Boot order helpers
 import { measureBootTime } from './bootstrap/start-time-logger';
 import { registerGracefulShutdown } from './bootstrap/graceful-shutdown';
+import { registerSecurity } from './bootstrap/security';
 
 // NestJS imports (charges apres telemetry init)
 import { NestFactory } from '@nestjs/core';
@@ -97,11 +99,16 @@ async function bootstrap(): Promise<void> {
   const logger = app.get(Logger);
   app.useLogger(logger);
 
-  // === ETAPE 5 : Active shutdown hooks NestJS ===
+  // === ETAPE 5 : Plugins de securite Fastify ===
+  // Helmet (en-tetes HTTP), CORS (origines env.CORS_ORIGINS), Compress (gzip).
+  // Tache 1.3.5 -- ordre : helmet -> cors -> compress (requis par Fastify encap).
+  await registerSecurity(app, env);
+
+  // === ETAPE 6 : Active shutdown hooks NestJS ===
   // Sans cela, les providers @OnModuleDestroy ne sont jamais appeles.
   app.enableShutdownHooks();
 
-  // === ETAPE 6 : Graceful shutdown handlers ===
+  // === ETAPE 7 : Graceful shutdown handlers ===
   // Chain : app.close() -> telemetry.shutdown() -> process.exit(0)
   // DB, Redis, Kafka geres via leurs hooks onModuleDestroy dans app.close().
   const timeoutMs = Number(process.env['GRACEFUL_SHUTDOWN_TIMEOUT_MS'] ?? '30000');
@@ -111,7 +118,7 @@ async function bootstrap(): Promise<void> {
     logger,
   });
 
-  // === ETAPE 7 : Listen sur API_PORT, bind 0.0.0.0 ===
+  // === ETAPE 8 : Listen sur API_PORT, bind 0.0.0.0 ===
   // Bind 0.0.0.0 EXPLICITEMENT (pas localhost) sinon Docker port mapping fail.
   const port = env.API_PORT ?? 4000;
   const host = process.env['API_HOST'] ?? '0.0.0.0';

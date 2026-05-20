@@ -91,6 +91,10 @@ function setupCommonMocks(options: { listenFn?: (port: number, host: string) => 
     measureBootTime: vi.fn(() => 100),
     BOOT_TIME_WARNING_THRESHOLD_MS: 5000,
   }));
+  // Mock security bootstrap (Tache 1.3.5) : evite les plugins Fastify reels.
+  vi.doMock('./bootstrap/security', () => ({
+    registerSecurity: vi.fn(async () => {}),
+  }));
   return { createSpy };
 }
 
@@ -151,6 +155,9 @@ describe('main.ts bootstrap', () => {
       measureBootTime: vi.fn(() => 100),
       BOOT_TIME_WARNING_THRESHOLD_MS: 5000,
     }));
+    vi.doMock('./bootstrap/security', () => ({
+      registerSecurity: vi.fn(async () => {}),
+    }));
 
     const { ready } = await import('./main');
     await ready;
@@ -210,6 +217,9 @@ describe('main.ts bootstrap', () => {
       measureBootTime: vi.fn(() => 100),
       BOOT_TIME_WARNING_THRESHOLD_MS: 5000,
     }));
+    vi.doMock('./bootstrap/security', () => ({
+      registerSecurity: vi.fn(async () => {}),
+    }));
 
     const { ready } = await import('./main');
     await ready;
@@ -267,6 +277,9 @@ describe('main.ts bootstrap', () => {
     vi.doMock('./bootstrap/start-time-logger', () => ({
       measureBootTime: vi.fn(() => 100),
       BOOT_TIME_WARNING_THRESHOLD_MS: 5000,
+    }));
+    vi.doMock('./bootstrap/security', () => ({
+      registerSecurity: vi.fn(async () => {}),
     }));
 
     const { ready } = await import('./main');

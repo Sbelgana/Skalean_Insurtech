@@ -10,13 +10,14 @@
  *   4. NestFactory.create<NestFastifyApplication>(AppModule, FastifyAdapter, { bufferLogs: true })
  *   5. app.useLogger(app.get(Logger)) (nestjs-pino -- remplace logger default, flush bufferLogs)
  *   6. app.useGlobalPipes(new ZodValidationPipe()) (pass-through global -- Tache 1.3.6)
+ *   6b. app.useGlobalInterceptors(new ResponseInterceptor()) (format API -- Tache 1.3.7)
  *   7. registerSecurity(app, env) (Helmet, CORS, Compress -- Tache 1.3.5)
  *   8. app.enableShutdownHooks() (active onModuleDestroy providers)
  *   9. registerGracefulShutdown() (handlers SIGTERM/SIGINT chain)
  *  10. app.listen(port, '0.0.0.0') (bind 0.0.0.0 pour Docker)
  *
  * Reference : decision-003 (NestJS Fastify) + decision-006 (no-emoji ABSOLUE).
- * Tache : 1.3.1 + 1.3.3 + 1.3.5 + 1.3.6 (Sprint 3 / Phase 1).
+ * Tache : 1.3.1 + 1.3.3 + 1.3.5 + 1.3.6 + 1.3.7 (Sprint 3 / Phase 1).
  */
 
 // Polyfill DI -- DOIT etre la TOUTE PREMIERE ligne avant tout autre import.
@@ -46,6 +47,9 @@ import { loadEnv } from '@insurtech/shared-config';
 
 // Pipe de validation Zod global (Tache 1.3.6).
 import { ZodValidationPipe } from './pipes/zod-validation.pipe';
+
+// Intercepteur de format de reponse API (Tache 1.3.7).
+import { ResponseInterceptor } from './interceptors/response.interceptor';
 
 // App module (skeleton -- 1.3.2 enrichit)
 import { AppModule } from './app.module';
@@ -108,6 +112,11 @@ async function bootstrap(): Promise<void> {
   // @Body(new ZodValidationPipe(schema)) pour une validation schema-specifique.
   // Tache 1.3.6.
   app.useGlobalPipes(new ZodValidationPipe());
+
+  // === ETAPE 5b : Intercepteur format reponse API ===
+  // Enveloppe toutes les reponses succes dans { success, data, meta }.
+  // Tache 1.3.7.
+  app.useGlobalInterceptors(new ResponseInterceptor());
 
   // === ETAPE 7 : Plugins de securite Fastify ===
   // Helmet (en-tetes HTTP), CORS (origines env.CORS_ORIGINS), Compress (gzip).

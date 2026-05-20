@@ -43,6 +43,7 @@ function makeMockApp(listenFn?: (port: number, host: string) => Promise<void>) {
   return {
     useLogger: vi.fn(),
     useGlobalPipes: vi.fn(),
+    useGlobalInterceptors: vi.fn(),
     enableShutdownHooks: vi.fn(),
     listen: vi.fn(listenFn ?? ((_p: number, _h: string) => Promise.resolve())),
     close: vi.fn(() => Promise.resolve()),
@@ -102,6 +103,12 @@ function setupCommonMocks(options: { listenFn?: (port: number, host: string) => 
   vi.doMock('./pipes/zod-validation.pipe', () => ({
     ZodValidationPipe: class MockZodValidationPipe {
       transform = vi.fn((v: unknown) => v);
+    },
+  }));
+  // Mock ResponseInterceptor (Tache 1.3.7) : evite import rxjs dans bootstrap tests.
+  vi.doMock('./interceptors/response.interceptor', () => ({
+    ResponseInterceptor: class MockResponseInterceptor {
+      intercept = vi.fn((_ctx: unknown, next: { handle: () => unknown }) => next.handle());
     },
   }));
   return { createSpy };
@@ -172,6 +179,11 @@ describe('main.ts bootstrap', () => {
         transform = vi.fn((v: unknown) => v);
       },
     }));
+    vi.doMock('./interceptors/response.interceptor', () => ({
+      ResponseInterceptor: class MockResponseInterceptor {
+        intercept = vi.fn((_ctx: unknown, next: { handle: () => unknown }) => next.handle());
+      },
+    }));
 
     const { ready } = await import('./main');
     await ready;
@@ -239,6 +251,11 @@ describe('main.ts bootstrap', () => {
         transform = vi.fn((v: unknown) => v);
       },
     }));
+    vi.doMock('./interceptors/response.interceptor', () => ({
+      ResponseInterceptor: class MockResponseInterceptor {
+        intercept = vi.fn((_ctx: unknown, next: { handle: () => unknown }) => next.handle());
+      },
+    }));
 
     const { ready } = await import('./main');
     await ready;
@@ -303,6 +320,11 @@ describe('main.ts bootstrap', () => {
     vi.doMock('./pipes/zod-validation.pipe', () => ({
       ZodValidationPipe: class MockZodValidationPipe {
         transform = vi.fn((v: unknown) => v);
+      },
+    }));
+    vi.doMock('./interceptors/response.interceptor', () => ({
+      ResponseInterceptor: class MockResponseInterceptor {
+        intercept = vi.fn((_ctx: unknown, next: { handle: () => unknown }) => next.handle());
       },
     }));
 

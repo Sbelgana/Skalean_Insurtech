@@ -1,0 +1,103 @@
+{
+  "meta": {
+    "title": {
+      "default": "Skalean Garage Mobile -- Espace technicien atelier",
+      "brand": "Skalean Garage Mobile"
+    },
+    "description": "Application mobile technicien atelier Skalean InsurTech : taches du jour, scanner VIN, photos reparation, mode hors ligne."
+  },
+  "home": {
+    "title": "Bienvenue sur Skalean Garage Mobile",
+    "palette": {
+      "primary": "Orange Sofidemy",
+      "secondary": "Navy Sofidemy",
+      "accent": "ACAPS Teal",
+      "sky": "Sky Blue"
+    },
+    "placeholder": {
+      "banner": "Cette page sera remplacee par le tableau de bord technicien dans le Sprint 21."
+    }
+  },
+  "common": {
+    "loading": "Chargement",
+    "error": "Une erreur est survenue",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Precedent",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "sort": "Trier",
+    "refresh": "Rafraichir",
+    "export": "Exporter"
+  },
+  "garage": {
+    "workshop": "Atelier",
+    "technician": "Technicien",
+    "claim": "Sinistre",
+    "quote": "Devis",
+    "workOrder": "Ordre de travail",
+    "part": "Piece detachee",
+    "expertise": "Expertise auto",
+    "repairStatus": "Statut reparation",
+    "vehicleIntake": "Entree vehicule",
+    "delivery": "Livraison vehicule"
+  },
+  "mobile": {
+    "scanVin": "Scanner VIN",
+    "photoRepair": "Photo reparation",
+    "taskToday": "Tache du jour",
+    "offline": "Hors ligne",
+    "syncInProgress": "Synchronisation en cours",
+    "offlineModeActive": "Mode hors ligne actif",
+    "pendingSync": "En attente de synchronisation",
+    "syncComplete": "Synchronisation terminee",
+    "installApp": "Installer l'application",
+    "updateAvailable": "Mise a jour disponible",
+    "installLater": "Plus tard",
+    "installNow": "Installer maintenant",
+    "updateNow": "Mettre a jour",
+    "dismiss": "Ignorer",
+    "bottomNav": {
+      "tasks": "Taches",
+      "scanner": "Scanner",
+      "photos": "Photos",
+      "sync": "Sync",
+      "profile": "Profil"
+    }
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "claims": "Sinistres",
+    "quotes": "Devis",
+    "workOrders": "Ordres de travail",
+    "workshop": "Atelier",
+    "technicians": "Techniciens",
+    "reports": "Rapports",
+    "settings": "Parametres"
+  },
+  "auth": {
+    "login": "Connexion",
+    "logout": "Deconnexion",
+    "signin": "Se connecter",
+    "signup": "Creer un compte",
+    "forgotPassword": "Mot de passe oublie"
+  },
+  "errors": {
+    "network": "Connexion reseau impossible",
+    "unauthorized": "Authentification requise",
+    "forbidden": "Acces refuse",
+    "notFound": "Element non trouve",
+    "serverError": "Erreur serveur",
+    "validation": "Donnees invalides"
+  },
+  "offline": {
+    "title": "Mode hors ligne",
+    "description": "Vous etes actuellement hors ligne. Les modifications seront synchronisees lors du retour de la connexion.",
+    "retry": "Reessayer",
+    "goBack": "Retour"
+  }
+}

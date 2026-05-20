@@ -1,0 +1,103 @@
+{
+  "meta": {
+    "title": {
+      "default": "Skalean Garage Mobile -- فضاء التيكنيسيان",
+      "brand": "Skalean Garage Mobile"
+    },
+    "description": "تطبيق موبايل ديال التيكنيسيان Skalean InsurTech : المهام ديال اليوم، سكانر VIN، صور الإصلاح، الوضع بلا انترنت."
+  },
+  "home": {
+    "title": "مرحبا بيك فـ Skalean Garage Mobile",
+    "palette": {
+      "primary": "البرتقالي ديال Sofidemy",
+      "secondary": "الكحل ديال Sofidemy",
+      "accent": "أزرق ACAPS",
+      "sky": "السماوي"
+    },
+    "placeholder": {
+      "banner": "هاد الصفحة غادي تتبدل بـ Dashboard ديال التيكنيسيان فـ Sprint 21."
+    }
+  },
+  "common": {
+    "loading": "جاري التحميل",
+    "error": "وقع شي مشكل",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "confirm": "تأكيد",
+    "close": "إغلاق",
+    "back": "رجوع",
+    "next": "التالي",
+    "previous": "السابق",
+    "search": "بحث",
+    "filter": "تصفية",
+    "sort": "ترتيب",
+    "refresh": "تحديث",
+    "export": "تصدير"
+  },
+  "garage": {
+    "workshop": "الأتيليي",
+    "technician": "التيكنيسيان",
+    "claim": "الحادثة",
+    "quote": "الديفيس",
+    "workOrder": "أوردر الإصلاح",
+    "part": "قطعة غيار",
+    "expertise": "معاينة السيارة",
+    "repairStatus": "حالة الإصلاح",
+    "vehicleIntake": "استقبال السيارة",
+    "delivery": "تسليم السيارة"
+  },
+  "mobile": {
+    "scanVin": "سكان VIN",
+    "photoRepair": "صورة ديال الإصلاح",
+    "taskToday": "المهمة ديال اليوم",
+    "offline": "بلا انترنت",
+    "syncInProgress": "التزامن جاري",
+    "offlineModeActive": "الوضع بلا انترنت فعال",
+    "pendingSync": "في انتظار التزامن",
+    "syncComplete": "التزامن كمل",
+    "installApp": "تنزيل التطبيق",
+    "updateAvailable": "تحديث متاح",
+    "installLater": "في وقت آخر",
+    "installNow": "نزل دابا",
+    "updateNow": "حدث دابا",
+    "dismiss": "تجاهل",
+    "bottomNav": {
+      "tasks": "المهام",
+      "scanner": "السكانر",
+      "photos": "الصور",
+      "sync": "تزامن",
+      "profile": "البروفايل"
+    }
+  },
+  "nav": {
+    "dashboard": "لوحة القيادة",
+    "claims": "الحوادث",
+    "quotes": "الديفيسات",
+    "workOrders": "أواردر الإصلاح",
+    "workshop": "الأتيليي",
+    "technicians": "التيكنيسيانية",
+    "reports": "التقارير",
+    "settings": "الإعدادات"
+  },
+  "auth": {
+    "login": "دخول",
+    "logout": "خروج",
+    "signin": "تسجيل الدخول",
+    "signup": "إنشاء حساب",
+    "forgotPassword": "نسيت كلمة السر"
+  },
+  "errors": {
+    "network": "كاينة مشكلة فـ الشبكة",
+    "unauthorized": "خاصك تسجل الدخول",
+    "forbidden": "ما عندكش الإذن",
+    "notFound": "ما لقيناش هاد الحاجة",
+    "serverError": "مشكل فـ السيرفر",
+    "validation": "المعطيات غالط"
+  },
+  "offline": {
+    "title": "الوضع بلا انترنت",
+    "description": "ما عندكش انترنت دابا. التغييرات غادي تتزامن ملي ترجع الشبكة.",
+    "retry": "عاود حاول",
+    "goBack": "رجوع"
+  }
+}

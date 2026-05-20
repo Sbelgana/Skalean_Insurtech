@@ -1,0 +1,41 @@
+@import "tailwindcss";
+@import "@insurtech/shared-ui/styles/theme.css";
+
+/* ==========================================================================
+   web-garage-mobile -- styles globaux
+   Reference : task-1.4.3 Sprint 4 Phase 1
+   ========================================================================== */
+
+@layer base {
+  body {
+    font-family: var(--font-montserrat), "Noto Naskh Arabic", system-ui, -apple-system, sans-serif;
+    font-feature-settings: "ss01", "cv01";
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    /* Mobile : evite le scroll horizontal indesirable */
+    overflow-x: hidden;
+    /* Safe area insets pour iPhone avec encoche */
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  [dir="rtl"] body {
+    font-family: var(--font-arabic), var(--font-montserrat), system-ui, sans-serif;
+  }
+
+  /* Scrollbar fine pour mobile */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--color-muted); }
+  ::-webkit-scrollbar-thumb { background: #2D5773; border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: #1e3d52; }
+
+  /* Evite le tap highlight bleu sur mobile */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@media print {
+  body { background: #ffffff !important; color: #1A2730 !important; }
+  nav, [data-print="hidden"] { display: none !important; }
+  a { text-decoration: underline; color: inherit; }
+}

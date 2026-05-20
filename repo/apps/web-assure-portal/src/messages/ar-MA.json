@@ -1,0 +1,62 @@
+{
+  "meta": {
+    "title": {
+      "default": "فضائي فـ Skalean -- بورتال المؤمن",
+      "brand": "فضائي فـ Skalean"
+    },
+    "description": "دير العقود ديالك، صرح بالحوادث وتبع المدفوعات فـ Skalean InsurTech."
+  },
+  "home": {
+    "title": "مرحبا بيك فـ فضاء Skalean ديالك",
+    "palette": {
+      "primary": "السماوي",
+      "secondary": "الكحل ديال Sofidemy",
+      "accent": "البرتقالي ديال Sofidemy",
+      "acaps": "أخضر ACAPS"
+    },
+    "placeholder": {
+      "banner": "هاد الصفحة غادي تتبدل بـ Dashboard ديال المؤمن فـ Sprint 20."
+    }
+  },
+  "common": {
+    "loading": "جاري التحميل",
+    "error": "وقع شي مشكل",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "confirm": "تأكيد",
+    "close": "إغلاق",
+    "back": "رجوع",
+    "next": "التالي",
+    "previous": "السابق",
+    "search": "بحث",
+    "filter": "تصفية",
+    "sort": "ترتيب",
+    "refresh": "تحديث",
+    "export": "تصدير"
+  },
+  "nav": {
+    "policies": "عقودي",
+    "claims": "صرح بحادث",
+    "payments": "مدفوعاتي",
+    "profile": "حسابي",
+    "history": "السجل",
+    "documents": "الوثائق",
+    "help": "مساعدة",
+    "logout": "خروج"
+  },
+  "auth": {
+    "login": "دخول",
+    "logout": "خروج",
+    "signin": "تسجيل الدخول",
+    "signup": "إنشاء حساب",
+    "forgotPassword": "نسيت كلمة السر"
+  },
+  "errors": {
+    "network": "كاينة مشكلة فـ الشبكة",
+    "unauthorized": "خاصك تسجل الدخول",
+    "forbidden": "ما عندكش الإذن",
+    "notFound": "ما لقيناش هاد الحاجة",
+    "serverError": "مشكل فـ السيرفر",
+    "validation": "المعطيات غالط"
+  }
+}

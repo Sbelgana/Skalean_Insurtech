@@ -1,0 +1,62 @@
+{
+  "meta": {
+    "title": {
+      "default": "Mon Espace Skalean -- Portail assure",
+      "brand": "Mon Espace Skalean"
+    },
+    "description": "Gerez vos polices, declarez vos sinistres et suivez vos paiements sur Skalean InsurTech."
+  },
+  "home": {
+    "title": "Bienvenue sur Mon Espace Skalean",
+    "palette": {
+      "primary": "Sky Blue",
+      "secondary": "Navy Sofidemy",
+      "accent": "Orange Sofidemy",
+      "acaps": "ACAPS Teal"
+    },
+    "placeholder": {
+      "banner": "Cette page sera remplacee par le tableau de bord assure dans le Sprint 20."
+    }
+  },
+  "common": {
+    "loading": "Chargement",
+    "error": "Une erreur est survenue",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Precedent",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "sort": "Trier",
+    "refresh": "Rafraichir",
+    "export": "Exporter"
+  },
+  "nav": {
+    "policies": "Mes polices",
+    "claims": "Declarer un sinistre",
+    "payments": "Mes paiements",
+    "profile": "Mon profil",
+    "history": "Historique",
+    "documents": "Documents",
+    "help": "Aide",
+    "logout": "Deconnexion"
+  },
+  "auth": {
+    "login": "Connexion",
+    "logout": "Deconnexion",
+    "signin": "Se connecter",
+    "signup": "Creer un compte",
+    "forgotPassword": "Mot de passe oublie"
+  },
+  "errors": {
+    "network": "Connexion reseau impossible",
+    "unauthorized": "Authentification requise",
+    "forbidden": "Acces refuse",
+    "notFound": "Ressource introuvable",
+    "serverError": "Erreur serveur",
+    "validation": "Donnees invalides"
+  }
+}

@@ -5,8 +5,11 @@
     "rootDir": "./src",
     "composite": true,
     "declaration": true,
-    "noEmit": false
+    "declarationMap": true,
+    "sourceMap": true,
+    "noEmit": false,
+    "tsBuildInfoFile": "./tsconfig.tsbuildinfo"
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.spec.ts"]
+  "exclude": ["node_modules", "dist", "test", "**/*.spec.ts"]
 }

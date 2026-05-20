@@ -54,6 +54,9 @@ import { ResponseInterceptor } from './interceptors/response.interceptor';
 // Filtre global exceptions PII-safe (Tache 1.3.8).
 import { AllExceptionsFilter } from './filters/all-exceptions.filter';
 
+// Swagger OpenAPI 3.0 setup (Tache 1.3.9).
+import { SwaggerModule } from './swagger/swagger.module';
+
 // App module (skeleton -- 1.3.2 enrichit)
 import { AppModule } from './app.module';
 
@@ -127,6 +130,15 @@ async function bootstrap(): Promise<void> {
   // Production : messages generiques uniquement (CNDP loi 09-08).
   // Tache 1.3.8.
   app.useGlobalFilters(new AllExceptionsFilter());
+
+  // === ETAPE 5d : Swagger OpenAPI 3.0 ===
+  // Registre /docs (HTML UI) + /docs-json (OpenAPI JSON) + /docs-yaml.
+  // SWAGGER_DISABLE_PROD=true desactive en production si necessaire.
+  // Par defaut : Swagger actif meme en production (transparency > obscurity).
+  // Tache 1.3.9.
+  SwaggerModule.setup(app, {
+    disable: process.env['SWAGGER_DISABLE_PROD'] === 'true' && env.NODE_ENV === 'production',
+  });
 
   // === ETAPE 7 : Plugins de securite Fastify ===
   // Helmet (en-tetes HTTP), CORS (origines env.CORS_ORIGINS), Compress (gzip).

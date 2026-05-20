@@ -32,6 +32,9 @@ import { LoggerModule } from './logger/logger.module';
 // === Context de requete (AsyncLocalStorage -- apres logger, avant metier) ===
 import { RequestContextModule } from './request-context/request-context.module';
 
+// === Swagger OpenAPI (Tache 1.3.9) ===
+import { SwaggerModule } from './swagger/swagger.module';
+
 // === Modules transverses globaux ===
 import { ConfigModule } from './config/config.module';
 import { DatabaseModule } from './database/database.module';
@@ -66,6 +69,9 @@ import { TenantModule } from './modules/tenant/tenant.module';
 
     // === Context de requete (AsyncLocalStorage) ===
     RequestContextModule,
+
+    // === Swagger OpenAPI (Tache 1.3.9) ===
+    SwaggerModule,
 
     // === Transverses globaux (ordre : Config -> Database -> Redis -> Kafka) ===
     ConfigModule.forRoot(),

@@ -118,6 +118,10 @@ function setupCommonMocks(options: { listenFn?: (port: number, host: string) => 
       catch = vi.fn();
     },
   }));
+  // Mock SwaggerModule (Tache 1.3.9) : evite @nestjs/swagger dans bootstrap tests.
+  vi.doMock('./swagger/swagger.module', () => ({
+    SwaggerModule: { setup: vi.fn() },
+  }));
   return { createSpy };
 }
 
@@ -196,6 +200,9 @@ describe('main.ts bootstrap', () => {
         catch = vi.fn();
       },
     }));
+    vi.doMock('./swagger/swagger.module', () => ({
+      SwaggerModule: { setup: vi.fn() },
+    }));
 
     const { ready } = await import('./main');
     await ready;
@@ -273,6 +280,9 @@ describe('main.ts bootstrap', () => {
         catch = vi.fn();
       },
     }));
+    vi.doMock('./swagger/swagger.module', () => ({
+      SwaggerModule: { setup: vi.fn() },
+    }));
 
     const { ready } = await import('./main');
     await ready;
@@ -348,6 +358,9 @@ describe('main.ts bootstrap', () => {
       AllExceptionsFilter: class MockAllExceptionsFilter {
         catch = vi.fn();
       },
+    }));
+    vi.doMock('./swagger/swagger.module', () => ({
+      SwaggerModule: { setup: vi.fn() },
     }));
 
     const { ready } = await import('./main');

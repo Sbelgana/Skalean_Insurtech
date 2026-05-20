@@ -144,6 +144,12 @@ function setupCommonMocks(options: { listenFn?: (port: number, host: string) => 
     isSentryInitialized: vi.fn(() => false),
     resetSentryStateForTesting: vi.fn(),
   }));
+  // Mock ThrottlerRateLimitModule (Tache 1.3.13) : evite connexion Redis DB 5.
+  vi.doMock('./throttler/throttler.module', () => ({
+    ThrottlerRateLimitModule: class MockThrottlerRateLimitModule {},
+    DEFAULT_RATE_LIMIT: 100,
+    DEFAULT_WINDOW_SECONDS: 60,
+  }));
   return { createSpy };
 }
 
@@ -235,6 +241,11 @@ describe('main.ts bootstrap', () => {
       isSentryInitialized: vi.fn(() => false),
       resetSentryStateForTesting: vi.fn(),
     }));
+    vi.doMock('./throttler/throttler.module', () => ({
+      ThrottlerRateLimitModule: class MockThrottlerRateLimitModule {},
+      DEFAULT_RATE_LIMIT: 100,
+      DEFAULT_WINDOW_SECONDS: 60,
+    }));
 
     const { ready } = await import('./main');
     await ready;
@@ -325,6 +336,11 @@ describe('main.ts bootstrap', () => {
       isSentryInitialized: vi.fn(() => false),
       resetSentryStateForTesting: vi.fn(),
     }));
+    vi.doMock('./throttler/throttler.module', () => ({
+      ThrottlerRateLimitModule: class MockThrottlerRateLimitModule {},
+      DEFAULT_RATE_LIMIT: 100,
+      DEFAULT_WINDOW_SECONDS: 60,
+    }));
 
     const { ready } = await import('./main');
     await ready;
@@ -413,6 +429,11 @@ describe('main.ts bootstrap', () => {
       sentryCaptureException: vi.fn(),
       isSentryInitialized: vi.fn(() => false),
       resetSentryStateForTesting: vi.fn(),
+    }));
+    vi.doMock('./throttler/throttler.module', () => ({
+      ThrottlerRateLimitModule: class MockThrottlerRateLimitModule {},
+      DEFAULT_RATE_LIMIT: 100,
+      DEFAULT_WINDOW_SECONDS: 60,
     }));
 
     const { ready } = await import('./main');

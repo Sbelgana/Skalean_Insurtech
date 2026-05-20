@@ -6,7 +6,7 @@
  * et pour nestjs-pino (evite middleware HTTP hors contexte tests).
  *
  * Reference : decision-006 (no-emoji).
- * Tache : 1.3.2 + 1.3.3 (Sprint 3 / Phase 1).
+ * Tache : 1.3.2 + 1.3.3 + 1.3.13 (Sprint 3 / Phase 1).
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Test, type TestingModule } from '@nestjs/testing';
@@ -116,7 +116,7 @@ vi.mock('@bull-board/fastify', () => ({
   })),
 }));
 
-// Mock @sentry/nestjs + @sentry/nestjs/nestjs + @sentry/profiling-node.
+// Mock @sentry/nestjs + @sentry/profiling-node.
 vi.mock('@sentry/nestjs', () => ({
   init: vi.fn(),
   captureException: vi.fn(),
@@ -124,6 +124,37 @@ vi.mock('@sentry/nestjs', () => ({
 }));
 vi.mock('@sentry/profiling-node', () => ({
   nodeProfilingIntegration: vi.fn(() => ({})),
+}));
+
+// Mock @nestjs/throttler : evite connexion Redis DB 5 pour rate-limit.
+vi.mock('@nestjs/throttler', () => ({
+  ThrottlerModule: {
+    forRoot: vi.fn(() => ({
+      module: class MockThrottlerModuleClass {},
+      providers: [],
+      exports: [],
+      global: true,
+    })),
+    forRootAsync: vi.fn(() => ({
+      module: class MockThrottlerAsyncModuleClass {},
+      providers: [
+        {
+          provide: 'THROTTLER_OPTIONS',
+          useValue: { throttlers: [{ name: 'default', ttl: 60, limit: 100 }] },
+        },
+        {
+          provide: Symbol.for('ThrottlerStorage'),
+          useValue: { increment: vi.fn() },
+        },
+      ],
+      exports: ['THROTTLER_OPTIONS'],
+      global: true,
+    })),
+  },
+  ThrottlerGuard: class MockThrottlerGuard {
+    canActivate() { return true; }
+    onModuleInit() { return Promise.resolve(); }
+  },
 }));
 
 // ============================================================================

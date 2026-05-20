@@ -18,7 +18,6 @@
  * Tache : 1.3.12 (Sprint 3 / Phase 1).
  */
 import * as Sentry from '@sentry/nestjs';
-import { nodeProfilingIntegration } from '@sentry/profiling-node';
 import { sentryBeforeSend } from './sentry-before-send';
 
 /** Flag interne indiquant si Sentry a ete initialise. */
@@ -50,6 +49,12 @@ export function initSentry(): void {
   }
 
   const isProd = nodeEnv === 'production';
+
+  // Dynamic import @sentry/profiling-node only when Sentry is actually enabled.
+  // Avoids loading the native CPU profiler binary (which is Node-ABI-specific)
+  // when SENTRY_DSN is unset (dev/CI). See KNOWN-ISSUES.md (Node ABI mismatch).
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { nodeProfilingIntegration } = require('@sentry/profiling-node') as typeof import('@sentry/profiling-node');
 
   Sentry.init({
     dsn,

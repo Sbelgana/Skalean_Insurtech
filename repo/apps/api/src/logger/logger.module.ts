@@ -18,11 +18,7 @@
  * Tache : 1.3.3 (Sprint 3 / Phase 1).
  */
 import { Global, Module, type DynamicModule } from '@nestjs/common';
-import {
-  LoggerModule as NestjsPinoModule,
-  Logger,
-  PinoLogger,
-} from 'nestjs-pino';
+import { LoggerModule as NestjsPinoModule } from 'nestjs-pino';
 import type { Options } from 'pino-http';
 import { trace } from '@opentelemetry/api';
 import { PII_REDACT_PATHS } from './pii-redact-paths';
@@ -97,9 +93,11 @@ export class LoggerModule {
     return {
       module: LoggerModule,
       imports: [pinoModule],
-      // Re-expose Logger et PinoLogger de nestjs-pino en tant que providers globaux.
-      // Tout module peut injecter Logger ou PinoLogger sans importer LoggerModule.
-      exports: [Logger, PinoLogger],
+      // Re-export the entire pinoModule -- consumers get Logger + PinoLogger
+      // via NestJS module transitive export resolution. Exporting class tokens
+      // directly fails because they are providers of nestjs-pino, not of this
+      // module (UnknownExportException at boot).
+      exports: [NestjsPinoModule],
       global: true,
     };
   }

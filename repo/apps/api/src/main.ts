@@ -154,23 +154,25 @@ async function bootstrap(): Promise<void> {
   });
 
   // === ETAPE 5e : BullBoard UI /admin/queues ===
-  // Interface UI BullMQ sur /admin/queues (auth requise Sprint 5+).
-  // bullBoardAdapter est initialise dans JobsModule.onModuleInit().
-  // Enregistrement plugin Fastify via l'adaptateur BullBoard.
-  // Tache 1.3.11.
-  try {
-    const fastifyInstance = app
-      .getHttpAdapter()
-      .getInstance() as unknown as { register: (plugin: unknown, opts?: unknown) => Promise<void> };
-    await fastifyInstance.register(bullBoardAdapter.registerPlugin(), {
-      prefix: '/admin/queues',
-      basePath: '/admin/queues',
-    });
-  } catch (err) {
-    // BullBoard non critique : log warn et continue le boot.
-    const msg = err instanceof Error ? err.message : String(err);
-    const logger = app.get(Logger);
-    logger.warn(`[JobsModule] BullBoard register skipped : ${msg}`);
+  // TODO Sprint 5+ : Re-enable when @fastify/static is downgraded to a
+  // Fastify-4-compatible version (currently pulls 5.x and breaks boot via
+  // avvio deferred error, not caught by try/catch around register()).
+  // See KNOWN-ISSUES.md (Sprint 3 pre-Sprint-5 validation).
+  // Skipped for pause technique #2 to allow API boot validation.
+  if (false) {
+    try {
+      const fastifyInstance = app
+        .getHttpAdapter()
+        .getInstance() as unknown as { register: (plugin: unknown, opts?: unknown) => Promise<void> };
+      await fastifyInstance.register(bullBoardAdapter.registerPlugin(), {
+        prefix: '/admin/queues',
+        basePath: '/admin/queues',
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const logger = app.get(Logger);
+      logger.warn(`[JobsModule] BullBoard register skipped : ${msg}`);
+    }
   }
 
   // === ETAPE 7 : Plugins de securite Fastify ===

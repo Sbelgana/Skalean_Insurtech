@@ -38,14 +38,12 @@
     "forceConsistentCasingInFileNames": true,
     "paths": {
       "@insurtech/database": ["packages/database/dist/index.d.ts"],
-      "@insurtech/shared-config": ["packages/shared-config/src/index.ts"],
-      "@insurtech/shared-config/*": ["packages/shared-config/src/*"],
-      "@insurtech/shared-utils": ["packages/shared-utils/src/index.ts"],
-      "@insurtech/shared-utils/*": ["packages/shared-utils/src/*"],
-      "@insurtech/shared-events": ["packages/shared-events/src/index.ts"],
-      "@insurtech/shared-events/*": ["packages/shared-events/src/*"],
-      "@insurtech/auth": ["packages/auth/src/index.ts"],
-      "@insurtech/auth/*": ["packages/auth/src/*"]
+      "@insurtech/shared-config": ["packages/shared-config/dist/index.d.ts"],
+      "@insurtech/shared-utils": ["packages/shared-utils/dist/index.d.ts"],
+      "@insurtech/shared-utils/telemetry": ["packages/shared-utils/dist/telemetry/index.d.ts"],
+      "@insurtech/shared-utils/redis": ["packages/shared-utils/dist/redis/index.d.ts"],
+      "@insurtech/shared-events": ["packages/shared-events/dist/index.d.ts"],
+      "@insurtech/auth": ["packages/auth/dist/index.d.ts"]
     }
   },
   "include": ["src/**/*", "test/**/*"],

@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Avatar -- simple avatar component + sub-component API (AvatarImage, AvatarFallback).
  * Reference : task-1.4.8 + task-1.4.14 Sprint 4 Phase 1

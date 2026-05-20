@@ -8,7 +8,7 @@
     "noEmit": false,
     "module": "Preserve",
     "moduleResolution": "Bundler",
-    "jsx": "preserve"
+    "jsx": "react-jsx"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.spec.tsx"]

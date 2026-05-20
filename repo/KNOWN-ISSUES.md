@@ -168,3 +168,151 @@ expected 'Seq Scan on crm_companies' to match /idx_crm_companies_name_trgm|Bitma
 **Plan de fix Sprint 3 hors-bande** : avant l'assertion EXPLAIN, inserer ~5000 lignes de donnees fictives dans `crm_companies` pour forcer le planner a utiliser l'index. Augmenter `random_page_cost` peut aussi aider.
 
 **Decouvert lors** : validation Sprints 1+2 (pause technique entre Sprint 2 et Sprint 3).
+
+## Sprint 3 apps/api -- Sentry profiling-node top-level import (Mai 2026)
+
+**Status** : RESOLVED
+
+**Probleme** : `apps/api/src/sentry/sentry.config.ts` faisait `import { nodeProfilingIntegration } from '@sentry/profiling-node'` au top du module. Le package charge un binary natif `sentry_cpu_profiler-<os>-<arch>-<abi>.node` a l'import time. Si l'ABI du Node runtime ne matche aucun binary bundle (par ex Node 25 ABI 141 vs versions 108/115/127 disponibles), crash au boot.
+
+**Solution appliquee** : Convertir en dynamic `require()` a l'interieur de `initSentry()`, gated par `process.env.SENTRY_DSN`. Le package n'est charge qu'en production quand Sentry est explicitement active.
+
+**Fichier modifie** : `apps/api/src/sentry/sentry.config.ts`
+
+**Decouvert lors** : pause technique #2 (entre Sprint 4 et Sprint 5).
+
+## Sprint 3 apps/api -- LoggerModule.exports invalid (Mai 2026)
+
+**Status** : RESOLVED
+
+**Probleme** : `LoggerModule` (Tache 1.3.3) declarait `exports: [Logger, PinoLogger]` ou Logger/PinoLogger sont des providers de `nestjs-pino`, PAS de LoggerModule. Au boot : `UnknownExportException: Nest cannot export a provider/module that is not a part of the currently processed module`.
+
+**Solution appliquee** : Re-exporter le module entier `NestjsPinoModule` (transitive export resolution). Les consumers obtiennent Logger + PinoLogger via NestJS.
+
+**Fichier modifie** : `apps/api/src/logger/logger.module.ts`
+
+**Decouvert lors** : pause technique #2 (entre Sprint 4 et Sprint 5).
+
+## Sprint 3 apps/api -- Fastify 4 vs plugins requirant Fastify 5 (Mai 2026)
+
+**Status** : RESOLVED via pnpm overrides
+
+**Probleme** : `apps/api` utilise `fastify@4.28.1` (NestJS Platform Fastify 10.x). Mais les versions latest des plugins `@fastify/*` requierent Fastify 5.x :
+- `@fastify/static@9.x` (pulled par `@bull-board/fastify@7.1.5`)
+- `@fastify/helmet@13.x`
+- `@fastify/cors@11.x`
+- `@fastify/compress@8.x`
+
+Erreur boot : `FastifyError: fastify-plugin: @fastify/X - expected '5.x' fastify version, '4.28.1' is installed`.
+
+**Solution appliquee** : Ajout de pnpm overrides dans `package.json` racine forcant les versions v4-compatibles :
+```json
+"pnpm": {
+  "overrides": {
+    "@fastify/static": "^7.0.4",
+    "@fastify/helmet": "^11.1.1",
+    "@fastify/cors": "^9.0.1",
+    "@fastify/compress": "^7.0.3"
+  }
+}
+```
+
+**Considerations long terme** : Sprint Phase 2 (Sprint 10+), evaluer migration Fastify 4 -> 5. Necessite revue NestJS Platform Fastify 11+ compat + bumper tous les plugins. Breaking changes signature plugin et hooks.
+
+**Decouvert lors** : pause technique #2 (entre Sprint 4 et Sprint 5).
+
+## Sprint 3 apps/api -- BullBoard fastify.register non catched (Mai 2026)
+
+**Status** : SKIPPED (block disabled), TODO Sprint 5+
+
+**Probleme** : `apps/api/src/main.ts` ligne 161-174 enroule `fastifyInstance.register(bullBoardAdapter.registerPlugin(), ...)` dans try/catch. Mais Fastify utilise avvio en interne avec resolution differree des plugins : `register()` enqueue le plugin et retourne avant l'erreur. L'erreur emerge plus tard via `process.processTicksAndRejections`, NON catched par le try/catch synchrone.
+
+**Solution appliquee** : Le bloc est entoure de `if (false)` (skip) avec TODO comment. BullBoard UI sur `/admin/queues` reste non-fonctionnelle.
+
+**Plan de fix Sprint 5+** : 
+- Option A : Bumper Fastify 4 -> 5 (cf section precedente) ce qui permet `@fastify/static@9` + `@bull-board/fastify@7` natifs
+- Option B : Downgrade `@bull-board/fastify` a une version compatible avec Fastify 4 + `@fastify/static@7`
+- Option C : Implementer BullBoard via Express adapter au lieu de Fastify (necessite double HTTP server)
+
+**Fichier modifie** : `apps/api/src/main.ts`
+
+**Decouvert lors** : pause technique #2 (entre Sprint 4 et Sprint 5).
+
+## Sprint 3 apps/api -- tsconfig paths pointed to src/ instead of dist/ (Mai 2026)
+
+**Status** : RESOLVED
+
+**Probleme** : `apps/api/tsconfig.json` `paths` aliases pointaient vers `packages/<name>/src/index.ts` au lieu de `packages/<name>/dist/index.d.ts`. Resultat : `tsc` essayait de compiler les sources des workspace packages comme partie integrante du build apps/api, declenchant `error TS6059: File '...' is not under 'rootDir' '...apps/api/src'`.
+
+**Solution appliquee** : `paths` pointent maintenant vers `dist/index.d.ts` (declaration only, runtime via node_modules resolution standard).
+
+**Fichier modifie** : `apps/api/tsconfig.json`
+
+**Decouvert lors** : pause technique #2 (entre Sprint 4 et Sprint 5).
+
+## Sprint 4 shared-ui -- jsx:preserve emits .jsx not consumable as .js (Mai 2026)
+
+**Status** : RESOLVED
+
+**Probleme** : `packages/shared-ui/tsconfig.json` avait `"jsx": "preserve"` qui emet des fichiers `.jsx` dans dist/. Mais `dist/index.js` (compile depuis `src/index.ts`) faisait `import './components/X.js'` (avec extension `.js`). Next.js bundler ne pouvait pas resoudre `.js` vers `.jsx` -> erreur `Module not found: Can't resolve './components/LocaleSwitcher.js'`.
+
+**Solution appliquee** : Changer `jsx: preserve` -> `jsx: react-jsx` (modern JSX transform). Output : fichiers `.js` purs avec `import { jsx as _jsx } from "react/jsx-runtime"` injecte automatiquement. 48 components emis en `.js`.
+
+**Note** : Apparait quelques warnings TS6133 "React declared but value never read" sur les fichiers qui font encore `import React from 'react'` (inutile avec react-jsx). Non-bloquant, dist est emit. A nettoyer Sprint 16+.
+
+**Fichier modifie** : `packages/shared-ui/tsconfig.json`
+
+**Decouvert lors** : pause technique #2 (entre Sprint 4 et Sprint 5).
+
+## Sprint 4 shared-ui -- avatar.tsx createContext sans 'use client' (Mai 2026)
+
+**Status** : RESOLVED (1 fichier), AUDIT A FAIRE (peut-etre d'autres)
+
+**Probleme** : `packages/shared-ui/src/components/ui/avatar.tsx` utilise `React.createContext` sans la directive `'use client'` au top. Next.js RSC (Server Components) interdit `createContext` cote serveur -> `TypeError: createContext only works in Client Components`.
+
+**Solution appliquee** : Ajout `'use client';` en premiere ligne de `avatar.tsx`.
+
+**Audit a faire Sprint 16 pre-pause** : grep tous les composants shared-ui utilisant `createContext`, `useState`, `useEffect`, `useContext`, `useRef`, etc. sans `'use client'`. Liste actuelle (probable) :
+- `packages/shared-ui/src/components/ui/avatar.tsx` (FIXED)
+- Stories Storybook (non-utilisees en prod, OK)
+
+**Fichier modifie** : `packages/shared-ui/src/components/ui/avatar.tsx`
+
+**Decouvert lors** : pause technique #2 (entre Sprint 4 et Sprint 5).
+
+## Sprint 4 frontends -- 404 routes locale apres clean cache (Mai 2026)
+
+**Status** : INVESTIGATION REPORTEE pre-Sprint 16
+
+**Probleme** : `apps/web-broker` compile via `pnpm dev`, mais les routes `/fr`, `/ar-MA`, `/ar` retournent 404 apres clean cache `.next/`. La middleware next-intl redirige `/` -> `/fr` correctement, et `/fr-MA` -> `/fr/fr-MA`, mais le rendu de `[locale]/page.tsx` echoue silencieusement (404 en 12-18ms, trop rapide pour un vrai rendu).
+
+**Cause non identifiee** (candidats) :
+- next-intl middleware config dans `apps/web-broker/src/middleware.ts`
+- D'autres composants shared-ui sans `'use client'` (audit incomplet)
+- Next 14 vs 15 compatibility
+- `[locale]/layout.tsx` ligne 95-96 : `if (!routing.locales.includes(locale as ...)) notFound();` evaluation suspecte
+
+**Plan de fix** : Pause technique #3 avant Sprint 16 (Web Broker App + Auth UI). A ce moment, les endpoints Auth Sprint 5 + CRM/Booking Sprint 8 seront dispo pour tester le frontend dans un contexte reel.
+
+**Audit a faire pre-Sprint 16** :
+1. Verifier `middleware.ts` next-intl pour chaque app (7 apps web-*)
+2. Grep tous composants shared-ui utilisant `createContext|useState|useEffect|useContext|useRef` sans `'use client'`
+3. Verifier `[locale]/layout.tsx` existe partout, et que `routing.locales` est correctement importe
+4. Tester `pnpm build` (production) en plus de `pnpm dev` -- peut reveler bugs RSC supplementaires
+5. Tester avec Next sans Turbopack (`--no-turbopack`) pour isoler bugs Turbopack vs Next standard
+
+**Decouvert lors** : pause technique #2 (entre Sprint 4 et Sprint 5).
+
+## Pause technique #2 environment -- Node 25 conflicting with Volta-22 (Mai 2026)
+
+**Status** : WORKAROUND, NOT FIXED (env issue local user)
+
+**Probleme** : Windows PATH contient `C:\Program Files\nodejs\node.exe` (Node 25.0.0 installation systeme) en parallele de `C:\Program Files\Volta\node.exe` (Volta shim resolvant a 22.22.1 via package.json volta config). Le shim Volta est en premier dans PATH bash mais quand `nest start --watch` spawn un child process via `child_process.spawn(cmd, { shell: true })`, cmd.exe fait son propre PATH lookup et peut prendre la mauvaise version (Node 25).
+
+**Symptome** : `Sentry/profiling-node` binary `sentry_cpu_profiler-win32-x64-141.node` not found (Node 25 ABI 141 manquante).
+
+**Workaround** : Boot direct via `"/c/Program Files/Volta/node" dist/main.js` au lieu de `pnpm dev`. Ce qui contourne le child_process spawn issue.
+
+**Plan de fix** : Documenter dans `repo/CONTRIBUTING.md` que Node 25 doit etre desinstalle du chemin `C:\Program Files\nodejs\` OU placer Volta avant nodejs dans le Windows PATH systeme (regedit). Pas un bug du projet, juste du dev environment local.
+
+**Decouvert lors** : pause technique #2 (entre Sprint 4 et Sprint 5).

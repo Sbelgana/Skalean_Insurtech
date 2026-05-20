@@ -73,7 +73,20 @@ describe('AuthService', () => {
     const mfa = new MfaService(redis as unknown as RedisLike, argon2, encryption, hashing);
     mfa.onModuleInit();
     userRepo = new InMemoryUserRepository();
-    service = new AuthService(userRepo, argon2, jwt, session, hashing, mfa);
+    const { InMemoryEmailVerificationRepository } = await import('./email-verification.repository');
+    const { StubEmailService } = await import('./email.service');
+    const emailVerifyRepo = new InMemoryEmailVerificationRepository();
+    const emailService = new StubEmailService();
+    service = new AuthService(
+      userRepo,
+      argon2,
+      jwt,
+      session,
+      hashing,
+      mfa,
+      emailVerifyRepo,
+      emailService,
+    );
   }, 30000);
 
   async function seedUser(overrides: Partial<AuthUser> = {}): Promise<AuthUser> {

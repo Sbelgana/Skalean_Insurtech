@@ -2,7 +2,9 @@
  * apps/api/src/modules/auth/auth.controller
  *
  * REST endpoints for /api/v1/auth/*.
- * Sprint 5 Tache 2.1.6.
+ * Sprint 5 Tache 2.1.6 (signin/signout/refresh/me)
+ *           + 2.1.8 (setup-mfa/confirm-mfa/verify-mfa/disable-mfa)
+ *           + 2.1.9 (signup/verify-email/resend-verification)
  */
 
 import {
@@ -16,17 +18,33 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { type AuthContext, signinSchema, refreshSchema } from '@insurtech/auth';
+import {
+  type AuthContext,
+  mfaDisableSchema,
+  mfaSetupConfirmSchema,
+  mfaVerifySchema,
+  refreshSchema,
+  resendVerificationSchema,
+  signinSchema,
+  signupSchema,
+  verifyEmailSchema,
+} from '@insurtech/auth';
 import { z } from 'zod';
 import { Public } from '../../decorators/public.decorator';
-import { CurrentAuth } from './decorators/current-auth.decorator.js';
-import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 import { AuthService, type SigninContext } from './auth.service.js';
+import { CurrentAuth } from './decorators/current-auth.decorator.js';
 import type {
   RefreshResponse,
   SigninResponse,
   UserPublic,
 } from './dto/auth-response.dto.js';
+import type {
+  ConfirmMfaResponse,
+  DisableMfaResponse,
+  SetupMfaResponse,
+  VerifyMfaResponse,
+} from './dto/mfa-response.dto.js';
+import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 
 interface HttpHeadersBag {
   [k: string]: string | string[] | undefined;
@@ -42,6 +60,62 @@ const signoutSchema = z
 @UseGuards(JwtAuthGuard)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Public()
+  @Post('signup')
+  @HttpCode(HttpStatus.OK)
+  async signup(
+    @Body() body: unknown,
+    @Req() req: { headers: HttpHeadersBag; ip?: string; socket?: { remoteAddress?: string } },
+  ): Promise<{ message: string }> {
+    const parsed = signupSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException({
+        code: 'VALIDATION_ERROR',
+        message: 'Invalid signup payload',
+        issues: parsed.error.issues,
+      });
+    }
+    const ctx = this.buildContext(req, false);
+    return this.authService.signup(parsed.data, ctx);
+  }
+
+  @Public()
+  @Post('verify-email')
+  @HttpCode(HttpStatus.OK)
+  async verifyEmail(@Body() body: unknown): Promise<{ verified: true; message: string }> {
+    const parsed = verifyEmailSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException({
+        code: 'VALIDATION_ERROR',
+        message: 'Invalid verify-email payload',
+        issues: parsed.error.issues,
+      });
+    }
+    return this.authService.verifyEmail(parsed.data.verification_token);
+  }
+
+  @Public()
+  @Post('resend-verification')
+  @HttpCode(HttpStatus.OK)
+  async resendVerification(
+    @Body() body: unknown,
+    @Req() req: { headers: HttpHeadersBag; ip?: string; socket?: { remoteAddress?: string } },
+  ): Promise<{ message: string }> {
+    const parsed = resendVerificationSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException({
+        code: 'VALIDATION_ERROR',
+        message: 'Invalid resend-verification payload',
+        issues: parsed.error.issues,
+      });
+    }
+    const ctx = this.buildContext(req, false);
+    return this.authService.resendVerification(parsed.data.email, {
+      ip: ctx.ip,
+      user_agent: ctx.user_agent,
+    });
+  }
 
   @Public()
   @Post('signin')
@@ -62,23 +136,6 @@ export class AuthController {
     return this.authService.signin(parsed.data, ctx);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Post('signout')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async signout(
-    @Body() body: unknown,
-    @CurrentAuth() auth: AuthContext,
-  ): Promise<void> {
-    const parsed = signoutSchema.safeParse(body ?? {});
-    const all = parsed.success ? parsed.data.all_devices : false;
-    if (auth.subject.kind !== 'user') return;
-    if (all) {
-      await this.authService.signoutAll(auth.subject.user.id);
-      return;
-    }
-    await this.authService.signout(auth.subject.session_id);
-  }
-
   @Public()
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
@@ -96,6 +153,110 @@ export class AuthController {
     }
     const ctx = this.buildContext(req, false);
     return this.authService.refresh(parsed.data.refresh_token, ctx);
+  }
+
+  @Public()
+  @Post('verify-mfa')
+  @HttpCode(HttpStatus.OK)
+  async verifyMfa(
+    @Body() body: unknown,
+    @Req() req: { headers: HttpHeadersBag; ip?: string; socket?: { remoteAddress?: string } },
+  ): Promise<VerifyMfaResponse> {
+    const parsed = mfaVerifySchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException({
+        code: 'VALIDATION_ERROR',
+        message: 'Invalid verify-mfa payload',
+        issues: parsed.error.issues,
+      });
+    }
+    const ctx = this.buildContext(req, false);
+    return this.authService.verifyMfa({
+      challenge_token: parsed.data.challenge_token,
+      ...(parsed.data.totp_code !== undefined ? { totp_code: parsed.data.totp_code } : {}),
+      ...(parsed.data.recovery_code !== undefined
+        ? { recovery_code: parsed.data.recovery_code }
+        : {}),
+      ip: ctx.ip,
+      user_agent: ctx.user_agent,
+      request_id: ctx.request_id,
+    });
+  }
+
+  @Post('signout')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async signout(
+    @Body() body: unknown,
+    @CurrentAuth() auth: AuthContext,
+  ): Promise<void> {
+    const parsed = signoutSchema.safeParse(body ?? {});
+    const all = parsed.success ? parsed.data.all_devices : false;
+    if (auth.subject.kind !== 'user') return;
+    if (all) {
+      await this.authService.signoutAll(auth.subject.user.id);
+      return;
+    }
+    await this.authService.signout(auth.subject.session_id);
+  }
+
+  @Post('setup-mfa')
+  @HttpCode(HttpStatus.OK)
+  async setupMfa(@CurrentAuth() auth: AuthContext): Promise<SetupMfaResponse> {
+    if (auth.subject.kind !== 'user') {
+      throw new BadRequestException({ code: 'NOT_USER_SUBJECT', message: 'Not a user subject' });
+    }
+    return this.authService.setupMfa({
+      user_id: auth.subject.user.id,
+      email: auth.subject.user.email,
+    });
+  }
+
+  @Post('confirm-mfa')
+  @HttpCode(HttpStatus.OK)
+  async confirmMfa(
+    @Body() body: unknown,
+    @CurrentAuth() auth: AuthContext,
+  ): Promise<ConfirmMfaResponse> {
+    if (auth.subject.kind !== 'user') {
+      throw new BadRequestException({ code: 'NOT_USER_SUBJECT', message: 'Not a user subject' });
+    }
+    const parsed = mfaSetupConfirmSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException({
+        code: 'VALIDATION_ERROR',
+        message: 'Invalid confirm-mfa payload',
+        issues: parsed.error.issues,
+      });
+    }
+    return this.authService.confirmMfa({
+      user_id: auth.subject.user.id,
+      setup_token: parsed.data.setup_token,
+      totp_code: parsed.data.totp_code,
+    });
+  }
+
+  @Post('disable-mfa')
+  @HttpCode(HttpStatus.OK)
+  async disableMfa(
+    @Body() body: unknown,
+    @CurrentAuth() auth: AuthContext,
+  ): Promise<DisableMfaResponse> {
+    if (auth.subject.kind !== 'user') {
+      throw new BadRequestException({ code: 'NOT_USER_SUBJECT', message: 'Not a user subject' });
+    }
+    const parsed = mfaDisableSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException({
+        code: 'VALIDATION_ERROR',
+        message: 'Invalid disable-mfa payload',
+        issues: parsed.error.issues,
+      });
+    }
+    return this.authService.disableMfa({
+      user_id: auth.subject.user.id,
+      current_password: parsed.data.current_password,
+      totp_code: parsed.data.totp_code,
+    });
   }
 
   @Get('me')

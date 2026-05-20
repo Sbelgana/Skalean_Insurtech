@@ -62,3 +62,29 @@ export const MfaChallengeExpiredError = (): ApiAuthError =>
 
 export const MfaSetupExpiredError = (): ApiAuthError =>
   new ApiAuthError('MFA_SETUP_EXPIRED', 'MFA setup token expired -- restart setup');
+
+export const EmailVerificationExpiredError = (): ApiAuthError =>
+  new ApiAuthError(
+    'EMAIL_VERIFICATION_EXPIRED',
+    'Email verification token expired. Request a new one.',
+    HttpStatus.GONE,
+  );
+
+export const EmailVerificationInvalidError = (): ApiAuthError =>
+  new ApiAuthError(
+    'EMAIL_VERIFICATION_INVALID',
+    'Email verification token invalid or already used.',
+    HttpStatus.GONE,
+  );
+
+export const AccountAlreadyVerifiedError = (): ApiAuthError =>
+  new ApiAuthError('EMAIL_ALREADY_VERIFIED', 'Email is already verified', HttpStatus.OK);
+
+export const PasswordPolicyViolationError = (reasons: readonly string[]): ApiAuthError => {
+  const err = new ApiAuthError(
+    'PASSWORD_POLICY_VIOLATION',
+    `Password does not meet the policy: ${reasons.join(', ')}`,
+    HttpStatus.BAD_REQUEST,
+  );
+  return err;
+};

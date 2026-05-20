@@ -10,6 +10,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import {
   Argon2Service,
+  type AuthRole,
   HashingService,
   isMfaMandatory,
   JwtService,
@@ -23,12 +24,14 @@ import {
   SessionService,
   TokenError,
   type SigninInput,
+  type SignupInput,
 } from '@insurtech/auth';
 import {
   AccountDeletedError,
   AccountDisabledError,
   AccountLockedError,
   EmailNotVerifiedError,
+  EmailVerificationInvalidError,
   InvalidCredentialsError,
   InvalidRefreshTokenError,
   MfaAlreadyEnabledError,
@@ -36,8 +39,14 @@ import {
   MfaInvalidCodeError,
   MfaNotEnabledError,
   MfaSetupExpiredError,
+  PasswordPolicyViolationError,
   TokenReuseDetectedError,
 } from './auth.errors.js';
+import {
+  type EmailVerificationRepository,
+  EMAIL_VERIFICATION_REPOSITORY_TOKEN,
+} from './email-verification.repository.js';
+import { type EmailService, EMAIL_SERVICE_TOKEN } from './email.service.js';
 import type {
   RefreshResponse,
   SigninMfaRequiredResponse,
@@ -76,7 +85,133 @@ export class AuthService {
     private readonly session: SessionService,
     private readonly hashing: HashingService,
     private readonly mfa: MfaService,
+    @Inject(EMAIL_VERIFICATION_REPOSITORY_TOKEN)
+    private readonly emailVerifyRepo: EmailVerificationRepository,
+    @Inject(EMAIL_SERVICE_TOKEN) private readonly emailService: EmailService,
   ) {}
+
+  /**
+   * Creates a new user (email_verified_at NULL) and sends verification email.
+   * Anti-enumeration : returns same response whether email exists or not.
+   */
+  async signup(
+    input: SignupInput,
+    ctx: { ip: string; user_agent: string; request_id: string },
+  ): Promise<{ message: string }> {
+    const email = input.email.trim().toLowerCase();
+    const policy = this.argon2.validatePolicy(input.password, {
+      email,
+      display_name: input.display_name,
+    });
+    if (!policy.valid) {
+      throw PasswordPolicyViolationError(policy.reasons);
+    }
+    const existing = await this.userRepo.findByEmail(email);
+    if (existing) {
+      this.logger.log({ action: 'signup_duplicate_attempt', email, ip: ctx.ip });
+      return {
+        message: 'If your email is not yet registered, a verification email has been sent.',
+      };
+    }
+    const passwordHash = await this.argon2.hash(input.password);
+    const userId = this.jwt.generateUuid();
+    const role = (input.requested_role ?? 'prospect') as AuthRole;
+    await this.userRepo.create({
+      id: userId,
+      email,
+      display_name: input.display_name,
+      role,
+      tenant_id: null,
+      password_hash: passwordHash,
+      email_verified_at: null,
+      mfa_enabled: false,
+      mfa_secret_encrypted: null,
+      mfa_recovery_codes_hashes: null,
+      mfa_setup_completed_at: null,
+      is_active: true,
+      deleted_at: null,
+      locked_until: null,
+      failed_login_attempts: 0,
+      locale: input.locale,
+      created_at: new Date(),
+      last_login_at: null,
+      last_login_ip: null,
+    });
+    const rawToken = this.hashing.randomToken(32);
+    const tokenHash = this.hashing.sha256(rawToken);
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await this.emailVerifyRepo.create({
+      user_id: userId,
+      token_hash: tokenHash,
+      purpose: 'signup',
+      expires_at: expiresAt,
+      ip_at_creation: ctx.ip,
+      user_agent_at_creation: ctx.user_agent,
+    });
+    await this.emailService.sendVerification({
+      to: email,
+      locale: input.locale,
+      token: rawToken,
+      display_name: input.display_name,
+    });
+    this.logger.log({ action: 'signup_completed', user_id: userId, email });
+    return {
+      message: 'If your email is not yet registered, a verification email has been sent.',
+    };
+  }
+
+  /** Verifies the email via SHA-256-hashed token lookup. One-time use. */
+  async verifyEmail(token: string): Promise<{ verified: true; message: string }> {
+    const tokenHash = this.hashing.sha256(token);
+    const record = await this.emailVerifyRepo.findActiveByTokenHash(tokenHash);
+    if (!record) {
+      throw EmailVerificationInvalidError();
+    }
+    await this.userRepo.markEmailVerified(record.user_id, new Date());
+    await this.emailVerifyRepo.markConsumed(record.id);
+    this.logger.log({ action: 'email_verified', user_id: record.user_id });
+    return { verified: true, message: 'Email verified. You can now sign in.' };
+  }
+
+  /** Re-sends verification (anti-enumeration : same response when unknown). */
+  async resendVerification(
+    email: string,
+    ctx: { ip: string; user_agent: string },
+  ): Promise<{ message: string }> {
+    const lower = email.trim().toLowerCase();
+    const user = await this.userRepo.findByEmail(lower);
+    const sameResponse = {
+      message: 'If your email is registered and not yet verified, a new email has been sent.',
+    };
+    if (!user) {
+      this.logger.log({ action: 'resend_verification_unknown_email', email: lower });
+      return sameResponse;
+    }
+    if (user.email_verified_at !== null) {
+      this.logger.log({ action: 'resend_verification_already_verified', user_id: user.id });
+      return sameResponse;
+    }
+    await this.emailVerifyRepo.deleteUnconsumedForUser(user.id);
+    const rawToken = this.hashing.randomToken(32);
+    const tokenHash = this.hashing.sha256(rawToken);
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await this.emailVerifyRepo.create({
+      user_id: user.id,
+      token_hash: tokenHash,
+      purpose: 'resend',
+      expires_at: expiresAt,
+      ip_at_creation: ctx.ip,
+      user_agent_at_creation: ctx.user_agent,
+    });
+    await this.emailService.sendVerification({
+      to: lower,
+      locale: user.locale,
+      token: rawToken,
+      display_name: user.display_name,
+    });
+    this.logger.log({ action: 'resend_verification_sent', user_id: user.id });
+    return sameResponse;
+  }
 
   async signin(input: SigninInput, ctx: SigninContext): Promise<SigninResponse> {
     const email = input.email.trim().toLowerCase();

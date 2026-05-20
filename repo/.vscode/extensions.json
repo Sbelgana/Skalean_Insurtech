@@ -3,16 +3,21 @@
     "biomejs.biome",
     "EditorConfig.EditorConfig",
     "bradlc.vscode-tailwindcss",
-    "ms-azuretools.vscode-docker",
-    "redhat.vscode-yaml",
-    "ms-vscode-remote.remote-wsl",
+    "ms-playwright.playwright",
+    "vitest.explorer",
     "ms-vscode.vscode-typescript-next",
+    "prisma.prisma",
+    "GitHub.vscode-pull-request-github",
+    "redhat.vscode-yaml",
+    "yoavbls.pretty-ts-errors",
     "streetsidesoftware.code-spell-checker",
+    "ms-azuretools.vscode-docker",
     "usernamehw.errorlens"
   ],
   "unwantedRecommendations": [
-    "esbenp.prettier-vscode",
     "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "ms-vscode.vscode-typescript-tslint-plugin",
     "ms-vscode.typescript-javascript-grammar"
   ]
 }

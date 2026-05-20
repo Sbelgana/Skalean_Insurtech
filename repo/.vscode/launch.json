@@ -1,0 +1,83 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Next.js debug -- web-broker (3001)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm --filter @insurtech/web-broker dev",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Next.js debug -- web-garage (3002)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm --filter @insurtech/web-garage dev",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Next.js debug -- web-customer-portal (3004)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm --filter @insurtech/web-customer-portal dev",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Next.js debug -- web-insurtech-admin (3000)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm --filter @insurtech/web-insurtech-admin dev",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Next.js debug -- web-assure-portal (3005)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm --filter @insurtech/web-assure-portal dev",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Next.js debug -- web-assure-mobile (3006)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm --filter @insurtech/web-assure-mobile dev",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Vitest -- run all",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["test"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Vitest -- current file",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["exec", "vitest", "run", "${file}"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Playwright -- E2E debug",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["exec", "playwright", "test", "--debug"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Doctor script",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["doctor"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    }
+  ]
+}

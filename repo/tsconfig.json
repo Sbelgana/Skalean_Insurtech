@@ -7,6 +7,7 @@
   },
   "include": [
     "infrastructure/scripts/**/*.ts",
+    "scripts/**/*.ts",
     "test/**/*.ts",
     "vitest.config.ts",
     "playwright.config.ts"

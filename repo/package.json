@@ -26,23 +26,67 @@
   ],
   "scripts": {
     "dev": "turbo run dev --parallel --concurrency=15",
+
+    "dev:web-broker": "pnpm --filter @insurtech/web-broker dev",
+    "dev:web-garage": "pnpm --filter @insurtech/web-garage dev",
+    "dev:web-garage-mobile": "pnpm --filter @insurtech/web-garage-mobile dev",
+    "dev:web-insurtech-admin": "pnpm --filter @insurtech/web-insurtech-admin dev",
+    "dev:web-customer-portal": "pnpm --filter @insurtech/web-customer-portal dev",
+    "dev:web-assure-portal": "pnpm --filter @insurtech/web-assure-portal dev",
+    "dev:web-assure-mobile": "pnpm --filter @insurtech/web-assure-mobile dev",
+
+    "dev:portals": "bash scripts/dev-portals.sh",
+    "dev:dashboards": "bash scripts/dev-dashboards.sh",
+    "dev:all": "bash scripts/dev-all.sh",
+    "dev:portals:win": "scripts\\dev-portals.cmd",
+    "dev:dashboards:win": "scripts\\dev-dashboards.cmd",
+    "dev:all:win": "scripts\\dev-all.cmd",
+
     "build": "turbo run build",
     "build:affected": "turbo run build --filter=...[origin/main]",
+    "build:apps": "turbo run build --filter='./apps/*'",
+    "build:packages": "turbo run build --filter='./packages/*'",
+
+    "typecheck": "turbo run typecheck",
+    "typecheck:apps": "turbo run typecheck --filter='./apps/*'",
+    "typecheck:packages": "turbo run typecheck --filter='./packages/*'",
+
     "lint": "turbo run lint && node_modules/.bin/biome check .",
     "lint:fix": "turbo run lint:fix && node_modules/.bin/biome check --write .",
+    "lint:apps": "turbo run lint --filter='./apps/*'",
+
     "format": "node_modules/.bin/biome format --write .",
     "format:check": "node_modules/.bin/biome format --check .",
-    "typecheck": "turbo run typecheck",
+
     "test": "turbo run test",
+    "test:apps": "turbo run test --filter='./apps/*'",
+    "test:packages": "turbo run test --filter='./packages/*'",
     "test:watch": "turbo run test -- --watch",
     "test:coverage": "turbo run test -- --coverage",
     "test:e2e": "turbo run test:e2e",
     "test:structure": "vitest run infrastructure/scripts/__tests__/structure.spec.ts",
+    "test:integration": "turbo run test:integration --concurrency=1",
+    "test:integration:coverage": "pnpm --filter @insurtech/database test:integration:coverage && pnpm --filter @insurtech/shared-events test:integration:coverage",
+
+    "doctor": "tsx scripts/doctor.ts",
+    "doctor:offline": "tsx scripts/doctor.ts --offline",
+    "doctor:fix": "tsx scripts/doctor.ts --fix",
+
+    "generate:api-client": "turbo run generate:api-client --filter=@insurtech/api-client",
+    "lighthouse:baseline": "turbo run lighthouse --filter='./apps/*'",
+
+    "storybook": "pnpm --filter @insurtech/shared-ui storybook",
+    "storybook:build": "pnpm --filter @insurtech/shared-ui build-storybook",
+
+    "validate": "pnpm typecheck && pnpm lint && pnpm test",
+    "ci": "pnpm install --frozen-lockfile && pnpm validate && pnpm build:apps",
+
     "docker:up": "docker compose -f infrastructure/docker/docker-compose.dev.yaml up -d",
     "docker:down": "docker compose -f infrastructure/docker/docker-compose.dev.yaml down",
     "docker:reset": "docker compose -f infrastructure/docker/docker-compose.dev.yaml down -v && docker compose -f infrastructure/docker/docker-compose.dev.yaml up -d",
     "docker:logs": "docker compose -f infrastructure/docker/docker-compose.dev.yaml logs -f --tail=100",
     "docker:ps": "docker compose -f infrastructure/docker/docker-compose.dev.yaml ps",
+
     "bootstrap": "pnpm install --frozen-lockfile && pnpm typecheck && pnpm lint && echo Bootstrap completed",
     "verify-env": "tsx infrastructure/scripts/verify-env.ts",
     "check-no-emoji": "bash infrastructure/scripts/check-no-emoji.sh",
@@ -50,8 +94,6 @@
     "seeds:reset": "pnpm --filter @insurtech/platform seeds:reset",
     "seeds:dev": "pnpm --filter @insurtech/platform seeds:dev",
     "seeds:test": "pnpm --filter @insurtech/platform seeds:test",
-    "test:integration": "turbo run test:integration --concurrency=1",
-    "test:integration:coverage": "pnpm --filter @insurtech/database test:integration:coverage && pnpm --filter @insurtech/shared-events test:integration:coverage",
     "clean": "turbo run clean && rimraf node_modules .turbo",
     "clean:all": "pnpm clean && find . -name node_modules -type d -prune -exec rm -rf {} + 2>/dev/null; find . -name .turbo -type d -prune -exec rm -rf {} + 2>/dev/null; find . -name dist -type d -prune -exec rm -rf {} + 2>/dev/null; true",
     "prepare": "node -e \"try{require('child_process').execSync('git -C .. config core.hooksPath repo/.husky',{stdio:'ignore'})}catch(e){}\"",
@@ -66,8 +108,10 @@
     "@types/node": "22.10.5",
     "@types/pg": "8.11.10",
     "@vitest/coverage-v8": "2.1.8",
+    "concurrently": "9.1.0",
     "dotenv": "16.4.7",
     "husky": "9.1.7",
+    "is-ci": "4.1.0",
     "kafkajs": "2.2.4",
     "lint-staged": "15.2.11",
     "pg": "8.13.1",
@@ -78,7 +122,8 @@
     "turbo": "2.4.0",
     "typescript": "5.7.3",
     "vite-tsconfig-paths": "5.1.4",
-    "vitest": "2.1.8"
+    "vitest": "2.1.8",
+    "zod": "3.24.1"
   },
   "pnpm": {
     "overrides": {},

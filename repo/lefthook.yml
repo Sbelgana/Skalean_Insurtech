@@ -1,0 +1,43 @@
+# Skalean InsurTech -- Lefthook config (alternative a Husky)
+# Pour activer : 1. retirer .husky/, 2. installer Lefthook, 3. lefthook install
+# Documente V25, evaluation Sprint 30
+
+pre-commit:
+  parallel: true
+  commands:
+    biome:
+      glob: "*.{ts,tsx,js,jsx,json,css}"
+      run: pnpm exec biome check --write --no-errors-on-unmatched {staged_files}
+      stage_fixed: true
+    no-emoji:
+      glob: "*.{ts,tsx,js,jsx,json,md,yaml,yml,sh,cmd}"
+      run: |
+        if grep -lP '[\x{1F000}-\x{1FFFF}]|[\x{2600}-\x{27BF}]' {staged_files}; then
+          echo "ERREUR emoji detecte (decision-006)"
+          exit 1
+        fi
+    no-console:
+      glob: "*.{ts,tsx}"
+      exclude: "(__tests__|\\.(spec|test)\\.|scripts/)"
+      run: |
+        if grep -nE 'console\.(log|debug|info)' {staged_files}; then
+          echo "ERREUR console.log detecte"
+          exit 1
+        fi
+    no-aws:
+      glob: "*.{env,env.*,json,yaml,yml,ts,tsx}"
+      run: |
+        if grep -nE 'amazonaws\.com|AKIA[0-9A-Z]{16}' {staged_files}; then
+          echo "ERREUR fuite AWS (decision-008)"
+          exit 1
+        fi
+
+pre-push:
+  commands:
+    vitest:
+      run: pnpm exec vitest run --changed origin/main
+
+commit-msg:
+  commands:
+    commitlint:
+      run: pnpm exec commitlint --edit {1}

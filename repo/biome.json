@@ -198,6 +198,16 @@
       }
     },
     {
+      "include": ["scripts/**/*.ts", "scripts/**/*.js", "infrastructure/scripts/**/*.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
+          }
+        }
+      }
+    },
+    {
       "include": [
         "*.config.ts",
         "*.config.js",

@@ -151,6 +151,20 @@
         "SEED_RANDOM_SEED"
       ]
     },
+    "e2e": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "outputs": ["test-results/**", "playwright-report/**"]
+    },
+    "generate:api-client": {
+      "cache": false,
+      "outputs": ["src/types.gen.ts", "src/client.gen.ts"]
+    },
+    "lighthouse": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "outputs": [".lighthouseci/**", "lighthouse-reports/**"]
+    },
     "clean": {
       "cache": false
     }

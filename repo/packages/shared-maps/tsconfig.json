@@ -5,8 +5,12 @@
     "rootDir": "./src",
     "composite": true,
     "declaration": true,
-    "noEmit": false
+    "noEmit": false,
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.spec.ts"]
+  "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.spec.tsx"]
 }

@@ -86,4 +86,19 @@ export type {
 
 export { AuthModule } from './auth.module.js';
 
+// Sprint 6 Tache 2.2.1 -- Tenant context multi-tenant runtime
+export {
+  TENANT_CONTEXT_ERROR_CODES,
+  TenantContextService,
+  tenantContextStorage,
+} from './services/tenant-context.service.js';
+export { TenantContextModule } from './modules/tenant-context.module.js';
+export {
+  buildMockTenantContext,
+  buildMockTenantSettings,
+  withAssureContext,
+  withSuperAdminContext,
+  withTenantContext,
+} from './testing/tenant-context-test.helper.js';
+
 export const AUTH_PACKAGE_VERSION = '0.1.0';

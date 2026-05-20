@@ -32,6 +32,9 @@ import { LoggerModule } from './logger/logger.module';
 // === Context de requete (AsyncLocalStorage -- apres logger, avant metier) ===
 import { RequestContextModule } from './request-context/request-context.module';
 
+// === Context tenant multi-tenant (Sprint 6 Tache 2.2.1 -- Global) ===
+import { TenantContextModule } from '@insurtech/auth';
+
 // === Swagger OpenAPI (Tache 1.3.9) ===
 import { SwaggerModule } from './swagger/swagger.module';
 
@@ -84,6 +87,9 @@ import { TenantModule } from './modules/tenant/tenant.module';
 
     // === Context de requete (AsyncLocalStorage) ===
     RequestContextModule,
+
+    // === Tenant context multi-tenant (Sprint 6 Tache 2.2.1 -- Global) ===
+    TenantContextModule,
 
     // === Swagger OpenAPI (Tache 1.3.9) ===
     SwaggerModule,

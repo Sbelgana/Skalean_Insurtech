@@ -38,3 +38,10 @@ export type { SessionContext, SessionLookupResult } from './session-context.js';
 
 export type { LockoutSnapshot, LockoutDecision, LockoutTier } from './lockout.js';
 export { getLockoutDurationMs } from './lockout.js';
+
+export type {
+  TenantContext,
+  TenantContextInit,
+  TenantContextUpdate,
+  TenantSettings,
+} from './tenant-context.type.js';

@@ -1,0 +1,80 @@
+{
+  "name": "@insurtech/api-client",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Generated TypeScript API client for Skalean InsurTech NestJS backend (auto-generated from OpenAPI Swagger)",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.js"
+    },
+    "./hooks": {
+      "types": "./dist/hooks/index.d.ts",
+      "import": "./dist/hooks/index.js"
+    },
+    "./types": {
+      "types": "./dist/types.gen.d.ts",
+      "import": "./dist/types.gen.js"
+    },
+    "./zod-schemas": {
+      "types": "./dist/zod-schemas/index.d.ts",
+      "import": "./dist/zod-schemas/index.js"
+    }
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "generate": "tsx scripts/generate.ts",
+    "validate": "tsx scripts/validate.ts",
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "lint": "biome check src --no-errors-on-unmatched",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.scripts.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "generate:api-client": "tsx scripts/generate.ts",
+    "clean": "rimraf dist node_modules/.cache"
+  },
+  "dependencies": {
+    "openapi-fetch": "0.13.4",
+    "uuid": "11.0.4",
+    "zod": "3.24.1"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "5.62.7",
+    "react": "19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@tanstack/react-query": { "optional": false },
+    "react": { "optional": false }
+  },
+  "devDependencies": {
+    "@testing-library/react": "16.1.0",
+    "@types/node": "20.17.10",
+    "@types/react": "19.0.2",
+    "@types/uuid": "10.0.0",
+    "@vitejs/plugin-react": "4.3.4",
+    "@vitest/coverage-v8": "2.1.8",
+    "happy-dom": "15.11.7",
+    "openapi-typescript": "7.4.4",
+    "prettier": "3.4.2",
+    "rimraf": "6.0.1",
+    "tsx": "4.19.2",
+    "typescript": "5.7.2",
+    "vitest": "2.1.8"
+  },
+  "engines": {
+    "node": ">=20.18.0",
+    "pnpm": ">=9.15.0"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}

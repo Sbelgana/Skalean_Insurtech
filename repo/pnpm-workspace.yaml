@@ -38,6 +38,7 @@ packages:
   - 'packages/sky-ui'                   # Chat widget shared 3 apps + streaming + voice-to-text -- Sprint 31
 
   # Packages shared (8 packages)
+  - 'packages/api-client'               # Generated TypeScript client from OpenAPI + React Query hooks -- Sprint 4
   - 'packages/assure-shared'            # Components shared web-assure-portal + mobile -- Sprint 18
   - 'packages/shared-types'             # Types globaux (Locale, Money, UUID branded) -- Sprint 1.1.13
   - 'packages/shared-config'            # Env loader Zod runtime validation -- Sprint 1.1.8

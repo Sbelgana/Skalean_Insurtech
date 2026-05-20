@@ -3,10 +3,10 @@
  * et metier se charge correctement via DI NestJS.
  *
  * Utilise des mocks pour les connections exterieures (Database, Redis, Kafka)
- * afin que les tests ne requierent pas d'infrastructure Docker.
+ * et pour nestjs-pino (evite middleware HTTP hors contexte tests).
  *
  * Reference : decision-006 (no-emoji).
- * Tache : 1.3.2 (Sprint 3 / Phase 1).
+ * Tache : 1.3.2 + 1.3.3 (Sprint 3 / Phase 1).
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Test, type TestingModule } from '@nestjs/testing';
@@ -20,6 +20,23 @@ import { resetEnvCache } from '@insurtech/shared-config';
 // ============================================================================
 // Mocks infra -- evitent connexions reelles au boot AppModule
 // ============================================================================
+
+// Mock LoggerModule : evite l'enregistrement de middleware nestjs-pino dans les tests.
+// On mocke notre propre module (pas nestjs-pino) pour rester independant de l'impl.
+vi.mock('./logger/logger.module', () => {
+  const FakeLoggerModuleClass = class FakeLoggerModule {};
+  return {
+    LoggerModule: {
+      forRoot: vi.fn(() => ({
+        module: FakeLoggerModuleClass,
+        providers: [],
+        imports: [],
+        exports: [],
+        global: true,
+      })),
+    },
+  };
+});
 
 const mockDataSource = {
   isInitialized: false,

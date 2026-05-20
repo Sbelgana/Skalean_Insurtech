@@ -8,13 +8,13 @@
  *   2. startTelemetry() (auto-instrumentation OpenTelemetry AVANT tout import metier)
  *   3. loadEnv() (Zod runtime validation)
  *   4. NestFactory.create<NestFastifyApplication>(AppModule, FastifyAdapter, { bufferLogs: true })
- *   5. app.useLogger(Logger) (replace logger default)
+ *   5. app.useLogger(app.get(Logger)) (nestjs-pino -- remplace logger default, flush bufferLogs)
  *   6. app.enableShutdownHooks() (active onModuleDestroy providers)
  *   7. registerGracefulShutdown() (handlers SIGTERM/SIGINT chain)
  *   8. app.listen(port, '0.0.0.0') (bind 0.0.0.0 pour Docker)
  *
  * Reference : decision-003 (NestJS Fastify) + decision-006 (no-emoji ABSOLUE).
- * Tache : 1.3.1 (Sprint 3 / Phase 1).
+ * Tache : 1.3.1 + 1.3.3 (Sprint 3 / Phase 1).
  */
 
 // Polyfill DI -- DOIT etre la TOUTE PREMIERE ligne avant tout autre import.
@@ -30,11 +30,13 @@ import { registerGracefulShutdown } from './bootstrap/graceful-shutdown';
 
 // NestJS imports (charges apres telemetry init)
 import { NestFactory } from '@nestjs/core';
-import { Logger } from '@nestjs/common';
 import {
   FastifyAdapter,
   type NestFastifyApplication,
 } from '@nestjs/platform-fastify';
+
+// Logger Pino (nestjs-pino -- remplace le Logger NestJS default apres boot).
+import { Logger } from 'nestjs-pino';
 
 // Env loader Zod (Sprint 2 Tache 1.2.14)
 import { loadEnv } from '@insurtech/shared-config';
@@ -88,10 +90,11 @@ async function bootstrap(): Promise<void> {
     },
   );
 
-  // === ETAPE 4 : Logger NestJS actif ===
-  // Les logs bufferises via bufferLogs: true sont flushes apres useLogger.
-  // Tache 1.3.5 remplacera par app.get(Logger) (nestjs-pino).
-  const logger = new Logger('Bootstrap');
+  // === ETAPE 4 : Logger Pino actif ===
+  // app.get(Logger) recupere l'instance nestjs-pino injectee par LoggerModule.
+  // Les logs bufferises via bufferLogs: true sont flushes ici vers Pino.
+  // Logger de nestjs-pino implemente LoggerService -- compatible NestJS.
+  const logger = app.get(Logger);
   app.useLogger(logger);
 
   // === ETAPE 5 : Active shutdown hooks NestJS ===

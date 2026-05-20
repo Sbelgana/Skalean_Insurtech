@@ -26,13 +26,27 @@ const MOCK_ENV = {
 };
 
 /** Cree un mock app NestJS minimal. */
+/** Mock Logger Pino retourne par app.get(Logger) (Tache 1.3.3). */
+function makeMockPinoLogger() {
+  return {
+    log: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+    verbose: vi.fn(),
+    fatal: vi.fn(),
+  };
+}
+
 function makeMockApp(listenFn?: (port: number, host: string) => Promise<void>) {
+  const pinoLogger = makeMockPinoLogger();
   return {
     useLogger: vi.fn(),
     enableShutdownHooks: vi.fn(),
     listen: vi.fn(listenFn ?? ((_p: number, _h: string) => Promise.resolve())),
     close: vi.fn(() => Promise.resolve()),
-    get: vi.fn(),
+    // app.get(Logger) retourne le mock Pino logger (Tache 1.3.3).
+    get: vi.fn(() => pinoLogger),
   };
 }
 
@@ -51,16 +65,19 @@ function setupCommonMocks(options: { listenFn?: (port: number, host: string) => 
     NestFactory: { create: createSpy },
   }));
   vi.doMock('@nestjs/common', () => ({
-    Logger: class MockLogger {
-      log = vi.fn();
-      warn = vi.fn();
-      error = vi.fn();
-    },
     Module: () => () => {},
     Controller: () => () => {},
     Get: () => () => {},
     Header: () => () => {},
     Injectable: () => () => {},
+  }));
+  // Mock nestjs-pino : main.ts importe Logger depuis nestjs-pino (Tache 1.3.3).
+  vi.doMock('nestjs-pino', () => ({
+    Logger: class MockNestjsPinoLogger {
+      log = vi.fn();
+      warn = vi.fn();
+      error = vi.fn();
+    },
   }));
   vi.doMock('@nestjs/platform-fastify', () => ({
     FastifyAdapter: vi.fn(() => ({})),
@@ -108,16 +125,19 @@ describe('main.ts bootstrap', () => {
       },
     }));
     vi.doMock('@nestjs/common', () => ({
-      Logger: class MockLogger {
-        log = vi.fn();
-        warn = vi.fn();
-        error = vi.fn();
-      },
       Module: () => () => {},
       Controller: () => () => {},
       Get: () => () => {},
       Header: () => () => {},
       Injectable: () => () => {},
+    }));
+    // Logger importe depuis nestjs-pino (Tache 1.3.3).
+    vi.doMock('nestjs-pino', () => ({
+      Logger: class MockNestjsPinoLogger {
+        log = vi.fn();
+        warn = vi.fn();
+        error = vi.fn();
+      },
     }));
     vi.doMock('@nestjs/platform-fastify', () => ({
       FastifyAdapter: vi.fn(() => ({})),
@@ -164,16 +184,19 @@ describe('main.ts bootstrap', () => {
       NestFactory: { create: vi.fn(() => Promise.resolve(makeMockApp())) },
     }));
     vi.doMock('@nestjs/common', () => ({
-      Logger: class MockLogger {
-        log = vi.fn();
-        warn = vi.fn();
-        error = vi.fn();
-      },
       Module: () => () => {},
       Controller: () => () => {},
       Get: () => () => {},
       Header: () => () => {},
       Injectable: () => () => {},
+    }));
+    // Logger importe depuis nestjs-pino (Tache 1.3.3).
+    vi.doMock('nestjs-pino', () => ({
+      Logger: class MockNestjsPinoLogger {
+        log = vi.fn();
+        warn = vi.fn();
+        error = vi.fn();
+      },
     }));
     vi.doMock('@nestjs/platform-fastify', () => ({
       FastifyAdapter: adapterSpy,
@@ -224,12 +247,15 @@ describe('main.ts bootstrap', () => {
       NestFactory: { create: vi.fn() },
     }));
     vi.doMock('@nestjs/common', () => ({
-      Logger: class MockLogger {
+      Module: () => () => {},
+    }));
+    // Logger importe depuis nestjs-pino (Tache 1.3.3).
+    vi.doMock('nestjs-pino', () => ({
+      Logger: class MockNestjsPinoLogger {
         log = vi.fn();
         warn = vi.fn();
         error = vi.fn();
       },
-      Module: () => () => {},
     }));
     vi.doMock('@nestjs/platform-fastify', () => ({
       FastifyAdapter: vi.fn(() => ({})),

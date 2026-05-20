@@ -7,17 +7,24 @@
  * KafkaModule (kafkajs),
  * et 19 modules metier stubs places dans modules/.
  *
+ * Sprint 3 Tache 1.3.3 : LoggerModule Pino ajoute en PREMIER import
+ * (logger disponible pour tous les modules suivants).
+ *
  * Convention ordre imports :
- *   1. Modules transverses globaux (Config, Database, Redis, Kafka).
- *   2. Modules metier stubs (alphabetique).
+ *   1. LoggerModule (Pino -- PREMIER pour couvrir tous les logs de boot).
+ *   2. Modules transverses globaux (Config, Database, Redis, Kafka).
+ *   3. Modules metier stubs (alphabetique).
  *
  * Reference : decision-003 (NestJS) + decision-006 (no-emoji) +
  *             decision-009 (Zod uniforme).
- * Tache : 1.3.2 (Sprint 3 / Phase 1).
+ * Tache : 1.3.2 + 1.3.3 (Sprint 3 / Phase 1).
  */
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+
+// === Logger global (PREMIER -- couvre tous les logs de boot) ===
+import { LoggerModule } from './logger/logger.module';
 
 // === Modules transverses globaux ===
 import { ConfigModule } from './config/config.module';
@@ -48,6 +55,9 @@ import { TenantModule } from './modules/tenant/tenant.module';
 
 @Module({
   imports: [
+    // === Logger global PREMIER (Pino -- couvre logs de boot des modules suivants) ===
+    LoggerModule.forRoot(),
+
     // === Transverses globaux (ordre : Config -> Database -> Redis -> Kafka) ===
     ConfigModule.forRoot(),
     DatabaseModule,

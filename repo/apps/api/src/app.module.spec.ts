@@ -126,6 +126,11 @@ vi.mock('@sentry/profiling-node', () => ({
   nodeProfilingIntegration: vi.fn(() => ({})),
 }));
 
+// Mock SecurityModule (Tache 1.3.14) : evite logique JWT absente en Sprint 3.
+vi.mock('./security/security.module', () => ({
+  SecurityModule: class MockSecurityModule {},
+}));
+
 // Mock @nestjs/throttler : evite connexion Redis DB 5 pour rate-limit.
 vi.mock('@nestjs/throttler', () => ({
   ThrottlerModule: {

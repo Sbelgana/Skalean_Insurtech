@@ -20,7 +20,7 @@
  *
  * Reference : decision-003 (NestJS) + decision-006 (no-emoji) +
  *             decision-009 (Zod uniforme).
- * Tache : 1.3.2 + 1.3.3 + 1.3.4 + 1.3.13 (Sprint 3 / Phase 1).
+ * Tache : 1.3.2 + 1.3.3 + 1.3.4 + 1.3.13 + 1.3.14 (Sprint 3 / Phase 1).
  */
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
@@ -46,6 +46,9 @@ import { SentryNestModule } from './sentry/sentry.module';
 
 // === Rate-limit global @nestjs/throttler v6 (Tache 1.3.13) ===
 import { ThrottlerRateLimitModule } from './throttler/throttler.module';
+
+// === Securite globale "secure by default" @Public() (Tache 1.3.14) ===
+import { SecurityModule } from './security/security.module';
 
 // === Modules transverses globaux ===
 import { ConfigModule } from './config/config.module';
@@ -96,6 +99,9 @@ import { TenantModule } from './modules/tenant/tenant.module';
 
     // === Rate-limit global 100 req/min (Tache 1.3.13) ===
     ThrottlerRateLimitModule,
+
+    // === Securite globale "secure by default" (Tache 1.3.14) ===
+    SecurityModule,
 
     // === Transverses globaux (ordre : Config -> Database -> Redis -> Kafka) ===
     ConfigModule.forRoot(),

@@ -150,6 +150,10 @@ function setupCommonMocks(options: { listenFn?: (port: number, host: string) => 
     DEFAULT_RATE_LIMIT: 100,
     DEFAULT_WINDOW_SECONDS: 60,
   }));
+  // Mock SecurityModule (Tache 1.3.14) : evite logique auth absente en Sprint 3.
+  vi.doMock('./security/security.module', () => ({
+    SecurityModule: class MockSecurityModule {},
+  }));
   return { createSpy };
 }
 
@@ -246,6 +250,9 @@ describe('main.ts bootstrap', () => {
       DEFAULT_RATE_LIMIT: 100,
       DEFAULT_WINDOW_SECONDS: 60,
     }));
+    vi.doMock('./security/security.module', () => ({
+      SecurityModule: class MockSecurityModule {},
+    }));
 
     const { ready } = await import('./main');
     await ready;
@@ -341,6 +348,9 @@ describe('main.ts bootstrap', () => {
       DEFAULT_RATE_LIMIT: 100,
       DEFAULT_WINDOW_SECONDS: 60,
     }));
+    vi.doMock('./security/security.module', () => ({
+      SecurityModule: class MockSecurityModule {},
+    }));
 
     const { ready } = await import('./main');
     await ready;
@@ -434,6 +444,9 @@ describe('main.ts bootstrap', () => {
       ThrottlerRateLimitModule: class MockThrottlerRateLimitModule {},
       DEFAULT_RATE_LIMIT: 100,
       DEFAULT_WINDOW_SECONDS: 60,
+    }));
+    vi.doMock('./security/security.module', () => ({
+      SecurityModule: class MockSecurityModule {},
     }));
 
     const { ready } = await import('./main');

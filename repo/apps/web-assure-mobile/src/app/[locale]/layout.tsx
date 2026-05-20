@@ -1,14 +1,14 @@
 /**
  * Root layout -- web-assure-mobile
- * Reference : task-1.4.7 Sprint 4 Phase 1
+ * Reference : task-1.4.7 + task-1.4.15 Sprint 4 Phase 1
  *
  * Server Component. Exposes :
  *   - Document <html lang dir data-theme="assure-mobile">
  *   - Fonts via next/font/google (Montserrat + Noto Naskh Arabic)
  *   - NextIntlClientProvider (locale + messages)
  *   - Providers wrapper ('use client' QueryClient + Theme + Sentry)
+ *   - MobileLayout (header + bottom tabs) from @insurtech/shared-ui
  *   - OfflineBanner + UpdateAvailableBanner (PWA)
- *   - Mobile bottom navigation layout
  *   - Apple mobile web app meta
  */
 import type { Metadata, Viewport } from 'next';
@@ -18,10 +18,12 @@ import { notFound } from 'next/navigation';
 import { Montserrat, Noto_Naskh_Arabic, Geist_Mono } from 'next/font/google';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from 'next-themes';
+import { MobileLayout, LocaleSwitcher } from '@insurtech/shared-ui';
 import { Providers } from '@/components/providers';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { UpdateAvailableBanner } from '@/components/UpdateAvailableBanner';
 import { routing } from '@/i18n/routing';
+import { assureMobileTabs } from '@/config/tabs';
 import '@/app/globals.css';
 
 const montserrat = Montserrat({
@@ -124,50 +126,11 @@ export default async function RootLayout({ children, params }: RootLayoutProps) 
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <NextIntlClientProvider locale={locale} messages={messages} timeZone="Africa/Casablanca">
             <Providers locale={locale}>
-              <OfflineBanner />
-              <div className="flex min-h-screen flex-col pb-safe-bottom">
+              <MobileLayout tabs={assureMobileTabs} localeSwitcher={<LocaleSwitcher />}>
+                <OfflineBanner />
                 {children}
-              </div>
-              <UpdateAvailableBanner />
-              {/* Mobile bottom navigation */}
-              <nav
-                className="fixed bottom-0 left-0 right-0 z-40 border-t bg-card pb-safe-bottom"
-                aria-label="Navigation mobile assure"
-                style={{ borderColor: '#2D5773/20' }}
-              >
-                <div className="flex items-center justify-around px-2 py-2">
-                  <a
-                    href={`/${locale}`}
-                    className="flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium text-muted-foreground hover:text-primary"
-                  >
-                    Accueil
-                  </a>
-                  <a
-                    href={`/${locale}/sinistres`}
-                    className="flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium text-muted-foreground hover:text-primary"
-                  >
-                    Sinistres
-                  </a>
-                  <a
-                    href={`/${locale}/polices`}
-                    className="flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium text-muted-foreground hover:text-primary"
-                  >
-                    Polices
-                  </a>
-                  <a
-                    href={`/${locale}/garage`}
-                    className="flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium text-muted-foreground hover:text-primary"
-                  >
-                    Garage
-                  </a>
-                  <a
-                    href={`/${locale}/profil`}
-                    className="flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium text-muted-foreground hover:text-primary"
-                  >
-                    Profil
-                  </a>
-                </div>
-              </nav>
+                <UpdateAvailableBanner />
+              </MobileLayout>
             </Providers>
           </NextIntlClientProvider>
           <Toaster position={dir === 'rtl' ? 'top-left' : 'top-right'} richColors />

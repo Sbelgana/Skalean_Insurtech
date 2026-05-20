@@ -1,12 +1,13 @@
 /**
  * Root layout -- web-garage-mobile
- * Reference : task-1.4.3 Sprint 4 Phase 1
+ * Reference : task-1.4.3 + task-1.4.15 Sprint 4 Phase 1
  *
  * Server Component. Exposes :
  *   - Document <html lang dir data-theme="garage-mobile">
  *   - Fonts via next/font/google (Montserrat + Noto Naskh Arabic)
  *   - NextIntlClientProvider (locale + messages)
  *   - Providers wrapper ('use client' QueryClient + Theme + Sentry)
+ *   - MobileLayout (header + bottom tabs) from @insurtech/shared-ui
  *   - Metadata mobile-first localisee
  *   - Viewport avec viewport-fit=cover pour iPhone encoche
  *   - Apple mobile web app meta
@@ -18,10 +19,12 @@ import { notFound } from 'next/navigation';
 import { Montserrat, Noto_Naskh_Arabic, Geist_Mono } from 'next/font/google';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from 'next-themes';
+import { MobileLayout, LocaleSwitcher } from '@insurtech/shared-ui';
 import { Providers } from '@/components/providers';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { UpdateAvailableBanner } from '@/components/UpdateAvailableBanner';
 import { routing } from '@/i18n/routing';
+import { garageMobileTabs } from '@/config/tabs';
 import '@/app/globals.css';
 
 const montserrat = Montserrat({
@@ -124,9 +127,11 @@ export default async function RootLayout({ children, params }: RootLayoutProps) 
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <NextIntlClientProvider locale={locale} messages={messages} timeZone="Africa/Casablanca">
             <Providers locale={locale}>
-              <OfflineBanner />
-              {children}
-              <UpdateAvailableBanner />
+              <MobileLayout tabs={garageMobileTabs} localeSwitcher={<LocaleSwitcher />}>
+                <OfflineBanner />
+                {children}
+                <UpdateAvailableBanner />
+              </MobileLayout>
             </Providers>
           </NextIntlClientProvider>
           <Toaster position={dir === 'rtl' ? 'top-left' : 'top-right'} richColors />

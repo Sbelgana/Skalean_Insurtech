@@ -22,6 +22,7 @@
     "plugins": [{ "name": "next" }],
     "paths": {
       "@/*": ["./src/*"],
+      "@insurtech/shared-ui": ["../../packages/shared-ui/dist/index.d.ts"],
       "@insurtech/shared-ui/*": ["../../packages/shared-ui/src/*"],
       "@insurtech/shared-config/*": ["../../packages/shared-config/src/*"],
       "@insurtech/shared-types/*": ["../../packages/shared-types/src/*"]

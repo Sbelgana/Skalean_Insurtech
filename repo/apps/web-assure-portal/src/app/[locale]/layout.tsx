@@ -1,8 +1,9 @@
 /**
  * Root layout -- web-assure-portal
- * Reference : task-1.4.6 Sprint 4 Phase 1
+ * Reference : task-1.4.6 + task-1.4.15 Sprint 4 Phase 1
  *
- * Self-service layout : topbar + content max-w-4xl mx-auto, no sidebar.
+ * Self-service layout : SelfServiceLayout from @insurtech/shared-ui.
+ * No sidebar. Large base font (18px). Max-w-3xl content width.
  */
 import type { Metadata, Viewport } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
@@ -11,8 +12,8 @@ import { notFound } from 'next/navigation';
 import { Montserrat, Noto_Naskh_Arabic, Geist_Mono } from 'next/font/google';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from 'next-themes';
+import { SelfServiceLayout, LocaleSwitcher } from '@insurtech/shared-ui';
 import { Providers } from '@/components/providers';
-import { AssureBranding } from '@/components/AssureBranding';
 import { routing } from '@/i18n/routing';
 import '@/app/globals.css';
 
@@ -105,14 +106,9 @@ export default async function RootLayout({ children, params }: RootLayoutProps) 
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <NextIntlClientProvider locale={locale} messages={messages} timeZone="Africa/Casablanca">
             <Providers locale={locale}>
-              <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-sm">
-                <div className="mx-auto flex h-16 max-w-4xl items-center justify-between px-6">
-                  <AssureBranding />
-                </div>
-              </header>
-              <div className="mx-auto max-w-4xl px-6 py-8">
+              <SelfServiceLayout localeSwitcher={<LocaleSwitcher />}>
                 {children}
-              </div>
+              </SelfServiceLayout>
             </Providers>
           </NextIntlClientProvider>
           <Toaster position={dir === 'rtl' ? 'top-left' : 'top-right'} richColors />

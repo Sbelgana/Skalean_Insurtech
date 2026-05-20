@@ -1,8 +1,9 @@
 /**
  * Root layout -- web-customer-portal
- * Reference : task-1.4.5 Sprint 4 Phase 1
+ * Reference : task-1.4.5 + task-1.4.15 Sprint 4 Phase 1
  *
- * Public marketing layout: top navigation, no sidebar.
+ * Public marketing layout: PublicLayout from @insurtech/shared-ui.
+ * MarketingHeader + MarketingFooter. No authentication required.
  */
 import type { Metadata, Viewport } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
@@ -11,8 +12,8 @@ import { notFound } from 'next/navigation';
 import { Montserrat, Noto_Naskh_Arabic, Geist_Mono } from 'next/font/google';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from 'next-themes';
+import { PublicLayout } from '@insurtech/shared-ui';
 import { Providers } from '@/components/providers';
-import { CustomerBranding } from '@/components/CustomerBranding';
 import { routing } from '@/i18n/routing';
 import '@/app/globals.css';
 
@@ -105,35 +106,9 @@ export default async function RootLayout({ children, params }: RootLayoutProps) 
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <NextIntlClientProvider locale={locale} messages={messages} timeZone="Africa/Casablanca">
             <Providers locale={locale}>
-              <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-sm">
-                <div className="container mx-auto flex h-16 items-center justify-between px-6">
-                  <CustomerBranding />
-                  <nav className="hidden items-center gap-6 md:flex" aria-label="Navigation principale">
-                    <a href={`/${locale}`} className="text-sm font-medium text-foreground/80 hover:text-foreground">
-                      Accueil
-                    </a>
-                    <a href={`/${locale}/products`} className="text-sm font-medium text-foreground/80 hover:text-foreground">
-                      Produits
-                    </a>
-                    <a href={`/${locale}/pricing`} className="text-sm font-medium text-foreground/80 hover:text-foreground">
-                      Tarifs
-                    </a>
-                    <a href={`/${locale}/contact`} className="text-sm font-medium text-foreground/80 hover:text-foreground">
-                      Contact
-                    </a>
-                    <a
-                      href={`/${locale}/auth/login`}
-                      className="rounded-md px-4 py-2 text-sm font-semibold text-white"
-                      style={{ backgroundColor: '#E95D2C' }}
-                    >
-                      Se connecter
-                    </a>
-                  </nav>
-                </div>
-              </header>
-              <main className="flex-1">
+              <PublicLayout>
                 {children}
-              </main>
+              </PublicLayout>
             </Providers>
           </NextIntlClientProvider>
           <Toaster position={dir === 'rtl' ? 'top-left' : 'top-right'} richColors />

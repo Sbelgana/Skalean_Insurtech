@@ -1,14 +1,14 @@
 /**
  * Root layout -- web-insurtech-admin
- * Reference : task-1.4.4 Sprint 4 Phase 1
+ * Reference : task-1.4.4 + task-1.4.15 Sprint 4 Phase 1
  *
  * Server Component. Exposes :
  *   - Document <html lang dir data-theme="admin">
  *   - Fonts via next/font/google (Montserrat + Noto Naskh Arabic)
  *   - NextIntlClientProvider (locale + messages)
  *   - Providers wrapper ('use client' QueryClient + Theme + Sentry)
- *   - Admin sidebar layout
- *   - AdminBranding component
+ *   - DashboardLayout (sidebar + topbar) from @insurtech/shared-ui
+ *   - Metadata localisee
  */
 import type { Metadata, Viewport } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
@@ -17,9 +17,10 @@ import { notFound } from 'next/navigation';
 import { Montserrat, Noto_Naskh_Arabic, Geist_Mono } from 'next/font/google';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from 'next-themes';
+import { DashboardLayout, LocaleSwitcher } from '@insurtech/shared-ui';
 import { Providers } from '@/components/providers';
-import { AdminBranding } from '@/components/AdminBranding';
 import { routing } from '@/i18n/routing';
+import { adminSidebarItems } from '@/config/sidebar-items';
 import '@/app/globals.css';
 
 const montserrat = Montserrat({
@@ -111,33 +112,12 @@ export default async function RootLayout({ children, params }: RootLayoutProps) 
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <NextIntlClientProvider locale={locale} messages={messages} timeZone="Africa/Casablanca">
             <Providers locale={locale}>
-              <div className="flex min-h-screen">
-                <aside className="hidden w-64 flex-col border-r bg-card lg:flex" style={{ borderColor: '#1A2730/20' }}>
-                  <div className="flex h-16 items-center border-b px-6" style={{ borderColor: '#1A2730/20' }}>
-                    <AdminBranding />
-                  </div>
-                  <nav className="flex-1 space-y-1 p-4" aria-label="Navigation admin">
-                    <a href={`/${locale}`} className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-muted">
-                      Tableau de bord
-                    </a>
-                    <a href={`/${locale}/tenants`} className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-muted">
-                      Tenants
-                    </a>
-                    <a href={`/${locale}/monitoring`} className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-muted">
-                      Monitoring
-                    </a>
-                    <a href={`/${locale}/reports`} className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-muted">
-                      Rapports
-                    </a>
-                    <a href={`/${locale}/conformite`} className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-muted">
-                      Conformite
-                    </a>
-                  </nav>
-                </aside>
-                <div className="flex flex-1 flex-col">
-                  {children}
-                </div>
-              </div>
+              <DashboardLayout
+                sidebarItems={adminSidebarItems}
+                localeSwitcher={<LocaleSwitcher />}
+              >
+                {children}
+              </DashboardLayout>
             </Providers>
           </NextIntlClientProvider>
           <Toaster position={dir === 'rtl' ? 'top-left' : 'top-right'} richColors />

@@ -1,12 +1,13 @@
 /**
  * Root layout -- web-broker
- * Reference : task-1.4.1 Sprint 4 Phase 1
+ * Reference : task-1.4.1 + task-1.4.15 Sprint 4 Phase 1
  *
  * Server Component. Exposes :
  *   - Document <html lang dir>
  *   - Fonts via next/font/google (Montserrat + Noto Naskh Arabic)
  *   - NextIntlClientProvider (locale + messages)
  *   - Providers wrapper ('use client' QueryClient + Theme + Sentry)
+ *   - DashboardLayout (sidebar + topbar) from @insurtech/shared-ui
  *   - Metadata localisee
  */
 import type { Metadata, Viewport } from 'next';
@@ -16,8 +17,10 @@ import { notFound } from 'next/navigation';
 import { Montserrat, Noto_Naskh_Arabic, Geist_Mono } from 'next/font/google';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from 'next-themes';
+import { DashboardLayout, LocaleSwitcher } from '@insurtech/shared-ui';
 import { Providers } from '@/components/providers';
 import { routing } from '@/i18n/routing';
+import { brokerSidebarItems } from '@/config/sidebar-items';
 import '@/app/globals.css';
 
 const montserrat = Montserrat({
@@ -107,7 +110,14 @@ export default async function RootLayout({ children, params }: RootLayoutProps) 
       <body className="min-h-screen bg-background text-foreground antialiased">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <NextIntlClientProvider locale={locale} messages={messages} timeZone="Africa/Casablanca">
-            <Providers locale={locale}>{children}</Providers>
+            <Providers locale={locale}>
+              <DashboardLayout
+                sidebarItems={brokerSidebarItems}
+                localeSwitcher={<LocaleSwitcher />}
+              >
+                {children}
+              </DashboardLayout>
+            </Providers>
           </NextIntlClientProvider>
           <Toaster position={dir === 'rtl' ? 'top-left' : 'top-right'} richColors />
         </ThemeProvider>

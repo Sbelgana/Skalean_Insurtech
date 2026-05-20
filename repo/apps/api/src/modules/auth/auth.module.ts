@@ -20,7 +20,11 @@ import {
   EMAIL_VERIFICATION_REPOSITORY_TOKEN,
   InMemoryEmailVerificationRepository,
 } from './email-verification.repository.js';
-import { EMAIL_SERVICE_TOKEN, StubEmailService } from './email.service.js';
+import {
+  EMAIL_SERVICE_TOKEN,
+  NodemailerEmailAdapter,
+  StubEmailService,
+} from './email.service.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 import { MfaRequiredGuard } from './guards/mfa-required.guard.js';
 import {
@@ -41,7 +45,7 @@ const emailVerifyRepoProvider: Provider = {
 
 const emailServiceProvider: Provider = {
   provide: EMAIL_SERVICE_TOKEN,
-  useClass: StubEmailService,
+  useClass: process.env['SMTP_HOST'] ? NodemailerEmailAdapter : StubEmailService,
 };
 
 const recoveryRepoProvider: Provider = {

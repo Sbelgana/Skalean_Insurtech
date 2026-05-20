@@ -16,11 +16,18 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest watch",
-    "lint": "biome check --no-errors-on-unmatched src",
+    "lint": "biome check --no-errors-on-unmatched src test",
     "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "@nestjs/common": "10.4.15",
+    "handlebars": "4.7.8",
+    "nodemailer": "6.9.16",
+    "reflect-metadata": "0.2.2"
   },
   "devDependencies": {
     "@types/node": "22.10.5",
+    "@types/nodemailer": "6.4.17",
     "typescript": "5.7.3",
     "vitest": "2.1.8"
   }

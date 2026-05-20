@@ -39,6 +39,34 @@ export interface EmailService {
   sendPasswordChanged(input: SendPasswordChangedInput): Promise<void>;
 }
 
+/**
+ * Adapter that wraps @insurtech/comm NodemailerEmailService behind the local
+ * EmailService interface used by AuthService. Activates when SMTP_HOST is set ;
+ * otherwise AuthModule falls back to StubEmailService.
+ */
+import { NodemailerEmailService } from '@insurtech/comm';
+
+@Injectable()
+export class NodemailerEmailAdapter implements EmailService {
+  private readonly inner = new NodemailerEmailService();
+
+  onModuleInit(): void {
+    this.inner.onModuleInit();
+  }
+
+  async sendVerification(input: SendVerificationInput): Promise<void> {
+    return this.inner.sendVerification(input);
+  }
+
+  async sendRecovery(input: SendRecoveryInput): Promise<void> {
+    return this.inner.sendRecovery(input);
+  }
+
+  async sendPasswordChanged(input: SendPasswordChangedInput): Promise<void> {
+    return this.inner.sendPasswordChanged(input);
+  }
+}
+
 @Injectable()
 export class StubEmailService implements EmailService {
   private readonly logger = new Logger(StubEmailService.name);

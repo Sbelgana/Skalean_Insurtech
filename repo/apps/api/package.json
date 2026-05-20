@@ -33,6 +33,7 @@
     "@fastify/cors": "11.2.0",
     "@fastify/helmet": "13.0.2",
     "@insurtech/auth": "workspace:*",
+    "@insurtech/comm": "workspace:*",
     "@insurtech/database": "workspace:*",
     "@insurtech/shared-config": "workspace:*",
     "@insurtech/shared-utils": "workspace:*",

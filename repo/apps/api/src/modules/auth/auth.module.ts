@@ -1,15 +1,19 @@
 /**
  * apps/api/src/modules/auth/auth.module
  *
- * Sprint 5 Tache 2.1.6 -- wires AuthController + AuthService + JwtAuthGuard
- * onto the @insurtech/auth global services (Argon2Service, JwtService,
- * SessionService, HashingService, EncryptionService, PepperService).
- *
- * Sprint 6 will swap InMemoryUserRepository for the Postgres-backed impl.
+ * Sprint 5 -- wires AuthController + AuthService + Guards + AuditAuthService
+ * onto the @insurtech/auth global services. Uses in-memory repos for the
+ * remaining persistent state ; Sprint 6 will swap them for Postgres-backed
+ * impls.
  */
 
 import { Module, type Provider } from '@nestjs/common';
 import { AuthModule as InsurtechAuthModule } from '@insurtech/auth';
+import {
+  AuditAuthService,
+  AUDIT_PUBLISHER_TOKEN,
+  PinoAuditPublisher,
+} from './audit-auth.service.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import {
@@ -45,6 +49,11 @@ const recoveryRepoProvider: Provider = {
   useClass: InMemoryPasswordRecoveryRepository,
 };
 
+const auditPublisherProvider: Provider = {
+  provide: AUDIT_PUBLISHER_TOKEN,
+  useClass: PinoAuditPublisher,
+};
+
 @Module({
   imports: [InsurtechAuthModule],
   controllers: [AuthController],
@@ -56,15 +65,19 @@ const recoveryRepoProvider: Provider = {
     emailVerifyRepoProvider,
     emailServiceProvider,
     recoveryRepoProvider,
+    auditPublisherProvider,
+    AuditAuthService,
   ],
   exports: [
     AuthService,
     JwtAuthGuard,
     MfaRequiredGuard,
+    AuditAuthService,
     USER_REPOSITORY_TOKEN,
     EMAIL_VERIFICATION_REPOSITORY_TOKEN,
     EMAIL_SERVICE_TOKEN,
     PASSWORD_RECOVERY_REPOSITORY_TOKEN,
+    AUDIT_PUBLISHER_TOKEN,
   ],
 })
 export class AuthModule {}

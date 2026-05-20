@@ -44,6 +44,7 @@ function makeMockApp(listenFn?: (port: number, host: string) => Promise<void>) {
     useLogger: vi.fn(),
     useGlobalPipes: vi.fn(),
     useGlobalInterceptors: vi.fn(),
+    useGlobalFilters: vi.fn(),
     enableShutdownHooks: vi.fn(),
     listen: vi.fn(listenFn ?? ((_p: number, _h: string) => Promise.resolve())),
     close: vi.fn(() => Promise.resolve()),
@@ -109,6 +110,12 @@ function setupCommonMocks(options: { listenFn?: (port: number, host: string) => 
   vi.doMock('./interceptors/response.interceptor', () => ({
     ResponseInterceptor: class MockResponseInterceptor {
       intercept = vi.fn((_ctx: unknown, next: { handle: () => unknown }) => next.handle());
+    },
+  }));
+  // Mock AllExceptionsFilter (Tache 1.3.8) : evite import nestjs dans bootstrap tests.
+  vi.doMock('./filters/all-exceptions.filter', () => ({
+    AllExceptionsFilter: class MockAllExceptionsFilter {
+      catch = vi.fn();
     },
   }));
   return { createSpy };
@@ -184,6 +191,11 @@ describe('main.ts bootstrap', () => {
         intercept = vi.fn((_ctx: unknown, next: { handle: () => unknown }) => next.handle());
       },
     }));
+    vi.doMock('./filters/all-exceptions.filter', () => ({
+      AllExceptionsFilter: class MockAllExceptionsFilter {
+        catch = vi.fn();
+      },
+    }));
 
     const { ready } = await import('./main');
     await ready;
@@ -256,6 +268,11 @@ describe('main.ts bootstrap', () => {
         intercept = vi.fn((_ctx: unknown, next: { handle: () => unknown }) => next.handle());
       },
     }));
+    vi.doMock('./filters/all-exceptions.filter', () => ({
+      AllExceptionsFilter: class MockAllExceptionsFilter {
+        catch = vi.fn();
+      },
+    }));
 
     const { ready } = await import('./main');
     await ready;
@@ -325,6 +342,11 @@ describe('main.ts bootstrap', () => {
     vi.doMock('./interceptors/response.interceptor', () => ({
       ResponseInterceptor: class MockResponseInterceptor {
         intercept = vi.fn((_ctx: unknown, next: { handle: () => unknown }) => next.handle());
+      },
+    }));
+    vi.doMock('./filters/all-exceptions.filter', () => ({
+      AllExceptionsFilter: class MockAllExceptionsFilter {
+        catch = vi.fn();
       },
     }));
 

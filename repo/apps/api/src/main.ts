@@ -51,6 +51,9 @@ import { ZodValidationPipe } from './pipes/zod-validation.pipe';
 // Intercepteur de format de reponse API (Tache 1.3.7).
 import { ResponseInterceptor } from './interceptors/response.interceptor';
 
+// Filtre global exceptions PII-safe (Tache 1.3.8).
+import { AllExceptionsFilter } from './filters/all-exceptions.filter';
+
 // App module (skeleton -- 1.3.2 enrichit)
 import { AppModule } from './app.module';
 
@@ -117,6 +120,13 @@ async function bootstrap(): Promise<void> {
   // Enveloppe toutes les reponses succes dans { success, data, meta }.
   // Tache 1.3.7.
   app.useGlobalInterceptors(new ResponseInterceptor());
+
+  // === ETAPE 5c : Filtre global exceptions PII-safe ===
+  // Capture toutes les exceptions (HttpException + inconnues).
+  // Retourne { success: false, error: {...}, meta: {...} }.
+  // Production : messages generiques uniquement (CNDP loi 09-08).
+  // Tache 1.3.8.
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   // === ETAPE 7 : Plugins de securite Fastify ===
   // Helmet (en-tetes HTTP), CORS (origines env.CORS_ORIGINS), Compress (gzip).

@@ -11,10 +11,12 @@
       "types": "./dist/index.d.ts"
     },
     "./tailwind-preset": {
-      "import": "./tailwind-preset.ts",
-      "require": "./tailwind-preset.ts",
-      "default": "./tailwind-preset.ts"
+      "import": "./src/tailwind-preset.ts",
+      "require": "./src/tailwind-preset.ts",
+      "default": "./src/tailwind-preset.ts"
     },
+    "./styles/theme.css": "./src/styles/theme.css",
+    "./styles/fonts.css": "./src/styles/fonts.css",
     "./components/locale-switcher": {
       "import": "./src/components/locale-switcher.tsx",
       "default": "./src/components/locale-switcher.tsx"
@@ -22,26 +24,33 @@
     "./components/theme-toggle": {
       "import": "./src/components/theme-toggle.tsx",
       "default": "./src/components/theme-toggle.tsx"
-    },
-    "./styles/theme.css": "./styles/theme.css"
+    }
   },
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest watch",
     "lint": "biome check --no-errors-on-unmatched src",
     "clean": "rm -rf dist .turbo"
   },
   "peerDependencies": {
+    "clsx": "2.1.1",
     "next": ">=15.0.0",
     "next-intl": ">=3.0.0",
     "next-themes": ">=0.4.0",
-    "react": ">=19.0.0"
+    "react": ">=19.0.0",
+    "sonner": "1.7.1",
+    "tailwind-merge": "2.5.5"
   },
   "devDependencies": {
     "@types/node": "22.10.5",
     "@types/react": "19.0.2",
+    "@vitest/coverage-v8": "2.1.8",
+    "clsx": "2.1.1",
+    "sonner": "1.7.1",
+    "tailwind-merge": "2.5.5",
     "typescript": "5.7.3",
     "vitest": "2.1.8"
   }

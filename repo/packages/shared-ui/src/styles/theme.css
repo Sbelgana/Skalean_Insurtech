@@ -1,0 +1,73 @@
+/*
+ * @insurtech/shared-ui -- Theme CSS variables Skalean Sofidemy
+ * Reference : task-1.4.8 Sprint 4 Phase 1
+ * RGB channel values (no alpha) -- enables Tailwind opacity modifiers.
+ */
+
+:root {
+  /* Sofidemy palette -- RGB channels */
+  --color-primary: 233 93 44;             /* #E95D2C Orange Skalean */
+  --color-primary-foreground: 255 255 255;
+  --color-secondary: 26 39 48;            /* #1A2730 Navy Dark */
+  --color-secondary-foreground: 255 255 255;
+  --color-accent: 176 206 226;            /* #B0CEE2 Sky Blue */
+  --color-accent-foreground: 26 39 48;
+  --color-acaps: 45 87 115;              /* #2D5773 ACAPS Teal */
+  --color-acaps-foreground: 255 255 255;
+
+  /* Semantic status */
+  --color-success: 34 197 94;
+  --color-warning: 234 179 8;
+  --color-error: 239 68 68;
+  --color-info: 59 130 246;
+
+  /* Surfaces */
+  --color-background: 255 255 255;
+  --color-foreground: 17 24 39;
+  --color-muted: 243 244 246;
+  --color-muted-foreground: 107 114 128;
+  --color-card: 255 255 255;
+  --color-card-foreground: 17 24 39;
+  --color-popover: 255 255 255;
+  --color-popover-foreground: 17 24 39;
+  --color-border: 229 231 235;
+  --color-input: 229 231 235;
+  --color-ring: 233 93 44;
+
+  /* Typography */
+  --font-sans: 'Montserrat', 'Noto Sans Arabic', system-ui, sans-serif;
+  --font-arabic: 'Noto Naskh Arabic', 'Amiri', serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+
+  /* Spacing */
+  --radius: 0.5rem;
+}
+
+[data-theme="dark"] {
+  --color-background: 17 24 39;
+  --color-foreground: 243 244 246;
+  --color-muted: 31 41 55;
+  --color-muted-foreground: 156 163 175;
+  --color-card: 31 41 55;
+  --color-card-foreground: 243 244 246;
+  --color-popover: 31 41 55;
+  --color-popover-foreground: 243 244 246;
+  --color-border: 55 65 81;
+  --color-input: 55 65 81;
+}
+
+/* App-specific theme overrides */
+[data-theme="admin"] {
+  --color-primary: 26 39 48;             /* Navy dominant pour admin */
+  --color-primary-foreground: 255 255 255;
+  --color-ring: 26 39 48;
+}
+
+[data-theme="garage"] {
+  --color-accent: 45 87 115;             /* ACAPS Teal accent pour garage */
+  --color-accent-foreground: 255 255 255;
+}
+
+[data-theme="assure"] {
+  --color-accent: 176 206 226;           /* Sky Blue accent pour assure */
+}

@@ -1,0 +1,18 @@
+/*
+ * @insurtech/shared-ui -- Fonts CSS
+ * Reference : task-1.4.8 Sprint 4 Phase 1
+ * Google Fonts loaded via next/font in app layouts.
+ * This file defines font-face fallbacks for non-Next.js consumers.
+ */
+
+/* Montserrat -- latin */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap');
+
+/* Noto Naskh Arabic -- arabic script */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap');
+
+/* RTL body direction when locale is Arabic */
+[dir="rtl"] {
+  font-family: var(--font-arabic), var(--font-sans);
+  text-align: right;
+}

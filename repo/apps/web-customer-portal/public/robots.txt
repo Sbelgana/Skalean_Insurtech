@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://assurance.skalean-insurtech.ma/sitemap.xml

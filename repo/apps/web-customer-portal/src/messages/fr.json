@@ -1,0 +1,67 @@
+{
+  "meta": {
+    "title": {
+      "default": "Skalean Assurance -- Protection et tranquillite d'esprit",
+      "brand": "Skalean Assurance"
+    },
+    "description": "Souscrivez votre assurance en ligne avec Skalean InsurTech : devis gratuit, assurance auto, protection complete."
+  },
+  "home": {
+    "title": "Bienvenue sur Skalean Assurance",
+    "palette": {
+      "primary": "Orange Sofidemy",
+      "secondary": "Navy Sofidemy",
+      "accent": "Sky Blue",
+      "acaps": "ACAPS Teal"
+    },
+    "placeholder": {
+      "banner": "Cette page sera remplacee par la landing page marketing dans le Sprint 19."
+    }
+  },
+  "common": {
+    "loading": "Chargement",
+    "error": "Une erreur est survenue",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Precedent",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "sort": "Trier",
+    "refresh": "Rafraichir",
+    "export": "Exporter"
+  },
+  "nav": {
+    "home": "Accueil",
+    "products": "Produits",
+    "pricing": "Tarifs",
+    "contact": "Contact",
+    "signin": "Se connecter",
+    "signup": "Inscription"
+  },
+  "customer": {
+    "insurance": "Assurance auto",
+    "subscription": "Souscription",
+    "freeQuote": "Devis gratuit",
+    "protection": "Protection",
+    "ourOffers": "Nos offres"
+  },
+  "auth": {
+    "login": "Connexion",
+    "logout": "Deconnexion",
+    "signin": "Se connecter",
+    "signup": "Creer un compte",
+    "forgotPassword": "Mot de passe oublie"
+  },
+  "errors": {
+    "network": "Connexion reseau impossible",
+    "unauthorized": "Authentification requise",
+    "forbidden": "Acces refuse",
+    "notFound": "Ressource introuvable",
+    "serverError": "Erreur serveur",
+    "validation": "Donnees invalides"
+  }
+}

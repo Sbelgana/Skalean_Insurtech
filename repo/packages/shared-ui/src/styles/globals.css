@@ -1,0 +1,8 @@
+/**
+ * shared-ui globals -- Storybook entry point
+ * Reference: task-1.4.16 Sprint 4 Phase 1
+ *
+ * Imports theme tokens + font variables for Storybook preview.
+ */
+@import './theme.css';
+@import './fonts.css';

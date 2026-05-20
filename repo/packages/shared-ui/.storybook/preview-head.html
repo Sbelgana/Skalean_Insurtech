@@ -1,0 +1,20 @@
+<!--
+  Storybook preview-head.html -- font preload injection
+  Reference: task-1.4.16 Sprint 4 Phase 1
+
+  next/font/google loads fonts server-side in Next.js.
+  In Storybook (Vite), we inject Google Fonts manually to avoid flash of unstyled text.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800;900&family=Noto+Naskh+Arabic:wght@400;700&family=Geist+Mono:wght@400&display=swap"
+/>
+<style>
+  :root {
+    --font-montserrat: 'Montserrat', system-ui, sans-serif;
+    --font-arabic: 'Noto Naskh Arabic', serif;
+    --font-mono: 'Geist Mono', 'Courier New', monospace;
+  }
+</style>

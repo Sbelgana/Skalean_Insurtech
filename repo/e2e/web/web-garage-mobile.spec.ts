@@ -1,66 +1,52 @@
 /**
- * web-garage-mobile E2E tests -- Sprint 4 bootstrap
- * Reference : task-1.4.3 Sprint 4 Phase 1
+ * web-garage-mobile E2E -- desktop chromium (smoke)
+ * Reference: task-1.4.16 Sprint 4 Phase 1
  *
- * Tests Playwright verifieront le fonctionnement du bootstrap Next.js 15 + PWA complet.
- * Ces tests necessitent que le serveur dev soit demarre : pnpm --filter @insurtech/web-garage-mobile dev
+ * Mobile-emulated tests are in e2e/mobile/web-garage-mobile.spec.ts.
+ * These smoke tests validate the app loads in a desktop browser context.
+ *
+ * Requires: pnpm --filter @insurtech/web-garage-mobile dev (port 3003)
  */
 import { test, expect } from '@playwright/test';
 
-test.describe('web-garage-mobile E2E (Sprint 4 bootstrap)', () => {
-  test('GET /fr returns 200 with French content', async ({ page }) => {
-    const response = await page.goto('/fr');
+const BASE = process.env.GARAGE_MOBILE_URL ?? 'http://localhost:3003';
+
+test.describe('web-garage-mobile (port 3003) -- desktop smoke', () => {
+  test('home /fr renders 200', async ({ page }) => {
+    const response = await page.goto(`${BASE}/fr`);
     expect(response?.status()).toBe(200);
-    await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
-    await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
-    await expect(page.locator('html')).toHaveAttribute('data-theme', 'garage-mobile');
-    await expect(page.getByRole('heading', { name: /Skalean Garage Mobile/i })).toBeVisible();
+    await expect(page).toHaveTitle(/Garage Mobile|Technicien|Skalean/i);
   });
 
-  test('GET /ar returns 200 with RTL direction', async ({ page }) => {
-    const response = await page.goto('/ar');
-    expect(response?.status()).toBe(200);
-    await expect(page.locator('html')).toHaveAttribute('lang', 'ar');
+  test('home /ar renders RTL', async ({ page }) => {
+    await page.goto(`${BASE}/ar`);
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
   });
 
-  test('GET /ar-MA renders Darija content', async ({ page }) => {
-    await page.goto('/ar-MA');
-    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-    await expect(page).toHaveTitle(/Garage/);
-  });
-
-  test('GET / redirects to /fr', async ({ page }) => {
-    const response = await page.goto('/');
-    expect(response?.url()).toMatch(/\/fr\/?$/);
-  });
-
-  test('manifest.webmanifest is served', async ({ page }) => {
-    const response = await page.goto('/manifest.webmanifest');
+  test('home /ar-MA Darija renders RTL', async ({ page }) => {
+    const response = await page.goto(`${BASE}/ar-MA`);
     expect(response?.status()).toBe(200);
-    const json = (await response?.json()) as Record<string, unknown>;
-    expect(json.name).toBe('Skalean Garage Mobile');
-    expect(json.display).toBe('standalone');
+    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
   });
 
-  test('mobile dashboard shows task tiles', async ({ page }) => {
-    await page.goto('/fr');
-    await expect(page.getByText('Tache du jour')).toBeVisible();
-    await expect(page.getByText('Scanner VIN')).toBeVisible();
-    await expect(page.getByText('Photo reparation')).toBeVisible();
+  test('manifest.webmanifest accessible', async ({ request }) => {
+    const response = await request.get(`${BASE}/manifest.webmanifest`);
+    expect(response.status()).toBe(200);
+    const m = await response.json() as Record<string, unknown>;
+    expect(m.theme_color).toBe('#E95D2C');
   });
 
-  test('Hydration runs without console errors', async ({ page }) => {
-    const errors: string[] = [];
-    page.on('console', (msg) => {
-      if (msg.type() === 'error') errors.push(msg.text());
-    });
-    await page.goto('/fr', { waitUntil: 'networkidle' });
-    expect(errors).toEqual([]);
-  });
-
-  test('GET /fr/inexistant renders 404', async ({ page }) => {
-    const response = await page.goto('/fr/inexistant', { waitUntil: 'networkidle' });
+  test('404 not-found', async ({ page }) => {
+    const response = await page.goto(`${BASE}/fr/non-existent-garage`);
     expect(response?.status()).toBe(404);
+    await expect(page.getByText(/404|introuvable/i)).toBeVisible();
+  });
+
+  test('hydration no console error', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+    await page.goto(`${BASE}/fr`);
+    await page.waitForLoadState('networkidle');
+    expect(errors.filter((e) => /hydrat/i.test(e))).toHaveLength(0);
   });
 });

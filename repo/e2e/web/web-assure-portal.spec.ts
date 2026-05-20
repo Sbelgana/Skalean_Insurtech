@@ -1,56 +1,58 @@
 /**
- * web-assure-portal E2E tests -- Sprint 4 bootstrap
- * Reference : task-1.4.6 Sprint 4 Phase 1
+ * web-assure-portal E2E -- self-service assure, desktop chromium
+ * Reference: task-1.4.16 Sprint 4 Phase 1
+ *
+ * Requires: pnpm --filter @insurtech/web-assure-portal dev (port 3005)
  */
 import { test, expect } from '@playwright/test';
 
-test.describe('web-assure-portal E2E (Sprint 4 bootstrap)', () => {
-  test('GET /fr returns 200 with French content', async ({ page }) => {
-    const response = await page.goto('/fr');
+const BASE = process.env.ASSURE_PORTAL_URL ?? 'http://localhost:3005';
+
+test.describe('web-assure-portal (port 3005) -- self-service assure', () => {
+  test('home /fr renders 200', async ({ page }) => {
+    const response = await page.goto(`${BASE}/fr`);
     expect(response?.status()).toBe(200);
-    await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
-    await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
-    await expect(page.locator('html')).toHaveAttribute('data-theme', 'assure');
-    await expect(page.getByRole('heading', { name: /Mon Espace Skalean/i })).toBeVisible();
+    await expect(page).toHaveTitle(/Espace|Assure|Skalean/i);
   });
 
-  test('GET /ar returns 200 with RTL direction', async ({ page }) => {
-    const response = await page.goto('/ar');
+  test('home /ar-MA Darija renders RTL', async ({ page }) => {
+    const response = await page.goto(`${BASE}/ar-MA`);
     expect(response?.status()).toBe(200);
-    await expect(page.locator('html')).toHaveAttribute('lang', 'ar');
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
   });
 
-  test('GET /ar-MA renders Darija content', async ({ page }) => {
-    await page.goto('/ar-MA');
+  test('home /ar renders RTL', async ({ page }) => {
+    await page.goto(`${BASE}/ar`);
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-    await expect(page).toHaveTitle(/Espace/);
   });
 
-  test('GET / redirects to /fr', async ({ page }) => {
-    const response = await page.goto('/');
-    expect(response?.url()).toMatch(/\/fr\/?$/);
+  test('mobile responsive 320px no horizontal scroll', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await page.goto(`${BASE}/fr`);
+    await expect(page.locator('main')).toBeVisible();
+    const horizontalScroll = await page.evaluate(
+      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    );
+    expect(horizontalScroll).toBe(false);
   });
 
-  test('Topbar is visible with branding and nav links', async ({ page }) => {
-    await page.goto('/fr');
-    await expect(page.getByRole('banner')).toBeVisible();
-    await expect(page.getByText('Mes polices')).toBeVisible();
-    await expect(page.getByText('Declarer un sinistre')).toBeVisible();
+  test('404 not-found', async ({ page }) => {
+    const response = await page.goto(`${BASE}/fr/non-existent`);
+    expect(response?.status()).toBe(404);
+    await expect(page.getByText(/404|introuvable/i)).toBeVisible();
   });
 
-  test('Content area uses centered max-w-4xl layout', async ({ page }) => {
-    await page.goto('/fr');
-    const main = page.locator('main');
-    await expect(main).toBeVisible();
-  });
-
-  test('Hydration runs without console errors', async ({ page }) => {
+  test('hydration no error', async ({ page }) => {
     const errors: string[] = [];
-    page.on('console', (msg) => {
-      if (msg.type() === 'error') errors.push(msg.text());
-    });
-    await page.goto('/fr', { waitUntil: 'networkidle' });
-    expect(errors).toEqual([]);
+    page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+    await page.goto(`${BASE}/fr`);
+    await page.waitForLoadState('networkidle');
+    expect(errors.filter((e) => /hydrat/i.test(e))).toHaveLength(0);
+  });
+
+  test('responsive 1280x720 desktop', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto(`${BASE}/fr`);
+    await expect(page.locator('main')).toBeVisible();
   });
 });

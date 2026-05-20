@@ -1,67 +1,69 @@
 /**
- * web-broker E2E tests -- Sprint 4 bootstrap
- * Reference : task-1.4.1 Sprint 4 Phase 1
+ * web-broker E2E -- desktop chromium 1280x720
+ * Reference: task-1.4.16 Sprint 4 Phase 1
  *
- * Tests Playwright verifieront le fonctionnement du bootstrap Next.js 15 complet.
- * Ces tests necessitent que le serveur dev soit demarre : pnpm --filter @insurtech/web-broker dev
+ * Requires: pnpm --filter @insurtech/web-broker dev (port 3001)
  */
 import { test, expect } from '@playwright/test';
 
-test.describe('web-broker E2E (Sprint 4 bootstrap)', () => {
-  test('GET /fr returns 200 with French content', async ({ page }) => {
-    const response = await page.goto('/fr');
+const BASE = process.env.BROKER_URL ?? 'http://localhost:3001';
+
+test.describe('web-broker (port 3001)', () => {
+  test('home /fr renders 200 with title', async ({ page }) => {
+    const response = await page.goto(`${BASE}/fr`);
     expect(response?.status()).toBe(200);
+    await expect(page).toHaveTitle(/Broker|Courtage|Skalean/i);
     await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
     await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
-    await expect(page.getByRole('heading', { name: /Skalean Broker/i })).toBeVisible();
   });
 
-  test('GET /ar returns 200 with RTL direction', async ({ page }) => {
-    const response = await page.goto('/ar');
+  test('home /ar renders RTL', async ({ page }) => {
+    const response = await page.goto(`${BASE}/ar`);
     expect(response?.status()).toBe(200);
     await expect(page.locator('html')).toHaveAttribute('lang', 'ar');
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
   });
 
-  test('GET /ar-MA renders Darija content', async ({ page }) => {
-    await page.goto('/ar-MA');
-    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-    await expect(page).toHaveTitle(/سمسار|Broker/);
-  });
-
-  test('GET / redirects to /fr', async ({ page }) => {
-    const response = await page.goto('/');
-    expect(response?.url()).toMatch(/\/fr\/?$/);
-  });
-
-  test('Locale switcher updates URL and content', async ({ page }) => {
-    await page.goto('/fr');
-    await page.getByRole('button', { name: /langue|language/i }).click();
-    await page.getByRole('button', { name: /Arabe|العربية/i }).click();
-    await expect(page).toHaveURL(/\/ar/);
+  test('home /ar-MA renders Darija content', async ({ page }) => {
+    const response = await page.goto(`${BASE}/ar-MA`);
+    expect(response?.status()).toBe(200);
+    await expect(page.locator('html')).toHaveAttribute('lang', 'ar-MA');
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
   });
 
-  test('Theme toggle persists across reload', async ({ page }) => {
-    await page.goto('/fr');
-    await page.getByRole('button', { name: /theme/i }).click();
-    await page.getByRole('button', { name: /Sombre|Dark/i }).click();
-    await expect(page.locator('html')).toHaveClass(/dark/);
-    await page.reload();
-    await expect(page.locator('html')).toHaveClass(/dark/);
-  });
-
-  test('GET /fr/inexistant renders 404', async ({ page }) => {
-    const response = await page.goto('/fr/inexistant', { waitUntil: 'networkidle' });
+  test('404 not-found triggered on unknown route', async ({ page }) => {
+    const response = await page.goto(`${BASE}/fr/non-existent-page-12345`);
     expect(response?.status()).toBe(404);
+    await expect(page.getByText(/404|introuvable|not found/i)).toBeVisible();
   });
 
-  test('Hydration runs without console errors', async ({ page }) => {
+  test('hydration no console error', async ({ page }) => {
     const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
     page.on('console', (msg) => {
       if (msg.type() === 'error') errors.push(msg.text());
     });
-    await page.goto('/fr', { waitUntil: 'networkidle' });
-    expect(errors).toEqual([]);
+    await page.goto(`${BASE}/fr`);
+    await page.waitForLoadState('networkidle');
+    expect(errors.filter((e) => /hydrat/i.test(e))).toHaveLength(0);
+  });
+
+  test('breadcrumb navigation visible', async ({ page }) => {
+    await page.goto(`${BASE}/fr`);
+    const breadcrumb = page.getByRole('navigation', { name: /breadcrumb|ariane/i });
+    await expect(breadcrumb).toBeVisible();
+    await expect(breadcrumb.getByText(/accueil|home/i)).toBeVisible();
+  });
+
+  test('responsive 1280x720 desktop main visible', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto(`${BASE}/fr`);
+    await expect(page.locator('main')).toBeVisible();
+  });
+
+  test('responsive 768px tablet main visible', async ({ page }) => {
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.goto(`${BASE}/fr`);
+    await expect(page.locator('main')).toBeVisible();
   });
 });

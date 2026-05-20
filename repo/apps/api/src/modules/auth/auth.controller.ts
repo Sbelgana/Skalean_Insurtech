@@ -18,6 +18,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import {
   type AuthContext,
   mfaDisableSchema,
@@ -64,6 +65,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Public()
+  @Throttle({ default: { limit: 3, ttl: 3600 } })
   @Post('signup')
   @HttpCode(HttpStatus.OK)
   async signup(
@@ -98,6 +100,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 3, ttl: 3600 } })
   @Post('resend-verification')
   @HttpCode(HttpStatus.OK)
   async resendVerification(
@@ -120,6 +123,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 5, ttl: 60 } })
   @Post('signin')
   @HttpCode(HttpStatus.OK)
   async signin(
@@ -139,6 +143,48 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 3, ttl: 3600 } })
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  async forgotPassword(
+    @Body() body: unknown,
+    @Req() req: { headers: HttpHeadersBag; ip?: string; socket?: { remoteAddress?: string } },
+  ): Promise<{ message: string }> {
+    const parsed = recoveryRequestSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException({
+        code: 'VALIDATION_ERROR',
+        message: 'Invalid forgot-password payload',
+        issues: parsed.error.issues,
+      });
+    }
+    const ctx = this.buildContext(req, false);
+    return this.authService.forgotPassword(parsed.data.email, {
+      ip: ctx.ip,
+      user_agent: ctx.user_agent,
+    });
+  }
+
+  @Public()
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(@Body() body: unknown): Promise<{ message: string; reset: true }> {
+    const parsed = recoveryConfirmSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException({
+        code: 'VALIDATION_ERROR',
+        message: 'Invalid reset-password payload',
+        issues: parsed.error.issues,
+      });
+    }
+    return this.authService.resetPassword({
+      recovery_token: parsed.data.recovery_token,
+      new_password: parsed.data.new_password,
+    });
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 30, ttl: 60 } })
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   async refresh(
@@ -158,6 +204,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 10, ttl: 60 } })
   @Post('verify-mfa')
   @HttpCode(HttpStatus.OK)
   async verifyMfa(

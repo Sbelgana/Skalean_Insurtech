@@ -5,7 +5,6 @@
  * Accepts optional `items` prop to override auto-generation.
  * Reference : task-1.4.14 Sprint 4 Phase 1
  */
-import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';

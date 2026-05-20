@@ -3,7 +3,6 @@
  * Inline SVG avoids extra HTTP request and supports theming via currentColor.
  * Reference : task-1.4.14 Sprint 4 Phase 1
  */
-import * as React from 'react';
 import { cn } from '../lib/cn.js';
 
 interface LogoSkaleanProps {

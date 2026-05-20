@@ -3,7 +3,6 @@
  * Compliant with CNDP / ACAPS / Loi 09-08.
  * Reference : task-1.4.14 Sprint 4 Phase 1
  */
-import * as React from 'react';
 import Link from 'next/link';
 import { Facebook, Linkedin, Youtube, Mail, Phone, MapPin } from 'lucide-react';
 import { LogoSkalean } from './LogoSkalean.js';

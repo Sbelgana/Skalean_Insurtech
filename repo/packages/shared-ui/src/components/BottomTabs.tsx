@@ -6,7 +6,6 @@
  * safe-area-inset-bottom applied for iOS notch.
  * Reference : task-1.4.14 Sprint 4 Phase 1
  */
-import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLocale } from 'next-intl';

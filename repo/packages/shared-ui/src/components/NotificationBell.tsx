@@ -5,7 +5,6 @@
  * Sprint 9 will connect SSE /api/v1/notifications/stream.
  * Reference : task-1.4.14 Sprint 4 Phase 1
  */
-import * as React from 'react';
 import { Bell } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import {

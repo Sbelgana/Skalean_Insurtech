@@ -57,5 +57,20 @@
     "notFound": "Ressource introuvable",
     "serverError": "Erreur serveur",
     "validation": "Donnees invalides"
+  },
+  "locale": {
+    "switcherAria": "Changer de langue",
+    "listAria": "Liste des langues disponibles",
+    "current": "Langue courante : {name}"
+  },
+  "format": {
+    "currency": "{value, number, currency}",
+    "date": "{value, date, short}",
+    "items": "{count, plural, one {# element} other {# elements}}"
+  },
+  "datetime": {
+    "today": "Aujourd'hui",
+    "yesterday": "Hier",
+    "tomorrow": "Demain"
   }
 }

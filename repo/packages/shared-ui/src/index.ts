@@ -5,7 +5,7 @@
 export const VERSION = '0.1.0';
 
 // Existing components
-export { LocaleSwitcher } from './components/locale-switcher.js';
+export { LocaleSwitcher } from './components/LocaleSwitcher.js';
 export { ThemeToggle } from './components/theme-toggle.js';
 
 // Theme provider
@@ -70,3 +70,25 @@ export type { BadgeVariant } from './components/ui/badge.js';
 export { Avatar } from './components/ui/avatar.js';
 export { Tooltip } from './components/ui/tooltip.js';
 export { Popover } from './components/ui/popover.js';
+
+// i18n routing + navigation
+export { routing, SUPPORTED_LOCALES, DEFAULT_LOCALE, RTL_LOCALES, isRtl, getDirection } from './i18n/routing';
+export type { SupportedLocale, RtlLocale, Pathnames } from './i18n/routing';
+export { LOCALES, getLocaleConfig, getLocaleFontStack } from './i18n/locales';
+export type { LocaleConfig } from './i18n/locales';
+export { Link, redirect, permanentRedirect, usePathname, useRouter, getPathname } from './i18n/navigation';
+export type { AppRouter } from './i18n/navigation';
+export type { AppName, MessageKey } from './i18n/types';
+
+// i18n format helpers
+export { formatDate, formatTime, formatRelativeTime, formatDateRange } from './lib/format-date';
+export type { DateFormatStyle } from './lib/format-date';
+export { formatNumber, formatCurrency, formatPercent, formatCompact, parseLocalizedNumber } from './lib/format-number';
+export type { NumberFormatOptions } from './lib/format-number';
+export { formatList, formatListAnd, formatListOr, formatListUnit } from './lib/format-list';
+export type { ListType, ListStyle } from './lib/format-list';
+export { getPluralCategory, pluralize, getPluralCategoriesForLocale } from './lib/pluralize';
+export type { PluralCategory, PluralMessages } from './lib/pluralize';
+
+// i18n components
+export { DirectionProvider, useIsRtl } from './components/DirectionProvider';

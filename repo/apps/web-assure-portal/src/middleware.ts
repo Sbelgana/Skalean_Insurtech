@@ -1,14 +1,16 @@
 /**
- * Middleware next-intl -- web-assure-portal
- * Reference : task-1.4.6 Sprint 4 Phase 1
+ * Middleware next-intl pour web-assure-portal (port 3005).
+ *
+ * Detecte locale depuis URL prefix -> Cookie NEXT_LOCALE -> Accept-Language -> defaut fr.
+ * Reference : task-1.4.11 Sprint 4 Phase 1
  */
 import createMiddleware from 'next-intl/middleware';
-import { routing } from '@/i18n/routing';
+import { routing } from '@insurtech/shared-ui/i18n/routing';
 
 export default createMiddleware(routing);
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon\\.ico|favicon\\.svg|manifest\\.webmanifest|robots\\.txt|icons|sitemap\\.xml).*)',
+    '/((?!api|_next|_vercel|static|favicon\.ico|manifest\.webmanifest|robots\.txt|sitemap\.xml|icons|flags|.*\..*).*)',
   ],
 };

@@ -60,5 +60,20 @@
     "notFound": "العنصر غير موجود",
     "serverError": "خطأ في الخادم",
     "validation": "بيانات غير صالحة"
+  },
+  "locale": {
+    "switcherAria": "تغيير اللغة",
+    "listAria": "قائمة اللغات المتاحة",
+    "current": "اللغة الحالية : {name}"
+  },
+  "format": {
+    "currency": "{value, number, currency}",
+    "date": "{value, date, short}",
+    "items": "{count, plural, zero {لا يوجد عناصر} one {عنصر واحد} two {عنصران} few {# عناصر} many {# عنصرا} other {# عنصر}}"
+  },
+  "datetime": {
+    "today": "اليوم",
+    "yesterday": "الأمس",
+    "tomorrow": "غدا"
   }
 }

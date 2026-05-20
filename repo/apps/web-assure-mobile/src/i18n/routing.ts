@@ -1,11 +1,18 @@
 /**
- * i18n routing -- web-assure-mobile
- * Reference : task-1.4.7 Sprint 4 Phase 1
+ * i18n routing re-export -- web-assure-mobile
+ * Reutilise la config partagee depuis @insurtech/shared-ui.
+ * Reference : task-1.4.11 Sprint 4 Phase 1
  */
-import { defineRouting } from 'next-intl/routing';
+export {
+  routing,
+  SUPPORTED_LOCALES,
+  DEFAULT_LOCALE,
+  isRtl,
+  getDirection,
+} from '@insurtech/shared-ui/i18n/routing';
+export type { SupportedLocale, RtlLocale } from '@insurtech/shared-ui/i18n/routing';
+export { Link, redirect, usePathname, useRouter, getPathname } from '@insurtech/shared-ui/i18n/navigation';
+export type { AppRouter } from '@insurtech/shared-ui/i18n/navigation';
 
-export const routing = defineRouting({
-  locales: ['fr', 'ar-MA', 'ar'] as const,
-  defaultLocale: 'fr',
-  localePrefix: 'always',
-});
+// Backward-compat alias
+export type AppLocale = import('@insurtech/shared-ui/i18n/routing').SupportedLocale;

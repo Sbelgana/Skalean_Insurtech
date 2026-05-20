@@ -2,26 +2,60 @@
   "name": "@insurtech/shared-pwa",
   "version": "0.1.0",
   "private": true,
+  "description": "Hooks et composants PWA partages pour les apps mobile Skalean InsurTech.",
+  "license": "UNLICENSED",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    }
+    ".": "./src/index.ts"
   },
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest watch",
+    "test:coverage": "vitest run --coverage",
     "lint": "biome check --no-errors-on-unmatched src",
-    "clean": "rm -rf dist .turbo"
+    "clean": "rimraf dist .turbo"
+  },
+  "dependencies": {
+    "clsx": "2.1.1",
+    "idb": "8.0.0",
+    "tailwind-merge": "2.5.5",
+    "workbox-core": "7.3.0",
+    "workbox-expiration": "7.3.0",
+    "workbox-precaching": "7.3.0",
+    "workbox-routing": "7.3.0",
+    "workbox-strategies": "7.3.0"
+  },
+  "peerDependencies": {
+    "next": "15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@insurtech/shared-ui": "workspace:*",
+    "next-intl": "3.26.3"
   },
   "devDependencies": {
-    "@types/node": "22.10.5",
-    "typescript": "5.7.3",
+    "@testing-library/jest-dom": "6.6.3",
+    "@testing-library/react": "16.1.0",
+    "@testing-library/user-event": "14.5.2",
+    "@types/node": "22.10.2",
+    "@types/react": "19.0.1",
+    "@types/react-dom": "19.0.2",
+    "@vitejs/plugin-react": "4.3.4",
+    "@vitest/coverage-v8": "2.1.8",
+    "fake-indexeddb": "6.0.0",
+    "jsdom": "25.0.1",
+    "next": "15.1.0",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "rimraf": "6.0.1",
+    "typescript": "5.7.2",
     "vitest": "2.1.8"
+  },
+  "peerDependenciesMeta": {
+    "next-intl": { "optional": true },
+    "@insurtech/shared-ui": { "optional": true }
   }
 }

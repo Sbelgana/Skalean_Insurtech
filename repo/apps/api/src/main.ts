@@ -57,6 +57,9 @@ import { AllExceptionsFilter } from './filters/all-exceptions.filter';
 // Swagger OpenAPI 3.0 setup (Tache 1.3.9).
 import { SwaggerModule } from './swagger/swagger.module';
 
+// BullMQ BullBoard UI setup (Tache 1.3.11).
+import { bullBoardAdapter } from './modules/jobs/jobs.module';
+
 // App module (skeleton -- 1.3.2 enrichit)
 import { AppModule } from './app.module';
 
@@ -139,6 +142,26 @@ async function bootstrap(): Promise<void> {
   SwaggerModule.setup(app, {
     disable: process.env['SWAGGER_DISABLE_PROD'] === 'true' && env.NODE_ENV === 'production',
   });
+
+  // === ETAPE 5e : BullBoard UI /admin/queues ===
+  // Interface UI BullMQ sur /admin/queues (auth requise Sprint 5+).
+  // bullBoardAdapter est initialise dans JobsModule.onModuleInit().
+  // Enregistrement plugin Fastify via l'adaptateur BullBoard.
+  // Tache 1.3.11.
+  try {
+    const fastifyInstance = app
+      .getHttpAdapter()
+      .getInstance() as unknown as { register: (plugin: unknown, opts?: unknown) => Promise<void> };
+    await fastifyInstance.register(bullBoardAdapter.registerPlugin(), {
+      prefix: '/admin/queues',
+      basePath: '/admin/queues',
+    });
+  } catch (err) {
+    // BullBoard non critique : log warn et continue le boot.
+    const msg = err instanceof Error ? err.message : String(err);
+    const logger = app.get(Logger);
+    logger.warn(`[JobsModule] BullBoard register skipped : ${msg}`);
+  }
 
   // === ETAPE 7 : Plugins de securite Fastify ===
   // Helmet (en-tetes HTTP), CORS (origines env.CORS_ORIGINS), Compress (gzip).

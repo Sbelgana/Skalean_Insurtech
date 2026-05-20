@@ -40,6 +40,9 @@ function makeMockPinoLogger() {
 
 function makeMockApp(listenFn?: (port: number, host: string) => Promise<void>) {
   const pinoLogger = makeMockPinoLogger();
+  const mockFastifyInstance = {
+    register: vi.fn(async () => {}),
+  };
   return {
     useLogger: vi.fn(),
     useGlobalPipes: vi.fn(),
@@ -52,6 +55,10 @@ function makeMockApp(listenFn?: (port: number, host: string) => Promise<void>) {
     get: vi.fn(() => pinoLogger),
     // app.register() pour les plugins Fastify (security -- Tache 1.3.5).
     register: vi.fn(async () => {}),
+    // app.getHttpAdapter().getInstance() pour BullBoard (Tache 1.3.11).
+    getHttpAdapter: vi.fn(() => ({
+      getInstance: vi.fn(() => mockFastifyInstance),
+    })),
   };
 }
 
@@ -121,6 +128,14 @@ function setupCommonMocks(options: { listenFn?: (port: number, host: string) => 
   // Mock SwaggerModule (Tache 1.3.9) : evite @nestjs/swagger dans bootstrap tests.
   vi.doMock('./swagger/swagger.module', () => ({
     SwaggerModule: { setup: vi.fn() },
+  }));
+  // Mock JobsModule BullBoard adapter (Tache 1.3.11) : evite connexion Redis/BullMQ.
+  vi.doMock('./modules/jobs/jobs.module', () => ({
+    JobsModule: class MockJobsModule {},
+    bullBoardAdapter: {
+      setBasePath: vi.fn(),
+      registerPlugin: vi.fn(() => async () => {}),
+    },
   }));
   return { createSpy };
 }
@@ -203,6 +218,10 @@ describe('main.ts bootstrap', () => {
     vi.doMock('./swagger/swagger.module', () => ({
       SwaggerModule: { setup: vi.fn() },
     }));
+    vi.doMock('./modules/jobs/jobs.module', () => ({
+      JobsModule: class MockJobsModule {},
+      bullBoardAdapter: { setBasePath: vi.fn(), registerPlugin: vi.fn(() => async () => {}) },
+    }));
 
     const { ready } = await import('./main');
     await ready;
@@ -283,6 +302,10 @@ describe('main.ts bootstrap', () => {
     vi.doMock('./swagger/swagger.module', () => ({
       SwaggerModule: { setup: vi.fn() },
     }));
+    vi.doMock('./modules/jobs/jobs.module', () => ({
+      JobsModule: class MockJobsModule {},
+      bullBoardAdapter: { setBasePath: vi.fn(), registerPlugin: vi.fn(() => async () => {}) },
+    }));
 
     const { ready } = await import('./main');
     await ready;
@@ -361,6 +384,10 @@ describe('main.ts bootstrap', () => {
     }));
     vi.doMock('./swagger/swagger.module', () => ({
       SwaggerModule: { setup: vi.fn() },
+    }));
+    vi.doMock('./modules/jobs/jobs.module', () => ({
+      JobsModule: class MockJobsModule {},
+      bullBoardAdapter: { setBasePath: vi.fn(), registerPlugin: vi.fn(() => async () => {}) },
     }));
 
     const { ready } = await import('./main');

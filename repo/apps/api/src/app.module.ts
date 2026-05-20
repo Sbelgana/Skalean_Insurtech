@@ -38,6 +38,9 @@ import { SwaggerModule } from './swagger/swagger.module';
 // === Health probes K8s (Tache 1.3.10) ===
 import { HealthModule } from './modules/health/health.module';
 
+// === BullMQ Jobs queue Redis-backed (Tache 1.3.11) ===
+import { JobsModule } from './modules/jobs/jobs.module';
+
 // === Modules transverses globaux ===
 import { ConfigModule } from './config/config.module';
 import { DatabaseModule } from './database/database.module';
@@ -78,6 +81,9 @@ import { TenantModule } from './modules/tenant/tenant.module';
 
     // === Health probes K8s (Tache 1.3.10) ===
     HealthModule,
+
+    // === BullMQ Jobs queue Redis-backed (Tache 1.3.11) ===
+    JobsModule,
 
     // === Transverses globaux (ordre : Config -> Database -> Redis -> Kafka) ===
     ConfigModule.forRoot(),

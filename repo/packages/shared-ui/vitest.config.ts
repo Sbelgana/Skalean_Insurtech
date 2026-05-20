@@ -12,6 +12,8 @@ export default defineConfig({
     globals: true,
     environmentMatchGlobs: [
       ['src/components/__tests__/**', 'jsdom'],
+      ['src/layouts/__tests__/**', 'jsdom'],
+      ['src/hooks/__tests__/**', 'jsdom'],
     ],
     environment: 'node',
     include: ['src/**/__tests__/**/*.spec.{ts,tsx}'],
@@ -19,7 +21,13 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text'],
-      include: ['src/lib/**', 'src/hooks/**', 'src/i18n/**', 'src/components/**'],
+      include: [
+        'src/lib/**',
+        'src/hooks/**',
+        'src/i18n/**',
+        'src/components/**',
+        'src/layouts/**',
+      ],
       exclude: [
         'src/hooks/useTheme.ts',
         'src/hooks/useDirection.ts',

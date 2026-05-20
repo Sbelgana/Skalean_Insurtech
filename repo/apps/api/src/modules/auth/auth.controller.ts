@@ -23,6 +23,8 @@ import {
   mfaDisableSchema,
   mfaSetupConfirmSchema,
   mfaVerifySchema,
+  recoveryConfirmSchema,
+  recoveryRequestSchema,
   refreshSchema,
   resendVerificationSchema,
   signinSchema,

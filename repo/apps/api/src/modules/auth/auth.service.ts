@@ -47,6 +47,10 @@ import {
   EMAIL_VERIFICATION_REPOSITORY_TOKEN,
 } from './email-verification.repository.js';
 import { type EmailService, EMAIL_SERVICE_TOKEN } from './email.service.js';
+import {
+  type PasswordRecoveryRepository,
+  PASSWORD_RECOVERY_REPOSITORY_TOKEN,
+} from './password-recovery.repository.js';
 import type {
   RefreshResponse,
   SigninMfaRequiredResponse,
@@ -88,7 +92,84 @@ export class AuthService {
     @Inject(EMAIL_VERIFICATION_REPOSITORY_TOKEN)
     private readonly emailVerifyRepo: EmailVerificationRepository,
     @Inject(EMAIL_SERVICE_TOKEN) private readonly emailService: EmailService,
+    @Inject(PASSWORD_RECOVERY_REPOSITORY_TOKEN)
+    private readonly recoveryRepo: PasswordRecoveryRepository,
   ) {}
+
+  /** Anti-enumeration : same response whether email exists or not. */
+  async forgotPassword(
+    email: string,
+    ctx: { ip: string; user_agent: string },
+  ): Promise<{ message: string }> {
+    const lower = email.trim().toLowerCase();
+    const sameResponse = {
+      message: 'If your email is registered, a password reset link has been sent.',
+    };
+    const user = await this.userRepo.findByEmail(lower);
+    if (!user) {
+      this.logger.log({ action: 'forgot_password_unknown_email', email: lower });
+      return sameResponse;
+    }
+    if (!user.is_active || user.deleted_at !== null) {
+      this.logger.log({ action: 'forgot_password_inactive_user', user_id: user.id });
+      return sameResponse;
+    }
+    await this.recoveryRepo.deleteUnconsumedForUser(user.id);
+    const rawToken = this.hashing.randomToken(32);
+    const tokenHash = this.hashing.sha256(rawToken);
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1h TTL
+    await this.recoveryRepo.create({
+      user_id: user.id,
+      token_hash: tokenHash,
+      expires_at: expiresAt,
+      ip_at_creation: ctx.ip,
+      user_agent_at_creation: ctx.user_agent,
+    });
+    await this.emailService.sendRecovery({
+      to: lower,
+      locale: user.locale,
+      token: rawToken,
+    });
+    this.logger.log({ action: 'forgot_password_sent', user_id: user.id });
+    return sameResponse;
+  }
+
+  /**
+   * Validates the recovery token and applies the new password.
+   * One-time use ; revokes all sessions on success.
+   */
+  async resetPassword(input: {
+    recovery_token: string;
+    new_password: string;
+  }): Promise<{ message: string; reset: true }> {
+    const tokenHash = this.hashing.sha256(input.recovery_token);
+    const record = await this.recoveryRepo.findActiveByTokenHash(tokenHash);
+    if (!record) {
+      throw InvalidRefreshTokenError('Recovery token invalid or expired');
+    }
+    const user = await this.userRepo.findById(record.user_id);
+    if (!user) {
+      throw InvalidRefreshTokenError('User missing');
+    }
+    const policy = this.argon2.validatePolicy(input.new_password, {
+      email: user.email,
+      display_name: user.display_name,
+    });
+    if (!policy.valid) {
+      throw PasswordPolicyViolationError(policy.reasons);
+    }
+    const newHash = await this.argon2.hash(input.new_password);
+    await this.userRepo.updatePassword(user.id, newHash);
+    await this.recoveryRepo.markConsumed(record.id);
+    await this.session.revokeUserSessions(user.id);
+    await this.emailService.sendPasswordChanged({
+      to: user.email,
+      locale: user.locale,
+      display_name: user.display_name,
+    });
+    this.logger.log({ action: 'password_reset_success', user_id: user.id });
+    return { reset: true, message: 'Password updated. Please sign in with your new password.' };
+  }
 
   /**
    * Creates a new user (email_verified_at NULL) and sends verification email.

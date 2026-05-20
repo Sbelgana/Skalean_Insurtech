@@ -75,8 +75,10 @@ describe('AuthService', () => {
     userRepo = new InMemoryUserRepository();
     const { InMemoryEmailVerificationRepository } = await import('./email-verification.repository');
     const { StubEmailService } = await import('./email.service');
+    const { InMemoryPasswordRecoveryRepository } = await import('./password-recovery.repository');
     const emailVerifyRepo = new InMemoryEmailVerificationRepository();
     const emailService = new StubEmailService();
+    const recoveryRepo = new InMemoryPasswordRecoveryRepository();
     service = new AuthService(
       userRepo,
       argon2,
@@ -86,6 +88,7 @@ describe('AuthService', () => {
       mfa,
       emailVerifyRepo,
       emailService,
+      recoveryRepo,
     );
   }, 30000);
 

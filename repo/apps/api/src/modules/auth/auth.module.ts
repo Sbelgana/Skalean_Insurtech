@@ -19,6 +19,10 @@ import {
 import { EMAIL_SERVICE_TOKEN, StubEmailService } from './email.service.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 import { MfaRequiredGuard } from './guards/mfa-required.guard.js';
+import {
+  InMemoryPasswordRecoveryRepository,
+  PASSWORD_RECOVERY_REPOSITORY_TOKEN,
+} from './password-recovery.repository.js';
 import { InMemoryUserRepository, USER_REPOSITORY_TOKEN } from './user.repository.js';
 
 const userRepoProvider: Provider = {
@@ -36,6 +40,11 @@ const emailServiceProvider: Provider = {
   useClass: StubEmailService,
 };
 
+const recoveryRepoProvider: Provider = {
+  provide: PASSWORD_RECOVERY_REPOSITORY_TOKEN,
+  useClass: InMemoryPasswordRecoveryRepository,
+};
+
 @Module({
   imports: [InsurtechAuthModule],
   controllers: [AuthController],
@@ -46,6 +55,7 @@ const emailServiceProvider: Provider = {
     userRepoProvider,
     emailVerifyRepoProvider,
     emailServiceProvider,
+    recoveryRepoProvider,
   ],
   exports: [
     AuthService,
@@ -54,6 +64,7 @@ const emailServiceProvider: Provider = {
     USER_REPOSITORY_TOKEN,
     EMAIL_VERIFICATION_REPOSITORY_TOKEN,
     EMAIL_SERVICE_TOKEN,
+    PASSWORD_RECOVERY_REPOSITORY_TOKEN,
   ],
 })
 export class AuthModule {}

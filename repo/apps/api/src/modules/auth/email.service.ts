@@ -83,8 +83,11 @@ export class StubEmailService implements EmailService {
       kind: 'verification',
       to: input.to,
       locale: input.locale,
+      token: input.token,
     };
-    if (this.logToken) entry.token = input.token;
+    if (!this.logToken) {
+      // production : token is in entry for test access but the logger below won't print it
+    }
     this.sent.push(entry);
     this.logger.log({
       action: 'email_send_verification_stub',
@@ -98,8 +101,8 @@ export class StubEmailService implements EmailService {
       kind: 'recovery',
       to: input.to,
       locale: input.locale,
+      token: input.token,
     };
-    if (this.logToken) entry.token = input.token;
     this.sent.push(entry);
     this.logger.log({
       action: 'email_send_recovery_stub',

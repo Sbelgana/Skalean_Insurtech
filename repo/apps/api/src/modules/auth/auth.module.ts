@@ -1,17 +1,29 @@
 /**
- * AuthModule -- stub. Enrichi Sprint 5 (Auth Foundations).
+ * apps/api/src/modules/auth/auth.module
  *
- * Sprint 5 ajoutera :
- *   - controllers : login, register, refresh, mfa, webauthn, logout
- *   - services : UserService, TokenService, PasswordService, MfaService
- *   - guards : JwtAuthGuard, MfaGuard
- *   - strategies : JwtStrategy, LocalStrategy
- *   - DTOs Zod : LoginDto, RegisterDto, RefreshDto, etc.
+ * Sprint 5 Tache 2.1.6 -- wires AuthController + AuthService + JwtAuthGuard
+ * onto the @insurtech/auth global services (Argon2Service, JwtService,
+ * SessionService, HashingService, EncryptionService, PepperService).
  *
- * Reference : B-05 Sprint 5 Auth Foundations.
- * Tache : 1.3.2 (stub Sprint 3 / Phase 1).
+ * Sprint 6 will swap InMemoryUserRepository for the Postgres-backed impl.
  */
-import { Module } from '@nestjs/common';
 
-@Module({})
+import { Module, type Provider } from '@nestjs/common';
+import { AuthModule as InsurtechAuthModule } from '@insurtech/auth';
+import { AuthController } from './auth.controller.js';
+import { AuthService } from './auth.service.js';
+import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
+import { InMemoryUserRepository, USER_REPOSITORY_TOKEN } from './user.repository.js';
+
+const userRepoProvider: Provider = {
+  provide: USER_REPOSITORY_TOKEN,
+  useClass: InMemoryUserRepository,
+};
+
+@Module({
+  imports: [InsurtechAuthModule],
+  controllers: [AuthController],
+  providers: [AuthService, JwtAuthGuard, userRepoProvider],
+  exports: [AuthService, JwtAuthGuard, USER_REPOSITORY_TOKEN],
+})
 export class AuthModule {}

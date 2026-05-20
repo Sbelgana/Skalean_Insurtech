@@ -35,7 +35,18 @@
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "paths": {
+      "@insurtech/database": ["packages/database/dist/index.d.ts"],
+      "@insurtech/shared-config": ["packages/shared-config/src/index.ts"],
+      "@insurtech/shared-config/*": ["packages/shared-config/src/*"],
+      "@insurtech/shared-utils": ["packages/shared-utils/src/index.ts"],
+      "@insurtech/shared-utils/*": ["packages/shared-utils/src/*"],
+      "@insurtech/shared-events": ["packages/shared-events/src/index.ts"],
+      "@insurtech/shared-events/*": ["packages/shared-events/src/*"],
+      "@insurtech/auth": ["packages/auth/src/index.ts"],
+      "@insurtech/auth/*": ["packages/auth/src/*"]
+    }
   },
   "include": ["src/**/*", "test/**/*"],
   "exclude": ["node_modules", "dist", "e2e", "coverage", "test-results"]

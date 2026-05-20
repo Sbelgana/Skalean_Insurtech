@@ -15,7 +15,7 @@ export const VALID_ENV_FIXTURE: Record<string, string> = {
   API_PORT: '14000',
   API_HOST: '127.0.0.1',
   TZ: 'Africa/Casablanca',
-  LOG_LEVEL: 'silent',
+  LOG_LEVEL: 'info',
   LOG_PRETTY_PRINT: 'false',
   LOG_REDACT_PII: 'true',
   BODY_LIMIT_MB: '10',

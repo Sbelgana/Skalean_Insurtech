@@ -1,0 +1,31 @@
+@import "tailwindcss";
+@import "@insurtech/shared-ui/styles/theme.css";
+
+/* ==========================================================================
+   web-insurtech-admin -- styles globaux
+   Reference : task-1.4.4 Sprint 4 Phase 1
+   ========================================================================== */
+
+@layer base {
+  body {
+    font-family: var(--font-montserrat), "Noto Naskh Arabic", system-ui, -apple-system, sans-serif;
+    font-feature-settings: "ss01", "cv01";
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  [dir="rtl"] body {
+    font-family: var(--font-arabic), var(--font-montserrat), system-ui, sans-serif;
+  }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--color-muted); }
+  ::-webkit-scrollbar-thumb { background: #1A2730; border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: #2D3E4A; }
+}
+
+@media print {
+  body { background: #ffffff !important; color: #1A2730 !important; }
+  nav, [data-print="hidden"] { display: none !important; }
+  a { text-decoration: underline; color: inherit; }
+}

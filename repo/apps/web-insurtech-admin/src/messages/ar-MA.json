@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "title": {
+      "default": "Skalean Admin -- لوحة الإدارة العليا",
+      "brand": "Skalean Admin"
+    },
+    "description": "منصة SuperAdmin ديال Skalean InsurTech : إدارة التنانت، المراقبة، التقارير، الامتثال."
+  },
+  "home": {
+    "title": "مرحبا بيك فـ Skalean Admin",
+    "palette": {
+      "primary": "الكحل ديال Sofidemy",
+      "secondary": "البرتقالي ديال Sofidemy",
+      "accent": "السماوي",
+      "acaps": "أخضر ACAPS"
+    },
+    "placeholder": {
+      "banner": "هاد الصفحة غادي تتبدل بـ Dashboard SuperAdmin فـ Sprint 18."
+    }
+  },
+  "common": {
+    "loading": "جاري التحميل",
+    "error": "وقع شي مشكل",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "confirm": "تأكيد",
+    "close": "إغلاق",
+    "back": "رجوع",
+    "next": "التالي",
+    "previous": "السابق",
+    "search": "بحث",
+    "filter": "تصفية",
+    "sort": "ترتيب",
+    "refresh": "تحديث",
+    "export": "تصدير"
+  },
+  "nav": {
+    "dashboard": "لوحة القيادة",
+    "tenants": "التنانت",
+    "monitoring": "المراقبة",
+    "reports": "التقارير",
+    "conformite": "الامتثال",
+    "users": "المستخدمين",
+    "security": "الأمن",
+    "settings": "الإعدادات",
+    "license": "الترخيص"
+  },
+  "auth": {
+    "login": "دخول",
+    "logout": "خروج",
+    "signin": "تسجيل الدخول",
+    "signup": "إنشاء حساب",
+    "forgotPassword": "نسيت كلمة السر",
+    "accessDenied": "ما عندكش الإذن"
+  },
+  "errors": {
+    "network": "كاينة مشكلة فـ الشبكة",
+    "unauthorized": "خاصك تسجل الدخول",
+    "forbidden": "ما عندكش الإذن",
+    "notFound": "ما لقيناش هاد الحاجة",
+    "serverError": "مشكل فـ السيرفر",
+    "validation": "المعطيات غالط"
+  }
+}

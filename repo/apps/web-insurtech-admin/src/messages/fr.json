@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "title": {
+      "default": "Skalean Admin -- Back-office SuperAdmin",
+      "brand": "Skalean Admin"
+    },
+    "description": "Plateforme SuperAdmin Skalean InsurTech : gestion tenants, monitoring, rapports, conformite."
+  },
+  "home": {
+    "title": "Bienvenue sur Skalean Admin",
+    "palette": {
+      "primary": "Navy Sofidemy",
+      "secondary": "Orange Sofidemy",
+      "accent": "Sky Blue",
+      "acaps": "ACAPS Teal"
+    },
+    "placeholder": {
+      "banner": "Cette page sera remplacee par le tableau de bord SuperAdmin dans le Sprint 18."
+    }
+  },
+  "common": {
+    "loading": "Chargement",
+    "error": "Une erreur est survenue",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Precedent",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "sort": "Trier",
+    "refresh": "Rafraichir",
+    "export": "Exporter"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "tenants": "Tenants",
+    "monitoring": "Monitoring",
+    "reports": "Rapports",
+    "conformite": "Conformite",
+    "users": "Utilisateurs",
+    "security": "Securite",
+    "settings": "Parametres",
+    "license": "License"
+  },
+  "auth": {
+    "login": "Connexion",
+    "logout": "Deconnexion",
+    "signin": "Se connecter",
+    "signup": "Creer un compte",
+    "forgotPassword": "Mot de passe oublie",
+    "accessDenied": "Acces refuse"
+  },
+  "errors": {
+    "network": "Connexion reseau impossible",
+    "unauthorized": "Authentification requise",
+    "forbidden": "Acces refuse",
+    "notFound": "Ressource introuvable",
+    "serverError": "Erreur serveur",
+    "validation": "Donnees invalides"
+  }
+}

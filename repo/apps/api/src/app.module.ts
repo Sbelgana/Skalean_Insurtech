@@ -22,9 +22,10 @@
  *             decision-009 (Zod uniforme).
  * Tache : 1.3.2 + 1.3.3 + 1.3.4 + 1.3.13 + 1.3.14 (Sprint 3 / Phase 1).
  */
-import { Module } from '@nestjs/common';
+import { type MiddlewareConsumer, Module, type NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { TenantContextMiddleware } from './common/middleware/tenant-context.middleware';
 
 // === Logger global (PREMIER -- couvre tous les logs de boot) ===
 import { LoggerModule } from './logger/logger.module';
@@ -137,6 +138,12 @@ import { TenantModule } from './modules/tenant/tenant.module';
     TenantModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, TenantContextMiddleware],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  // Sprint 6 Tache 2.2.2 -- TenantContextMiddleware applique a 100% des routes.
+  // Le middleware classifie le path et execute la logique appropriee (infrastructure/public/admin/assure/tenant).
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(TenantContextMiddleware).forRoutes('*');
+  }
+}

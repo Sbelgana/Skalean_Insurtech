@@ -1,16 +1,22 @@
 /**
- * TenantModule -- stub. Enrichi Sprint 6 (Multi-Tenant).
+ * TenantModule -- Sprint 6 Tache 2.2.2.
  *
- * Sprint 6 ajoutera :
- *   - TenantContextInterceptor (lit x-tenant-id header)
- *   - RLSPostgresSubscriber (SET LOCAL app.current_tenant)
- *   - TenantService
- *   - DTOs Tenant
+ * Enrichi avec :
+ *   - TenantAccessCacheService (Redis cache acces user + tenant settings)
+ *
+ * Sprint 6 a venir :
+ *   - Tache 2.2.4 TenantTransactionInterceptor (SET LOCAL Postgres)
+ *   - Tache 2.2.5 TenantValidationService
+ *   - Tache 2.2.6 CrossTenantAuthorizationService
+ *   - Tache 2.2.7 TenantManagementService
  *
  * Reference : B-06 Sprint 6 Multi-Tenant.
- * Tache : 1.3.2 (stub Sprint 3 / Phase 1).
  */
 import { Module } from '@nestjs/common';
+import { TenantAccessCacheService } from './services/tenant-access-cache.service.js';
 
-@Module({})
+@Module({
+  providers: [TenantAccessCacheService],
+  exports: [TenantAccessCacheService],
+})
 export class TenantModule {}

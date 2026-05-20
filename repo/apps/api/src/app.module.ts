@@ -9,15 +9,18 @@
  *
  * Sprint 3 Tache 1.3.3 : LoggerModule Pino ajoute en PREMIER import
  * (logger disponible pour tous les modules suivants).
+ * Sprint 3 Tache 1.3.4 : RequestContextModule (AsyncLocalStorage OTel)
+ * ajoute apres LoggerModule pour propager request_id, tenant_id, trace_id.
  *
  * Convention ordre imports :
  *   1. LoggerModule (Pino -- PREMIER pour couvrir tous les logs de boot).
- *   2. Modules transverses globaux (Config, Database, Redis, Kafka).
- *   3. Modules metier stubs (alphabetique).
+ *   2. RequestContextModule (AsyncLocalStorage -- avant modules metier).
+ *   3. Modules transverses globaux (Config, Database, Redis, Kafka).
+ *   4. Modules metier stubs (alphabetique).
  *
  * Reference : decision-003 (NestJS) + decision-006 (no-emoji) +
  *             decision-009 (Zod uniforme).
- * Tache : 1.3.2 + 1.3.3 (Sprint 3 / Phase 1).
+ * Tache : 1.3.2 + 1.3.3 + 1.3.4 (Sprint 3 / Phase 1).
  */
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
@@ -25,6 +28,9 @@ import { AppService } from './app.service';
 
 // === Logger global (PREMIER -- couvre tous les logs de boot) ===
 import { LoggerModule } from './logger/logger.module';
+
+// === Context de requete (AsyncLocalStorage -- apres logger, avant metier) ===
+import { RequestContextModule } from './request-context/request-context.module';
 
 // === Modules transverses globaux ===
 import { ConfigModule } from './config/config.module';
@@ -57,6 +63,9 @@ import { TenantModule } from './modules/tenant/tenant.module';
   imports: [
     // === Logger global PREMIER (Pino -- couvre logs de boot des modules suivants) ===
     LoggerModule.forRoot(),
+
+    // === Context de requete (AsyncLocalStorage) ===
+    RequestContextModule,
 
     // === Transverses globaux (ordre : Config -> Database -> Redis -> Kafka) ===
     ConfigModule.forRoot(),

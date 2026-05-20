@@ -4,19 +4,19 @@
  * @Global() AuthModule, progressively enriched across Sprint 5.
  *
  * Tache 2.1.1 -- skeleton @Global() module
- * Tache 2.1.2 -- adds PepperService, Argon2Service
- * Tache 2.1.3 -- adds EncryptionService, HashingService
- * Tache 2.1.4 -- adds JwtService (RS256)
- * Tache 2.1.5 -- adds SessionService + REDIS_TOKEN factory + NoOpSessionRepository  <-- current
- * Tache 2.1.6 -- adds AuthController, AuthService, JwtStrategy, JwtAuthGuard
- * Tache 2.1.7 -- adds MfaService
- * Tache 2.1.8 -- adds MfaRequiredGuard
- * Tache 2.1.9 -- adds SignupService, EmailVerificationService
- * Tache 2.1.10 -- adds LockoutService
- * Tache 2.1.11 -- adds RecoveryService
- * Tache 2.1.12 -- adds AuditAuthService
- * Tache 2.1.13 -- adds EmailService
- * Tache 2.1.14 -- adds RateLimitGuard auth-specific
+ * Tache 2.1.2 -- PepperService, Argon2Service
+ * Tache 2.1.3 -- EncryptionService, HashingService
+ * Tache 2.1.4 -- JwtService (RS256)
+ * Tache 2.1.5 -- SessionService + REDIS_TOKEN factory + NoOpSessionRepository
+ * Tache 2.1.6 -- AuthController, AuthService, JwtAuthGuard (in apps/api)
+ * Tache 2.1.7 -- MfaService (TOTP RFC 6238 + QR + recovery codes)  <-- current
+ * Tache 2.1.8 -- MfaRequiredGuard
+ * Tache 2.1.9 -- SignupService, EmailVerificationService
+ * Tache 2.1.10 -- LockoutService
+ * Tache 2.1.11 -- RecoveryService
+ * Tache 2.1.12 -- AuditAuthService
+ * Tache 2.1.13 -- EmailService
+ * Tache 2.1.14 -- RateLimitGuard auth-specific
  */
 
 import { Global, Module, type Provider } from '@nestjs/common';
@@ -25,6 +25,7 @@ import { Argon2Service } from './services/argon2.service.js';
 import { EncryptionService } from './services/encryption.service.js';
 import { HashingService } from './services/hashing.service.js';
 import { JwtService } from './services/jwt.service.js';
+import { MfaService } from './services/mfa.service.js';
 import { PepperService } from './services/pepper.service.js';
 import { REDIS_TOKEN, SessionService } from './services/session.service.js';
 import {
@@ -61,6 +62,7 @@ const sessionRepoProvider: Provider = {
     redisProvider,
     sessionRepoProvider,
     SessionService,
+    MfaService,
   ],
   controllers: [],
   exports: [
@@ -70,6 +72,7 @@ const sessionRepoProvider: Provider = {
     HashingService,
     JwtService,
     SessionService,
+    MfaService,
     REDIS_TOKEN,
     SESSION_REPOSITORY_TOKEN,
   ],

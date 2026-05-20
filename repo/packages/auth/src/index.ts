@@ -8,6 +8,25 @@ export * from './types/index.js';
 export * from './schemas/index.js';
 export * from './constants/index.js';
 
+export { MfaService } from './services/mfa.service.js';
+export type {
+  MfaSetupResult,
+  MfaConfirmResult,
+  MfaVerifyResult,
+  MfaChallengeRecord,
+  MfaSetupPendingRecord,
+} from './types/mfa-types.js';
+export {
+  MfaError,
+  MfaInvalidCodeError,
+  MfaSecretNotSetError,
+  MfaSetupAlreadyExistsError,
+  MfaChallengeExpiredError,
+  MfaRecoveryCodeAlreadyUsedError,
+  MfaSetupTokenExpiredError,
+  isMfaError,
+} from './errors/mfa-errors.js';
+
 export { Argon2Service } from './services/argon2.service.js';
 export type { PolicyValidationContext } from './services/argon2.service.js';
 export { PepperService } from './services/pepper.service.js';

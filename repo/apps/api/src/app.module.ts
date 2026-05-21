@@ -23,9 +23,12 @@
  * Tache : 1.3.2 + 1.3.3 + 1.3.4 + 1.3.13 + 1.3.14 (Sprint 3 / Phase 1).
  */
 import { type MiddlewareConsumer, Module, type NestModule } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { TenantTransactionInterceptor } from './common/interceptors/tenant-transaction.interceptor';
 import { TenantContextMiddleware } from './common/middleware/tenant-context.middleware';
+import { DatabaseTenantContextService } from './common/services/database-tenant-context.service';
 
 // === Logger global (PREMIER -- couvre tous les logs de boot) ===
 import { LoggerModule } from './logger/logger.module';
@@ -138,7 +141,16 @@ import { TenantModule } from './modules/tenant/tenant.module';
     TenantModule,
   ],
   controllers: [AppController],
-  providers: [AppService, TenantContextMiddleware],
+  providers: [
+    AppService,
+    TenantContextMiddleware,
+    DatabaseTenantContextService,
+    // Sprint 6 Tache 2.2.4 -- TenantTransactionInterceptor APP_INTERCEPTOR global
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TenantTransactionInterceptor,
+    },
+  ],
 })
 export class AppModule implements NestModule {
   // Sprint 6 Tache 2.2.2 -- TenantContextMiddleware applique a 100% des routes.

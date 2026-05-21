@@ -17,3 +17,14 @@ export const ADMIN_ONLY_KEY = 'admin-only';
 
 /** Marque controller/method comme assure L3 only (assureUserId non-undefined). */
 export const REQUIRE_ASSURE_KEY = 'require-assure';
+
+// === Sprint 6 Tache 2.2.10 -- SuperAdminGuard fine-grained ===
+
+/** super_admin_platform OR analyst_support (analyst restricted to GET). */
+export const SUPER_ADMIN_ONLY_KEY = 'super-admin-only';
+
+/** Explicit allow analyst_support read-only sur cette route. */
+export const ANALYST_ALLOWED_KEY = 'analyst-allowed';
+
+/** Explicit write : seul super_admin_platform passe (analyst bloque). */
+export const SUPER_ADMIN_WRITE_KEY = 'super-admin-write';

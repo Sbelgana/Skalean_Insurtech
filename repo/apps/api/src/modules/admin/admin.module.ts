@@ -12,8 +12,10 @@
  * Reference : B-06 Sprint 6 / Tache 2.2.7.
  */
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { SuperAdminGuard } from '../../common/guards/super-admin.guard.js';
 import { TenantContextGuard } from '../../common/guards/tenant-context.guard.js';
+import { SuperAdminAuditInterceptor } from '../../common/interceptors/super-admin-audit.interceptor.js';
 import { AuthModule } from '../auth/auth.module.js';
 import { TenantModule } from '../tenant/tenant.module.js';
 import { AdminOnboardingController } from './controllers/admin-onboarding.controller.js';
@@ -36,9 +38,20 @@ import { TenantSuspensionService } from './services/tenant-suspension.service.js
     TenantManagementService,
     TenantOnboardingService,
     TenantSuspensionService,
+    // Tache 2.2.3 -- TenantContextGuard global (basic isSuperAdmin + RequireTenant).
     {
       provide: APP_GUARD,
       useClass: TenantContextGuard,
+    },
+    // Tache 2.2.10 -- SuperAdminGuard fine-grained role + write-protection.
+    {
+      provide: APP_GUARD,
+      useClass: SuperAdminGuard,
+    },
+    // Tache 2.2.10 -- SuperAdminAuditInterceptor audit obligatoire loi 09-08.
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: SuperAdminAuditInterceptor,
     },
   ],
   exports: [TenantManagementService, TenantOnboardingService, TenantSuspensionService],

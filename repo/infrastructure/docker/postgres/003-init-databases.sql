@@ -29,19 +29,28 @@ CREATE EXTENSION IF NOT EXISTS "citext";
 
 \echo '[003-init-databases] Test DB extensions installed'
 
--- Re-back to skalean_insurtech principal
-\c skalean_insurtech
-
--- Schema n8n (n8n container DB_POSTGRESDB_SCHEMA=n8n)
+-- Creer schemas dans la DB de test courante (skalean_insurtech_test).
+-- Le script reste connecte a skalean_insurtech_test apres le \c plus haut.
 CREATE SCHEMA IF NOT EXISTS n8n;
-\echo '[003-init-databases] Schema n8n created'
-
--- Schema audit (sera utilise Sprint 12 compliance)
 CREATE SCHEMA IF NOT EXISTS audit;
-\echo '[003-init-databases] Schema audit created (Sprint 12 ready)'
-
--- Schema reporting (sera utilise Sprint 13 analytics ETL Postgres -> ClickHouse)
 CREATE SCHEMA IF NOT EXISTS reporting;
-\echo '[003-init-databases] Schema reporting created (Sprint 13 ready)'
+\echo '[003-init-databases] Schemas (n8n, audit, reporting) created in skalean_insurtech_test'
+
+-- En dev mode (skalean_insurtech DB existe), creer aussi les schemas la-bas.
+-- En test stack (skalean_insurtech DB absente), \gexec produit aucune ligne -> no-op.
+SELECT format('\c skalean_insurtech') AS cmd
+FROM pg_database
+WHERE datname = 'skalean_insurtech'
+\gexec
+
+SELECT 'CREATE SCHEMA IF NOT EXISTS n8n' AS s
+WHERE current_database() = 'skalean_insurtech'
+\gexec
+SELECT 'CREATE SCHEMA IF NOT EXISTS audit' AS s
+WHERE current_database() = 'skalean_insurtech'
+\gexec
+SELECT 'CREATE SCHEMA IF NOT EXISTS reporting' AS s
+WHERE current_database() = 'skalean_insurtech'
+\gexec
 
 \echo '[003-init-databases] DONE.'

@@ -74,8 +74,18 @@ BEGIN
   END IF;
 END$$;
 
--- Grants sur DB principale
-GRANT CONNECT ON DATABASE skalean_insurtech TO insurtech_app, insurtech_admin, insurtech_ro;
+-- Grants sur DB principale (skalean_insurtech en dev, skip en test stack).
+-- Sprint 6 fix : tolerant pour test stack ou skalean_insurtech n'existe pas.
+SELECT 'GRANT CONNECT ON DATABASE skalean_insurtech TO insurtech_app, insurtech_admin, insurtech_ro'
+FROM pg_database
+WHERE datname = 'skalean_insurtech'
+\gexec
+
+-- Grants sur DB test si presente (CI/integration).
+SELECT 'GRANT CONNECT ON DATABASE skalean_insurtech_test TO insurtech_app, insurtech_admin, insurtech_ro'
+FROM pg_database
+WHERE datname = 'skalean_insurtech_test'
+\gexec
 
 GRANT USAGE ON SCHEMA public TO insurtech_app, insurtech_admin, insurtech_ro;
 GRANT USAGE ON SCHEMA audit TO insurtech_app, insurtech_admin, insurtech_ro;

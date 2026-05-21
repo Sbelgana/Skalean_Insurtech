@@ -14,9 +14,10 @@
  */
 import { Module } from '@nestjs/common';
 import { TenantAccessCacheService } from './services/tenant-access-cache.service.js';
+import { TenantValidationService } from './services/tenant-validation.service.js';
 
 @Module({
-  providers: [TenantAccessCacheService],
-  exports: [TenantAccessCacheService],
+  providers: [TenantAccessCacheService, TenantValidationService],
+  exports: [TenantAccessCacheService, TenantValidationService],
 })
 export class TenantModule {}

@@ -18,11 +18,13 @@ import { TenantContextGuard } from '../../common/guards/tenant-context.guard.js'
 import { SuperAdminAuditInterceptor } from '../../common/interceptors/super-admin-audit.interceptor.js';
 import { AuthModule } from '../auth/auth.module.js';
 import { TenantModule } from '../tenant/tenant.module.js';
+import { AdminCndpPurgeController } from './controllers/admin-cndp-purge.controller.js';
 import { AdminOnboardingController } from './controllers/admin-onboarding.controller.js';
 import { AdminQuotasController } from './controllers/admin-quotas.controller.js';
 import { AdminSuspensionController } from './controllers/admin-suspension.controller.js';
 import { AdminTenantsController } from './controllers/admin-tenants.controller.js';
 import { OnboardingController } from './controllers/onboarding.controller.js';
+import { CndpPurgeService } from './services/cndp-purge.service.js';
 import { ResourceQuotaService } from './services/resource-quota.service.js';
 import { TenantManagementService } from './services/tenant-management.service.js';
 import { TenantOnboardingService } from './services/tenant-onboarding.service.js';
@@ -35,6 +37,7 @@ import { TenantSuspensionService } from './services/tenant-suspension.service.js
     AdminOnboardingController,
     AdminSuspensionController,
     AdminQuotasController,
+    AdminCndpPurgeController,
     OnboardingController,
   ],
   providers: [
@@ -42,6 +45,7 @@ import { TenantSuspensionService } from './services/tenant-suspension.service.js
     TenantOnboardingService,
     TenantSuspensionService,
     ResourceQuotaService,
+    CndpPurgeService,
     // Tache 2.2.3 -- TenantContextGuard global (basic isSuperAdmin + RequireTenant).
     {
       provide: APP_GUARD,
@@ -63,6 +67,7 @@ import { TenantSuspensionService } from './services/tenant-suspension.service.js
     TenantOnboardingService,
     TenantSuspensionService,
     ResourceQuotaService,
+    CndpPurgeService,
   ],
 })
 export class AdminModule {}

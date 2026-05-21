@@ -13,11 +13,20 @@
  * Reference : B-06 Sprint 6 Multi-Tenant.
  */
 import { Module } from '@nestjs/common';
+import { CrossTenantAuthorizationService } from './services/cross-tenant-authorization.service.js';
 import { TenantAccessCacheService } from './services/tenant-access-cache.service.js';
 import { TenantValidationService } from './services/tenant-validation.service.js';
 
 @Module({
-  providers: [TenantAccessCacheService, TenantValidationService],
-  exports: [TenantAccessCacheService, TenantValidationService],
+  providers: [
+    TenantAccessCacheService,
+    TenantValidationService,
+    CrossTenantAuthorizationService,
+  ],
+  exports: [
+    TenantAccessCacheService,
+    TenantValidationService,
+    CrossTenantAuthorizationService,
+  ],
 })
 export class TenantModule {}

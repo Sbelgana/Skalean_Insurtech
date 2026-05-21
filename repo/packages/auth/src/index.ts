@@ -101,4 +101,7 @@ export {
   withTenantContext,
 } from './testing/tenant-context-test.helper.js';
 
+// Sprint 7 Tache 2.3.1 -- RBAC catalog (12 roles + 85+ permissions)
+export * from './rbac/index.js';
+
 export const AUTH_PACKAGE_VERSION = '0.1.0';

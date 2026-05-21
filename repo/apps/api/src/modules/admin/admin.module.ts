@@ -1,15 +1,33 @@
 /**
- * AdminModule -- stub. Enrichi Sprint 27 (Tenants Management).
+ * AdminModule -- routes back-office /api/v1/admin/*.
  *
- * Sprint 27 ajoutera :
- *   - backend admin Skalean (super_admin_platform)
- *   - tenants CRUD
- *   - reports et compliance dashboards
+ * Securite : @AdminOnly() (Tache 2.2.3) sur tous controllers.
+ * TenantContextGuard enforce isSuperAdmin via APP_GUARD global.
  *
- * Reference : B-27 Sprint 27 Tenants Management.
- * Tache : 1.3.2 (stub Sprint 3 / Phase 1).
+ * Sprint 6 :
+ *   Tache 2.2.7 : tenants CRUD (cette tache)
+ *   Tache 2.2.9 : tenants suspend/reactivate (a venir)
+ *   Tache 2.2.10 : SuperAdminGuard enrichi audit
+ *
+ * Reference : B-06 Sprint 6 / Tache 2.2.7.
  */
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { TenantContextGuard } from '../../common/guards/tenant-context.guard.js';
+import { TenantModule } from '../tenant/tenant.module.js';
+import { AdminTenantsController } from './controllers/admin-tenants.controller.js';
+import { TenantManagementService } from './services/tenant-management.service.js';
 
-@Module({})
+@Module({
+  imports: [TenantModule],
+  controllers: [AdminTenantsController],
+  providers: [
+    TenantManagementService,
+    {
+      provide: APP_GUARD,
+      useClass: TenantContextGuard,
+    },
+  ],
+  exports: [TenantManagementService],
+})
 export class AdminModule {}

@@ -34,19 +34,19 @@ if (!DATABASE_URL) {
   requireEnvVar('DATABASE_URL');
 }
 
-export const cliDataSource = new DataSource({
+// TypeORM CLI requires exactly ONE DataSource export. Default-only (Sprint 6 pause #4 fix).
+export default new DataSource({
   type: 'postgres',
   url: DATABASE_URL,
   synchronize: false,
   logging: process.env['DATABASE_LOG_QUERIES'] === 'true',
   entities: [
+    // *.entity.ts only -- exclude *.spec.ts (vitest imports). Pause #4 fix.
+    // base/{base-entity,auditable-entity}.ts sont abstract et referencees par extends.
     resolve(__dirname, 'entities/**/*.entity.ts'),
-    resolve(__dirname, 'entities/base/*.ts'),
   ],
   migrations: [resolve(__dirname, 'migrations/*.ts')],
   subscribers: [resolve(__dirname, 'subscribers/*.ts')],
   migrationsTableName: 'typeorm_migrations',
   migrationsRun: false,
 });
-
-export default cliDataSource;

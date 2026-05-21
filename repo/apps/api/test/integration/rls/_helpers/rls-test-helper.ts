@@ -60,7 +60,7 @@ export async function withRlsTenantContext<T>(
   await queryRunner.connect();
   await queryRunner.startTransaction();
   try {
-    await queryRunner.query("SET ROLE skalean_app");
+    await queryRunner.query("SET ROLE insurtech_app");
 
     if (ctx.tenantId) {
       await queryRunner.query(
@@ -104,6 +104,56 @@ export async function withRlsTenantContext<T>(
 }
 
 /**
+ * Comme withRlsTenantContext mais COMMIT (persiste les changements).
+ * Pour fixtures INSERT/UPDATE/DELETE qui doivent etre visibles aux tests suivants.
+ */
+export async function withRlsTenantContextCommit<T>(
+  dataSource: DataSource,
+  ctx: RlsTenantContext,
+  fn: (em: EntityManager) => Promise<T>,
+): Promise<T> {
+  const queryRunner = dataSource.createQueryRunner() as unknown as QueryRunnerLike;
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
+  try {
+    await queryRunner.query("SET ROLE insurtech_app");
+
+    if (ctx.tenantId) {
+      await queryRunner.query(
+        `SELECT set_config('app.current_tenant_id', $1, true)`,
+        [ctx.tenantId],
+      );
+    }
+    if (ctx.isSuperAdmin) {
+      await queryRunner.query(
+        `SELECT set_config('app.is_super_admin', 'true', true)`,
+      );
+    }
+    if (ctx.userId) {
+      await queryRunner.query(
+        `SELECT set_config('app.current_user_id', $1, true)`,
+        [ctx.userId],
+      );
+    }
+    if (ctx.assureUserId) {
+      await queryRunner.query(
+        `SELECT set_config('app.assure_user_id', $1, true)`,
+        [ctx.assureUserId],
+      );
+    }
+
+    const result = await fn(queryRunner.manager);
+    await queryRunner.commitTransaction();
+    return result;
+  } catch (err) {
+    await queryRunner.rollbackTransaction().catch(() => undefined);
+    throw err;
+  } finally {
+    await queryRunner.release();
+  }
+}
+
+/**
  * Super admin context (bypass via app.is_super_admin = true).
  *
  * Sprint 1 helper Postgres app_can_access_tenant() Cond 1 :
@@ -122,11 +172,15 @@ export async function withRlsSuperAdminContext<T>(
 }
 
 /**
- * Insertion fixture sans RLS (utilise role par defaut postgres avec BYPASSRLS).
+ * Insertion fixture bypass RLS via app.is_super_admin=true.
  *
- * Pour les fixtures de setup (creer auth_tenants, auth_users, etc.) on n'a pas
- * besoin de passer par RLS. On commit pour persister entre tests dans le
- * meme fichier (cleanup explicite via tearDown).
+ * DECOUVERTE Pause #4 :
+ *   Tables tenant-scoped (auth_users, auth_tenant_users, crm_*, etc.) ont
+ *   FORCE ROW LEVEL SECURITY = true (Sprint 2 migrations). Meme superuser
+ *   `skalean` ne bypass PAS. Faut set app.is_super_admin=true pour que
+ *   helper Sprint 1 app_can_access_tenant() Cond 1 applique.
+ *
+ * Commit (pas rollback) -- pour fixture setup persistante.
  */
 export async function withRlsBypass<T>(
   dataSource: DataSource,
@@ -134,8 +188,15 @@ export async function withRlsBypass<T>(
 ): Promise<T> {
   const queryRunner = dataSource.createQueryRunner() as unknown as QueryRunnerLike;
   await queryRunner.connect();
+  await queryRunner.startTransaction();
   try {
-    return await fn(queryRunner.manager);
+    await queryRunner.query(`SELECT set_config('app.is_super_admin', 'true', true)`);
+    const result = await fn(queryRunner.manager);
+    await queryRunner.commitTransaction();
+    return result;
+  } catch (err) {
+    await queryRunner.rollbackTransaction().catch(() => undefined);
+    throw err;
   } finally {
     await queryRunner.release();
   }

@@ -25,9 +25,7 @@ export class ConsumerProcessedEvents1735000000008 implements MigrationInterface 
 
     await queryRunner.query(`
       COMMENT ON TABLE consumer_processed_events IS
-        'Idempotency registry for Kafka consumers. ' ||
-        'PK (event_id, group_id) allows the same event to be processed by multiple consumer groups. ' ||
-        'Retention: 30 days via scheduled cleanup (Sprint 33).';
+        'Idempotency registry for Kafka consumers. PK (event_id, group_id) allows the same event to be processed by multiple consumer groups. Retention: 30 days via scheduled cleanup (Sprint 33).';
     `);
 
     await queryRunner.query(`

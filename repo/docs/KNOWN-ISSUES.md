@@ -2,7 +2,31 @@
 
 Liste des items connus, defere ou nessitant attention runtime live.
 
-## Section A : Pause Technique #4 -- post-Sprint 6 plan
+## Section 0 : Sprint 6 -- Pause #4 BILAN (DONE 2026-05-21)
+
+**Status** : Sprint 6 score V-06 100% atteint, tag `sprint-06-complete-validated` post pause #4.
+
+**Decouvertes critiques** :
+1. **FORCE ROW LEVEL SECURITY** sur 33 tables Sprint 2 -> meme superuser `skalean` ne bypass PAS. Cleanup/fixtures requierent `set_config('app.is_super_admin', 'true', true)` (helper `withRlsBypass` Pause #4 updated).
+2. **TypeORM CLI** requier UN SEUL export DataSource (fix `cli-data-source.ts`).
+3. **Vitest spec dans entities/base/** : import vitest break TypeORM CLI `loadDirectoryClasses` (fix glob).
+4. **Migration 8 ConsumerProcessedEvents** : COMMENT ON TABLE ne supporte pas `||` literal concat.
+5. **Sprint 1 helpers** fonctionnent en prod : 6 helpers (`app_current_tenant`, `app_is_super_admin`, `app_can_access_tenant`, etc.).
+6. **Role applicatif** s'appelle `insurtech_app` (pas `skalean_app` mentionne dans docs initiales).
+7. **Pattern tests RLS necessite 2 helpers** :
+   - `withRlsTenantContext` (ROLLBACK) -- SELECT/test isole
+   - `withRlsTenantContextCommit` (COMMIT) -- fixtures INSERT persistant
+
+**Tests RLS live runtime PASS** :
+- `rls-policy-coherence.spec.ts` : 5 PASS (statique : 126 policies / 33 tables / helper coherence)
+- `rls-cross-tenant-isolation-crm.spec.ts` : 4 PASS (TC-1/2/3/4 CRUD cross-tenant)
+- `rls-super-admin-bypass.spec.ts` : 5 PASS (TC-45/46/47/48/49 bypass via `set_config`)
+- **Total 14 RLS tests PASS LIVE** sur skalean-postgres-test
+- 35 tests skipped (templates pour comm/docs/pay/books/etc. activeront quand verticales arrivent Sprint 8-13)
+
+**Cumul tests api post pause #4** : 690 PASS / 16 fails Sprint 5 pre-existants / 35 skipped templates.
+
+## Section A : Pause Technique #4 -- post-Sprint 6 plan (DONE)
 
 Apres completion code Sprint 6, dedier une session focus pour validation runtime.
 

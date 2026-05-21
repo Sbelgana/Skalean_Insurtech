@@ -15,7 +15,7 @@
 
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { TenantSettings } from '@insurtech/auth';
-import { AuthTenant, AuthTenantUser } from '@insurtech/database';
+import { AuthTenant, AuthTenantUser, type TenantStatus } from '@insurtech/database';
 import type { DataSource } from '@insurtech/database';
 import type Redis from 'ioredis';
 import { z } from 'zod';
@@ -27,6 +27,7 @@ const cacheKeyUserAccess = (userId: string, tenantId: string): string =>
   `tenant:user-access:${userId}:${tenantId}`;
 const cacheKeySettings = (tenantId: string): string => `tenant:settings:${tenantId}`;
 const cacheKeyExists = (tenantId: string): string => `tenant:exists:${tenantId}`;
+const cacheKeyStatus = (tenantId: string): string => `tenant:status:${tenantId}`;
 
 export interface UserAccessResult {
   allowed: boolean;
@@ -152,6 +153,30 @@ export class TenantAccessCacheService {
     const exists = tenant !== null;
     await this.redis.set(cacheKey, exists ? '1' : '0', 'EX', CACHE_TTL_SECONDS);
     return exists;
+  }
+
+  /**
+   * Retourne le status tenant (active/suspended/pending_setup/archived).
+   * Tache 2.2.9 -- utilise par TenantContextMiddleware enforce status.
+   */
+  async getTenantStatus(tenantId: string): Promise<TenantStatus | null> {
+    const cacheKey = cacheKeyStatus(tenantId);
+    const cached = await this.redis.get(cacheKey);
+    if (cached === 'active' || cached === 'suspended' || cached === 'pending_setup' || cached === 'archived') {
+      return cached;
+    }
+
+    const repo = this.dataSource.getRepository(AuthTenant);
+    const tenant = await repo.findOne({ where: { id: tenantId }, withDeleted: true });
+    if (!tenant) return null;
+
+    // Sprint 6 fallback : derive from deletedAt si colonne status absente.
+    const status: TenantStatus = tenant.deletedAt
+      ? 'archived'
+      : (tenant.status ?? 'active');
+
+    await this.redis.set(cacheKey, status, 'EX', CACHE_TTL_SECONDS);
+    return status;
   }
 
   async invalidateUserAccess(userId: string, tenantId: string): Promise<void> {

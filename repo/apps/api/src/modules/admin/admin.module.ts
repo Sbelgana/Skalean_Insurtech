@@ -17,22 +17,30 @@ import { TenantContextGuard } from '../../common/guards/tenant-context.guard.js'
 import { AuthModule } from '../auth/auth.module.js';
 import { TenantModule } from '../tenant/tenant.module.js';
 import { AdminOnboardingController } from './controllers/admin-onboarding.controller.js';
+import { AdminSuspensionController } from './controllers/admin-suspension.controller.js';
 import { AdminTenantsController } from './controllers/admin-tenants.controller.js';
 import { OnboardingController } from './controllers/onboarding.controller.js';
 import { TenantManagementService } from './services/tenant-management.service.js';
 import { TenantOnboardingService } from './services/tenant-onboarding.service.js';
+import { TenantSuspensionService } from './services/tenant-suspension.service.js';
 
 @Module({
   imports: [TenantModule, AuthModule],
-  controllers: [AdminTenantsController, AdminOnboardingController, OnboardingController],
+  controllers: [
+    AdminTenantsController,
+    AdminOnboardingController,
+    AdminSuspensionController,
+    OnboardingController,
+  ],
   providers: [
     TenantManagementService,
     TenantOnboardingService,
+    TenantSuspensionService,
     {
       provide: APP_GUARD,
       useClass: TenantContextGuard,
     },
   ],
-  exports: [TenantManagementService, TenantOnboardingService],
+  exports: [TenantManagementService, TenantOnboardingService, TenantSuspensionService],
 })
 export class AdminModule {}

@@ -18,12 +18,15 @@ import {
   Logger,
   type NestMiddleware,
   UnauthorizedException,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import {
   JwtService,
   TenantContextService,
   type TenantContext,
 } from '@insurtech/auth';
+import type { TenantStatus } from '@insurtech/database';
 import { randomUUID } from 'node:crypto';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { TenantAccessCacheService } from '../../modules/tenant/services/tenant-access-cache.service.js';
@@ -148,7 +151,7 @@ export class TenantContextMiddleware implements NestMiddleware {
       });
     }
     const tenantId = this.validateTenantHeader(req);
-    await this.verifyAccessAndTenant(claims.sub, tenantId);
+    await this.verifyAccessAndTenant(claims.sub, tenantId, req.method);
     const settings = await this.tenantAccessCache.getTenantSettings(tenantId);
 
     return {
@@ -185,7 +188,7 @@ export class TenantContextMiddleware implements NestMiddleware {
       });
     }
 
-    await this.verifyAccessAndTenant(claims.sub, tenantId);
+    await this.verifyAccessAndTenant(claims.sub, tenantId, req.method);
     const settings = await this.tenantAccessCache.getTenantSettings(tenantId);
 
     return {
@@ -197,13 +200,45 @@ export class TenantContextMiddleware implements NestMiddleware {
     };
   }
 
-  private async verifyAccessAndTenant(userId: string, tenantId: string): Promise<void> {
+  private async verifyAccessAndTenant(
+    userId: string,
+    tenantId: string,
+    httpMethod: string,
+  ): Promise<void> {
     const exists = await this.tenantAccessCache.getTenantExists(tenantId);
     if (!exists) {
       throw new BadRequestException({
         code: 'TENANT_NOT_FOUND',
         message: 'Tenant does not exist or has been archived',
       });
+    }
+
+    // Tache 2.2.9 -- status state machine enforcement.
+    const status: TenantStatus | null = await this.tenantAccessCache.getTenantStatus(tenantId);
+    if (status === 'archived') {
+      throw new HttpException(
+        { code: 'TENANT_ARCHIVED', message: 'Tenant is archived and no longer accessible' },
+        HttpStatus.GONE,
+      );
+    }
+    if (status === 'pending_setup') {
+      throw new ForbiddenException({
+        code: 'TENANT_PENDING_SETUP',
+        message: 'Tenant setup is not yet complete',
+      });
+    }
+    if (status === 'suspended') {
+      // Read-only mode : GET autorise, mutations refusees.
+      const isReadOnly = httpMethod === 'GET' || httpMethod === 'HEAD' || httpMethod === 'OPTIONS';
+      if (!isReadOnly) {
+        this.logger.warn(
+          `tenant_action_blocked_suspended user=${userId} tenant=${tenantId} method=${httpMethod}`,
+        );
+        throw new ForbiddenException({
+          code: 'TENANT_SUSPENDED',
+          message: 'Tenant is suspended. Read-only access only. Contact support.',
+        });
+      }
     }
 
     const access = await this.tenantAccessCache.getUserAccess(userId, tenantId);

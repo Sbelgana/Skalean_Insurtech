@@ -85,6 +85,7 @@ describe('TenantContextMiddleware', () => {
         tenantType: 'broker',
       }),
       getTenantExists: vi.fn().mockResolvedValue(true),
+      getTenantStatus: vi.fn().mockResolvedValue('active'),
     } as unknown as TenantAccessCacheService;
     jwtService = {
       verifyAccessToken: vi.fn().mockReturnValue(buildJwtClaims()),

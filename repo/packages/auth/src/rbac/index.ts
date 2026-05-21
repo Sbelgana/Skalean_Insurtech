@@ -54,3 +54,39 @@ export {
 } from './rbac-constants.js';
 
 export { validatePermissionsCatalog, type ValidationResult } from './permissions-validator.js';
+
+// Sprint 7 Tache 2.3.2 -- PermissionsMatrix + RoleHierarchy
+export {
+  PermissionsMatrix,
+  ALL_ROLES_IN_MATRIX,
+  countDirectPermissions,
+  getDirectPermissions,
+  hasWildcardPermission,
+  type PermissionsMatrixEntry,
+  type PermissionsMatrixKeys,
+} from './permissions-matrix.js';
+
+export {
+  RoleHierarchy,
+  ALL_ROLES_IN_HIERARCHY,
+  getDirectChildren,
+  isTerminalRole,
+} from './role-hierarchy.js';
+// Note : isBrokerRole / isGarageRole / isPlatformRole deja exportes par
+// @insurtech/auth/types/auth-roles (Sprint 5). Pas de re-export ici pour
+// eviter duplicate barrel.
+
+export {
+  HierarchyResolver,
+  RbacHierarchyCycleError,
+  RbacHierarchyDepthError,
+  DEFAULT_DEPTH_LIMIT,
+  defaultHierarchyResolver,
+  type EffectivePermissionsSet,
+  type HierarchyResolverOptions,
+} from './hierarchy-resolver.js';
+
+export {
+  validatePermissionsMatrix,
+  type MatrixValidationResult,
+} from './matrix-validator.js';

@@ -1,913 +1,915 @@
-# META-PROMPT B-14 -- SPRINT 14 INSURE FOUNDATION (Vertical Broker)
+# META-PROMPT B-14 v3.0 -- SPRINT 14 INSURE FOUNDATION + 3 ENTITES EXPERTS (Vertical Broker)
 
-**Version** : v2.2 (Option B)
-**Phase** : 4 -- Vertical Insure (Skalean Broker ERP)
-**Sprint** : 14 / 35 (cumul) -- PREMIER de la Phase 4
+**Version** : v3.0 (Option B Migration -- refonte minimale +3 entites experts)
+**Phase** : 4 -- Vertical Insure (Assurflow Broker ERP + Experts Pool ACAPS)
+**Sprint** : 14 / 40 (cumul v3.0) -- PREMIER de la Phase 4
 **Position** : Apres Phase 3 horizontaux complete, debut Phase 4 vertical metier
-**Numerotation taches** : 4.1.1 a 4.1.14
-**Effort total** : ~80 heures developpement / 2 semaines
-**Priorite** : P0 (premier sprint vertical, valide pattern reutilise pour tout Insure)
+**Numerotation taches** : 4.1.1 a 4.1.17 (vs 4.1.1 a 4.1.14 v2.2)
+**Effort total** : ~95 heures developpement / 2.5 semaines (vs 80h v2.2)
+**Priorite** : P0 (premier sprint vertical Phase 4 + foundation experts pool Sprint 22.7)
 
 ---
 
-## Objectif Global du Sprint
+## Refonte v2.2 -> v3.0 : Changements minimes
 
-Implementer **fondations Vertical Insure** : 7 entites lifecycle police (products, quotes, policies, avenants, premiums, renewals, commissions) + tarification engine basique + workflow signature police via Barid eSign (Sprint 10) + commissions courtier auto-calcul + reminders primes echues. Sprint 14 valide pattern vertical reutilise pour les 5 sprints suivants Phase 4.
+Ce sprint est **legerement etendu** par rapport a v2.2 pour ajouter les 3 entites experts permettant :
+- Carrier Portal Sprint 26.5 (designation experts)
+- Expert App Sprint 22.7 (consume mission queue)
+- Sprint 21 v3.0 workflow expert (envoi devis vers expert designe)
 
-A la sortie de ce sprint :
-- 7 entites Insure operationnelles + RLS multi-tenant
-- 5 branches initiales : auto / sante / multirisque habitation / RC pro / voyage
-- Catalog products (Sprint 14 simple ; Sprint 15 enrichi par connecteurs assureurs)
-- Workflow lifecycle police : prospect -> quote -> policy -> active -> renewal/cancel/expire
-- Tarification engine : lookup tables tarifs basiques (IA Phase 7+ peut enrichir)
-- Quotes generation : devis PDF avec tarification (utilise PdfGenerator Sprint 10)
-- Souscription workflow : signature police via Barid eSign + auto-genere police signed PDF
-- Commissions courtier auto-calcul (% configurable per produit/assureur)
-- Cron renewals : 60 jours avant expiration, generate quote renouvellement
-- Cron reminders primes : 15j/7j/3j avant echeance
-- Auto-log interactions CRM (Sprint 8) sur events Insure
-- Auto-eccritures comptables (Sprint 12) : commissions + primes encaissees
-- Tests E2E exhaustifs
+### Changements cle
+
+| Element | v2.2 | v3.0 | Change |
+|---------|------|------|--------|
+| **Taches** | 14 | **17** | +3 (taches 4.1.15 a 4.1.17) |
+| **Entites Insure** | 7 (products + quotes + policies + avenants + premiums + renewals + commissions) | **10** (+3 experts entities) | +3 |
+| **Roles utilises** | broker_admin/user/assistant + carrier (Sprint 32) | + **expert_independent / firm_admin / associate / carrier_internal** (Sprint 7.5a) | +4 |
+| **Effort** | 80h | **95h** | +15h |
+| **Tests E2E** | 50+ | **65+** | +15 |
+
+**Taches 4.1.1 a 4.1.14 = INCHANGEES v2.2** (preserves -- les modifier serait risque).
+
+**Taches 4.1.15 a 4.1.17 = NOUVELLES v3.0** :
+- 4.1.15 : `insure_experts` entity + catalog + KYB workflow (5h)
+- 4.1.16 : `insure_expert_assignments` entity + service (5h)
+- 4.1.17 : `insure_expert_reports` entity + service preview Sprint 22.7 (5h)
 
 ---
 
-## Frontiere du Sprint
+## Objectif Global du Sprint v3.0
 
-**INCLUS** :
-- 7 entities Insure (products, quotes, policies, avenants, premiums, renewals, commissions)
-- Catalog produits (CRUD super admin + lecture broker)
-- Tarification engine basique (lookup tables)
-- Quotes : devis generation + PDF + email
-- Policies : souscription + signature workflow
-- Avenants : modifications police active
-- Premiums : echeancier paiements + tracking
-- Renewals : cron + workflow renouvellement
-- Commissions : auto-calcul + tracking
+Implementer **fondations Vertical Insure** + **3 entites experts pool ACAPS** :
+
+**Heritage v2.2 (preserves)** :
+- 7 entites lifecycle police (products, quotes, policies, avenants, premiums, renewals, commissions)
+- Tarification engine basique
+- Workflow signature police via Barid eSign
+- Commissions courtier auto-calcul
+- Reminders primes echues
+
+**Nouveautes v3.0** :
+- **3 entites experts** : `insure_experts` (pool agrees ACAPS) + `insure_expert_assignments` (designations par carriers) + `insure_expert_reports` (rapports expertise digitaux)
+- Workflow catalog experts : carrier_admin onboarde son pool experts agrees ACAPS
+- Service designation expert (consume Sprint 26.5 Carrier Portal)
+- Service reception missions par expert (consume Sprint 22.7 Expert App)
+- Cross-tenant `garage_to_expert_request` integration
+
+---
+
+## Frontiere du Sprint v3.0
+
+**INCLUS (v2.2 preserves)** :
+- 7 entities Insure + RLS multi-tenant
+- 5 branches initiales (auto / sante / multirisque habitation / RC pro / voyage)
+- Catalog products + tarification + quotes + policies + avenants + premiums + renewals + commissions
 - Endpoints REST `/api/v1/insure/*`
-- Integration cross-module Comm + Docs + Pay + Books + ACAPS reports
+- Integration cross-module Comm + Docs + Pay + Books + ACAPS
 
-**EXCLU** (sera ajoute aux sprints suivants) :
-- Connecteurs assureurs (Wafa, Atlanta, Saham, RMA, AXA) -- Sprint 15
-- Lifecycle police avance (transferts, fractionnement) -- Sprint 16
-- Workflow client web public -- Sprint 17 (vente en ligne)
-- Self-service assure portal -- Sprint 19
-- Tarification IA-powered (Sprint 30+ defere)
+**INCLUS (NOUVEAU v3.0)** :
+- **`insure_experts` entity** : catalog experts agrees ACAPS (CIN + agrement + specialty + zone + status)
+- **`insure_expert_assignments` entity** : designations par carriers (workflow status complete)
+- **`insure_expert_reports` entity** : rapports expertise (preview Sprint 22.7 full version)
+- Services : ExpertsCatalogService + ExpertAssignmentsService + ExpertReportsService (preview)
+- KYB workflow experts (validation ACAPS agrement non expire)
+- Endpoints `/api/v1/insure/experts/*` (basics, full Sprint 22.7)
+
+**EXCLU (v2.2 inchange + v3.0 specifique)** :
+- Connecteurs assureurs (Wafa, Atlanta, Saham, RMA, AXA, MATU, Sanad) -- Sprint 32
+- Self-service assure portal -- Sprint 18
+- **Expert App UI complete -- Sprint 22.7** (mobile + desktop apps experts)
+- **Carrier Portal UI complete -- Sprint 26.5** (carrier_expert_manager dashboard)
+- **Workflow validation devis line-by-line -- Sprint 22.7** (full service avec signature Barid)
+- IA-powered tarification -- Sprint 30+ defere
 
 ---
 
 ## Lectures Prealables Obligatoires
 
-1. `00-pilotage/documentation/3-schemas-database-PARTIE2.sql` -- tables insure_*
-2. `00-pilotage/documentation/8-skalean-insurtech-prompt-master.md` -- regles vertical Insure + ACAPS
-3. Phase 3 modules horizontaux : tous prerequis bricks
-4. ACAPS regulations : portefeuille polices + sinistres + solvabilite
+1. `00-pilotage/decisions/013-expert-acteur-central.md` -- workflow expert v3.0
+2. `00-pilotage/documentation/3-schemas-database-PARTIE2.sql` -- tables insure_*
+3. Sortie Sprint 7.5a : AuthRole +4 expert roles + cross-tenant `garage_to_expert_request`
+4. Phase 3 modules horizontaux : tous prerequis bricks (Comm Sprint 9 + Docs Sprint 10 + Pay Sprint 11 + Books Sprint 12)
+5. ACAPS regulations : pool experts agrees + agrement renewal
+
+---
 
 ## Dependencies Sprint precedents (explicites)
 
-Ce Sprint 14 **depend critiquement** de :
-- **Sprint 6** (Multi-Tenant 3 Niveaux + RLS) : tables `insure_*` activent RLS multi-tenant 3 niveaux (Niveau 1 Platform / Niveau 2 Tenant / Niveau 3 Assure L3) -- toutes queries respectent `app_current_tenant()`
-- **Sprint 7** (RBAC Granulaire) : permissions `insure.products.read|write`, `insure.policies.*` definies dans 5-roles-permissions.md (12 roles x 85+ permissions)
-- **Sprint 8** (CRM) : foreign keys `contacts` -- prospects/clients utilises dans quotes/policies
-- **Sprint 10** (Docs + Signature 43-20) : Barid eSign workflow pour signature polices
-- **Sprint 11** (Pay) : encaissement primes via 6 passerelles MA
-- **Sprint 12** (Books) : auto-ecritures comptables commissions + primes
-- **Sprint 13** (Analytics) : dashboards Insure consomment ETL ClickHouse
+Ce Sprint 14 v3.0 **depend critiquement** de :
+- **Sprint 7.5a** : 4 expert roles + permissions expertise + cross-tenant types
+- **Sprint 6** : Multi-tenant + RLS + helper postgres app_can_access_tenant
+- **Sprint 7** : RBAC + Guards
+- **Sprint 9** : NotificationsService (notifications experts)
+- **Sprint 10** : Docs + Signature Barid eSign (pour rapports experts Sprint 22.7)
+- **Sprint 11** : Pay (pour honoraires experts -> carriers Sprint 22.7)
+
+Ce Sprint 14 v3.0 **BLOQUE** :
+- **Sprint 15** : Insure Lifecycle Police (consume entites Sprint 14)
+- **Sprint 22.7** : Expert App (consume `insure_experts` + `insure_expert_assignments` + `insure_expert_reports`)
+- **Sprint 26.5** : Carrier Portal (consume `insure_experts` pour designation)
+- **Sprint 21 v3.0** : Sinistre Workflow (route devis vers expert designe via `insure_expert_assignments`)
 
 ---
 
-## Stack Imposee (Sprint 14)
+## Stack Imposee (Sprint 14 v3.0)
 
 | Composant | Version | Notes |
 |-----------|---------|-------|
-| decimal.js | 10.4.3 | tarification + commissions precision |
-| date-fns | 4.1.0 | duration polices + renewals |
-| zod | 3.24.1 | validation tarifs schemas |
+| decimal.js | 10.4.3 | tarification + commissions + honoraires experts precision |
+| date-fns | 4.1.0 | duration polices + renewals + ACAPS agrement expiry |
+| zod | 3.24.1 | validation schemas |
+| **@insurtech/signature** | workspace | Preview Barid eSign pour rapports experts (Sprint 22.7) |
 
-Pas de nouvelle dep externe (utilise stack Phases 1-3).
-
----
-
-## Vue d'Ensemble des 14 Taches
-
-| # | Tache | Effort | Priorite | Depend de |
-|---|-------|--------|----------|-----------|
-| 4.1.1 | insure_products entity + catalog 5 branches initiales (admin) | 6h | P0 | Phase 3 |
-| 4.1.2 | Tarification engine basique (lookup tables) | 6h | P0 | 4.1.1 |
-| 4.1.3 | insure_quotes entity + service + devis PDF generation | 7h | P0 | 4.1.2 |
-| 4.1.4 | insure_policies entity + service + status workflow | 6h | P0 | 4.1.3 |
-| 4.1.5 | Souscription workflow : quote -> policy via signature Barid eSign | 6h | P0 | 4.1.4 |
-| 4.1.6 | insure_avenants entity + service (modifs police active) | 5h | P0 | 4.1.5 |
-| 4.1.7 | insure_premiums entity + echeancier + tracking paiements | 5h | P0 | 4.1.6 |
-| 4.1.8 | insure_renewals entity + cron renewal 60j avant expiration | 5h | P0 | 4.1.7 |
-| 4.1.9 | insure_commissions entity + auto-calcul + integration Books | 5h | P0 | 4.1.8 |
-| 4.1.10 | Cron reminders primes (J-15, J-7, J-3, post-echeance) | 4h | P0 | 4.1.9 |
-| 4.1.11 | Auto-log interactions CRM Insure events + ACAPS data feed | 4h | P0 | 4.1.10 |
-| 4.1.12 | Endpoints REST `/api/v1/insure/*` + permissions Insure | 6h | P0 | 4.1.11 |
-| 4.1.13 | Dashboards Insure (extends Sprint 13 analytics) | 4h | P1 | 4.1.12 |
-| 4.1.14 | Tests E2E (50+) + fixtures realistes 5 branches + seeds | 11h | P0 | 4.1.13 |
-
-**Total** : 80 heures.
+Pas de nouvelle dep externe.
 
 ---
 
-# DETAIL DES 14 TACHES
+## Vue d'Ensemble des 17 Taches v3.0
+
+| # | Tache | Effort | Priorite | Refonte v3.0 ? | Depend de |
+|---|-------|--------|----------|-----------------|-----------|
+| 4.1.1 | insure_products entity + catalog 5 branches initiales (admin) | 6h | P0 | Inchange v2.2 | Phase 3 |
+| 4.1.2 | Tarification engine basique (lookup tables) | 6h | P0 | Inchange v2.2 | 4.1.1 |
+| 4.1.3 | insure_quotes entity + service + devis PDF generation | 7h | P0 | Inchange v2.2 | 4.1.2 |
+| 4.1.4 | insure_policies entity + service + status workflow | 6h | P0 | Inchange v2.2 | 4.1.3 |
+| 4.1.5 | Souscription workflow : quote -> policy via signature Barid eSign | 6h | P0 | Inchange v2.2 | 4.1.4 |
+| 4.1.6 | insure_avenants entity + service (modifs police active) | 5h | P0 | Inchange v2.2 | 4.1.5 |
+| 4.1.7 | insure_premiums entity + echeancier + tracking paiements | 5h | P0 | Inchange v2.2 | 4.1.6 |
+| 4.1.8 | insure_renewals entity + cron renewal 60j avant expiration | 5h | P0 | Inchange v2.2 | 4.1.7 |
+| 4.1.9 | insure_commissions entity + auto-calcul + integration Books | 5h | P0 | Inchange v2.2 | 4.1.8 |
+| 4.1.10 | Cron reminders primes (J-15, J-7, J-3, post-echeance) | 4h | P0 | Inchange v2.2 | 4.1.9 |
+| 4.1.11 | Auto-log interactions CRM Insure events + ACAPS data feed | 4h | P0 | Inchange v2.2 | 4.1.10 |
+| 4.1.12 | Endpoints REST `/api/v1/insure/*` + permissions Insure | 6h | P0 | Inchange v2.2 | 4.1.11 |
+| 4.1.13 | Dashboards Insure (extends Sprint 13 analytics) | 4h | P1 | Inchange v2.2 | 4.1.12 |
+| 4.1.14 | Tests E2E (50+) + fixtures realistes 5 branches + seeds | 11h | P0 | Inchange v2.2 | 4.1.13 |
+| **4.1.15** | **insure_experts entity + catalog pool ACAPS + KYB workflow** | **5h** | **P0** | **NOUVEAU v3.0** | **4.1.14** |
+| **4.1.16** | **insure_expert_assignments entity + service designation par carriers** | **5h** | **P0** | **NOUVEAU v3.0** | **4.1.15** |
+| **4.1.17** | **insure_expert_reports entity + service preview Sprint 22.7** | **5h** | **P0** | **NOUVEAU v3.0** | **4.1.16** |
+
+**Total** : 95 heures (vs 80h v2.2). +15h pour 3 entites experts.
 
 ---
 
-## Tache 4.1.1 -- insure_products Entity + Catalog 5 Branches
+# TACHES 4.1.1 a 4.1.14 (INCHANGE v2.2)
 
-**Metadonnees** : Phase 4 / Sprint 14 / P0 / 6h / Depend de Phase 3
+Les 14 taches v2.2 sont **preservees inchangees**. Reference : `B-14-sprint-14-insure-foundation.md` v2.2 original (lignes 100-902).
 
-**But** : Catalog produits assurance (5 branches initiales MVP) gere par super admin Skalean (templates) et personnalise per tenant broker (variantes commerciales).
+**Aucune modification** sur :
+- 7 entites Insure (products / quotes / policies / avenants / premiums / renewals / commissions)
+- Tarification engine basique
+- Workflow lifecycle police
+- Souscription via Barid eSign
+- Commissions courtier
+- Cron renewals + reminders
+- ACAPS data feed
+- Tests E2E v2.2 (50+ scenarios preserves)
 
-**Contexte** : Architecture catalog 2 niveaux : 
-- **Templates super admin** : produits de base par branche (e.g. "Assurance Auto Tout Risque", "Assurance Sante Famille")
-- **Variantes tenant broker** : adaptations commerciales (prix, garanties optionnelles, conditions) basees sur templates
+**Important** : ces taches doivent etre executees **AVANT** les 3 nouvelles taches experts v3.0 (sequencing strict).
 
-5 branches MVP : auto / sante / multirisque habitation / RC pro / voyage. Sprint 15 ajoutera connecteurs assureurs reels avec leurs catalog specifique.
+---
 
-**Livrables checkables** :
-- [ ] Migration : table `insure_products` :
-  - id, tenant_id (NULL = template super admin), parent_product_id (FK self -- variante reference template), name, code (UNIQUE per tenant), branche (enum 'auto' | 'sante' | 'multirisque_habitation' | 'rc_pro' | 'voyage'), insurer_id (FK Sprint 15 ; NULL Sprint 14), description, garanties (jsonb : array { name, description, capital_max, franchise }), exclusions (jsonb), conditions_generales_doc_id (FK doc Sprint 10), tarif_grille (jsonb : tarification rules basiques), commission_rate_percent (decimal), active, created_at
-- [ ] Entity `repo/packages/insure/src/entities/insure-product.entity.ts`
-- [ ] Service `products.service.ts` :
-  - `createTemplate(data)` -- super admin only
-  - `createVariant(parentId, data)` -- tenant broker (heritage template)
-  - `findAll(filters)` -- liste products applicables au tenant (templates + ses variants)
-  - `findById(id)`
-  - `update(id, data)`
-  - `archive(id)` -- soft delete + empeche nouvelles souscriptions
-- [ ] Catalog seed 5 branches initiales :
-  1. **Auto** : Tiers / Tiers+ / Tous Risques (3 produits template)
-  2. **Sante** : Famille / Individuel / Senior (3 templates)
-  3. **Multirisque Habitation** : Standard / Premium (2 templates)
-  4. **RC Pro** : Generale / Specifique (avocats, medecins, etc.) (2 templates)
-  5. **Voyage** : Court sejour / Long sejour (2 templates)
-- [ ] Garanties typiques par branche pre-configurees (e.g. auto : RC obligatoire, vol, incendie, bris glace)
-- [ ] Endpoints :
-  - `POST /api/v1/admin/insure/products` (super admin templates)
-  - `POST /api/v1/insure/products` (tenant variant)
-  - `GET /api/v1/insure/products` (liste templates + variants tenant)
-  - `GET /api/v1/insure/products/:id`
-  - `PATCH /api/v1/insure/products/:id`
-  - `POST /api/v1/insure/products/:id/archive`
-- [ ] Permissions : `insure.products.create/read/update`, `admin.insure.products.create_template`
-- [ ] Audit + Kafka events
-- [ ] Tests : create template + variant + heritage + 5 branches seed
+# DETAIL DES 3 NOUVELLES TACHES v3.0
 
-**Pattern critique : produit avec garanties JSONB**
+---
+
+## Tache 4.1.15 -- NOUVEAU v3.0 : insure_experts entity + catalog pool ACAPS + KYB
+
+**Sprint** : 14 (Phase 4 / Sprint 1)
+**Phase** : 4 -- Vertical Insure
+**Priorite** : P0
+**Effort** : 5h
+**Dependances** : 4.1.14 (Sprint 14 v2.2 fini) + Sprint 7.5a (4 expert roles + permissions)
+
+### But
+
+Implementer entity `insure_experts` (catalog experts agrees ACAPS) + workflow KYB onboarding + verification ACAPS agrement renewal.
+
+### Contexte
+
+Les experts auto agrees ACAPS sont l'acteur 6/6 ecosystem Assurflow v3.0 (decision-013). Ils valident les devis garage avant approbation paiement carrier. Sans pool experts catalogue dans Assurflow, le workflow v3.0 ne peut pas fonctionner.
+
+Cette tache cree la **table de reference** des experts. Les Sprints 22.7 (Expert App) et 26.5 (Carrier Portal) consument cette table.
+
+### Livrables checkables
+
+- [ ] Migration : table `insure_experts` :
+  ```sql
+  CREATE TABLE insure_experts (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id uuid NOT NULL REFERENCES auth_tenants(id) ON DELETE CASCADE,
+    user_id uuid REFERENCES auth_users(id) ON DELETE SET NULL,
+    
+    -- Identite + agrement ACAPS
+    full_name text NOT NULL,
+    cin_number text NOT NULL,
+    cin_document_url text,
+    phone text NOT NULL,
+    email text NOT NULL,
+    acaps_agrement_number text NOT NULL UNIQUE,
+    acaps_agrement_document_url text NOT NULL,
+    acaps_agrement_expiry_date date NOT NULL,
+    acaps_specialty text[] NOT NULL CHECK (array_length(acaps_specialty, 1) > 0),
+    -- specialty values : 'auto', 'incendie', 'multirisque', 'transport', 'autre'
+    
+    -- Cabinet (si associate ou firm_admin)
+    firm_name text,
+    firm_address text,
+    firm_phone text,
+    firm_email text,
+    firm_ice text,  -- Identifiant Commun Entreprise
+    
+    -- Type d'expert
+    expert_type text NOT NULL CHECK (expert_type IN ('independent', 'firm_admin', 'associate', 'carrier_internal')),
+    carrier_tenant_id uuid REFERENCES auth_tenants(id),  -- NOT NULL si expert_type='carrier_internal'
+    
+    -- Geographic operating zones
+    active_zones text[],  -- 'casablanca', 'marrakech', 'rabat', 'tanger', 'fes', 'agadir', etc.
+    
+    -- Stats (computed by Sprint 26.5)
+    total_missions integer NOT NULL DEFAULT 0,
+    avg_rating decimal(3, 2),
+    avg_response_time_hours decimal(5, 2),
+    
+    -- Honoraires baseline (peut etre override par mission)
+    baseline_honoraire_mad decimal(10, 2),
+    
+    -- Status
+    status text NOT NULL CHECK (status IN ('active', 'pending_kyb', 'suspended', 'expired_agrement', 'inactive')) DEFAULT 'pending_kyb',
+    
+    -- KYB workflow
+    kyb_reviewed_at timestamptz,
+    kyb_reviewed_by_user_id uuid REFERENCES auth_users(id),
+    kyb_rejection_reason text,
+    
+    -- Metadata
+    notes text,
+    created_at timestamptz NOT NULL DEFAULT NOW(),
+    updated_at timestamptz NOT NULL DEFAULT NOW()
+  );
+
+  CREATE INDEX idx_insure_experts_tenant ON insure_experts(tenant_id);
+  CREATE INDEX idx_insure_experts_status ON insure_experts(status);
+  CREATE INDEX idx_insure_experts_specialty ON insure_experts USING GIN(acaps_specialty);
+  CREATE INDEX idx_insure_experts_zones ON insure_experts USING GIN(active_zones);
+  CREATE INDEX idx_insure_experts_carrier ON insure_experts(carrier_tenant_id) WHERE expert_type = 'carrier_internal';
+
+  ALTER TABLE insure_experts ENABLE ROW LEVEL SECURITY;
+  ALTER TABLE insure_experts FORCE ROW LEVEL SECURITY;
+  CREATE POLICY insure_experts_tenant_isolation ON insure_experts USING (app_can_access_tenant(tenant_id));
+  ```
+- [ ] Entity TypeORM `insure-expert.entity.ts` (~80 lignes)
+- [ ] Service `experts-catalog.service.ts` :
+  - `onboardExpert(input)` : creation expert avec status='pending_kyb'
+  - `approveKyb(expertId, reviewerId)` : verification documents + status='active'
+  - `rejectKyb(expertId, reviewerId, reason)` : status='inactive' + raison
+  - `suspendExpert(expertId, reason)` : status='suspended'
+  - `checkAgrementExpiry()` : cron daily, si expiry_date < today, status='expired_agrement'
+  - `searchExperts(filters)` : par specialty + zone + status + carrier_tenant_id
+- [ ] Validation Zod : email format + CIN MA format + acaps_agrement_number format + expiry_date > today
+- [ ] Cron `insure-experts-agrement-expiry.cron.ts` : daily check + notify experts 30j avant expiration
+- [ ] Endpoints REST :
+  - `POST /api/v1/insure/experts/onboard`
+  - `GET /api/v1/insure/experts/search?specialty=auto&zone=marrakech`
+  - `POST /api/v1/insure/experts/:id/approve-kyb`
+  - `POST /api/v1/insure/experts/:id/reject-kyb`
+  - `POST /api/v1/insure/experts/:id/suspend`
+- [ ] Permissions :
+  - `insure.experts.read_pool` (carrier_admin + carrier_expert_manager + super_admin_platform)
+  - `insure.experts.onboard` (super_admin_platform + carrier_admin)
+  - `insure.experts.approve_kyb` (super_admin_platform + carrier_admin)
+  - `insure.experts.suspend` (super_admin_platform + carrier_admin)
+- [ ] Tests unit + integration 15+ scenarios
+
+### Pattern critique : ExpertsCatalogService
 
 ```typescript
-// Exemple template Auto Tous Risques
-{
-  name: "Assurance Auto Tous Risques",
-  code: "AUTO-TR",
-  branche: "auto",
-  garanties: [
-    {
-      name: "RC obligatoire",
-      description: "Responsabilite civile vis-a-vis tiers",
-      capital_max: 1000000,                   // MAD
-      franchise: 0,
-      mandatory: true,
-    },
-    {
-      name: "Dommages collision",
-      description: "Reparation vehicule en cas de choc",
-      capital_max: 500000,
-      franchise: 5000,
-      mandatory: false,
-    },
-    {
-      name: "Vol",
-      description: "Indemnisation vol vehicule",
-      capital_max: null,                       // valeur vehicule
-      franchise: 10000,
-      mandatory: false,
-    },
-    {
-      name: "Incendie",
-      description: "Dommages incendie",
-      capital_max: null,
-      franchise: 0,
-      mandatory: false,
-    },
-    {
-      name: "Bris de glace",
-      description: "Pare-brise + vitres",
-      capital_max: 5000,
-      franchise: 500,
-      mandatory: false,
-    },
-  ],
-  exclusions: [
-    "Conduite sous emprise alcool / drogues",
-    "Sinistre intentionnel",
-    "Course / competition non autorisee",
-  ],
-  tarif_grille: {
-    base_factors: { vehicle_value: 0.04, age: 0.02, region: 0.01 },
-    discounts: { no_claim_bonus: 0.10, multi_policies: 0.05 },
-    surcharges: { young_driver: 0.30, high_risk_zone: 0.15 },
-  },
-  commission_rate_percent: 12.5,
+@Injectable()
+export class ExpertsCatalogService {
+  /**
+   * Onboard nouveau expert dans pool.
+   * Status initial : pending_kyb.
+   * Verification ACAPS agrement obligatoire avant activation.
+   */
+  async onboardExpert(input: OnboardExpertInput): Promise<InsureExpert> {
+    // Validation
+    const validated = OnboardExpertSchema.parse(input);
+    
+    // Check uniqueness ACAPS agrement
+    const existing = await this.expertsRepo.findOne({
+      where: { acaps_agrement_number: validated.acaps_agrement_number }
+    });
+    if (existing) {
+      throw new ConflictException(`Expert ACAPS ${validated.acaps_agrement_number} already exists`);
+    }
+    
+    // Check expiry date in future
+    if (isBefore(validated.acaps_agrement_expiry_date, new Date())) {
+      throw new BadRequestException('ACAPS agrement expiry date must be in future');
+    }
+    
+    // Create expert
+    const expert = await this.expertsRepo.save({
+      tenant_id: validated.tenant_id,
+      user_id: validated.user_id ?? null,
+      full_name: validated.full_name,
+      cin_number: validated.cin_number,
+      cin_document_url: validated.cin_document_url,
+      phone: validated.phone,
+      email: validated.email,
+      acaps_agrement_number: validated.acaps_agrement_number,
+      acaps_agrement_document_url: validated.acaps_agrement_document_url,
+      acaps_agrement_expiry_date: validated.acaps_agrement_expiry_date,
+      acaps_specialty: validated.acaps_specialty,
+      firm_name: validated.firm_name,
+      firm_address: validated.firm_address,
+      firm_ice: validated.firm_ice,
+      expert_type: validated.expert_type,
+      carrier_tenant_id: validated.carrier_tenant_id,
+      active_zones: validated.active_zones ?? [],
+      baseline_honoraire_mad: validated.baseline_honoraire_mad ?? 1500,  // default 1500 MAD
+      status: 'pending_kyb',
+    });
+    
+    // Notify admin for KYB review
+    await this.notificationsService.notifyAdminExpertKybRequired(expert.id);
+    
+    // Audit log
+    await this.auditLogService.log({
+      entity_type: 'insure_expert',
+      entity_id: expert.id,
+      action: 'onboarded',
+      actor_user_id: this.userContext.userId,
+    });
+    
+    // Emit event
+    await this.kafkaProducer.emit('insurtech.events.insure.expert.onboarded', {
+      expert_id: expert.id,
+      expert_type: expert.expert_type,
+      tenant_id: expert.tenant_id,
+    });
+    
+    return expert;
+  }
+  
+  /**
+   * Approve KYB after document verification.
+   * Status : pending_kyb -> active.
+   */
+  async approveKyb(expertId: string, reviewerId: string): Promise<void> {
+    const expert = await this.expertsRepo.findOneOrFail({ where: { id: expertId } });
+    
+    if (expert.status !== 'pending_kyb') {
+      throw new BadRequestException(`Expert ${expertId} is not pending_kyb (status: ${expert.status})`);
+    }
+    
+    // Re-check agrement expiry
+    if (isBefore(expert.acaps_agrement_expiry_date, new Date())) {
+      throw new BadRequestException('ACAPS agrement expired');
+    }
+    
+    await this.expertsRepo.update(expertId, {
+      status: 'active',
+      kyb_reviewed_at: new Date(),
+      kyb_reviewed_by_user_id: reviewerId,
+    });
+    
+    // Notify expert
+    await this.notificationsService.notifyExpertKybApproved(expert.user_id);
+    
+    // Emit event
+    await this.kafkaProducer.emit('insurtech.events.insure.expert.kyb_approved', {
+      expert_id: expertId,
+      reviewer_id: reviewerId,
+    });
+  }
+  
+  /**
+   * Cron daily : check ACAPS agrement expiry.
+   * Auto-suspend experts dont agrement expired.
+   */
+  async checkAgrementExpiry(): Promise<void> {
+    const today = new Date();
+    
+    // Find experts active dont agrement expired
+    const expiredExperts = await this.expertsRepo.find({
+      where: { 
+        status: 'active',
+        acaps_agrement_expiry_date: LessThan(today) 
+      }
+    });
+    
+    for (const expert of expiredExperts) {
+      await this.expertsRepo.update(expert.id, { status: 'expired_agrement' });
+      
+      await this.notificationsService.notifyExpertAgrementExpired(expert.user_id);
+      
+      await this.kafkaProducer.emit('insurtech.events.insure.expert.agrement_expired', {
+        expert_id: expert.id,
+      });
+    }
+    
+    // Find experts agrement expire dans 30j -> reminder
+    const expiringExperts = await this.expertsRepo.find({
+      where: {
+        status: 'active',
+        acaps_agrement_expiry_date: Between(today, addDays(today, 30))
+      }
+    });
+    
+    for (const expert of expiringExperts) {
+      await this.notificationsService.notifyExpertAgrementExpiringSoon(
+        expert.user_id, 
+        expert.acaps_agrement_expiry_date
+      );
+    }
+  }
+  
+  /**
+   * Search experts pool avec filtres (utilise par Sprint 26.5 Carrier Portal).
+   */
+  async searchExperts(filters: SearchExpertsFilters): Promise<InsureExpert[]> {
+    const qb = this.expertsRepo.createQueryBuilder('expert')
+      .where('expert.status = :status', { status: 'active' });
+    
+    if (filters.specialty) {
+      qb.andWhere(':specialty = ANY(expert.acaps_specialty)', { specialty: filters.specialty });
+    }
+    
+    if (filters.zone) {
+      qb.andWhere(':zone = ANY(expert.active_zones)', { zone: filters.zone });
+    }
+    
+    if (filters.expert_type) {
+      qb.andWhere('expert.expert_type = :type', { type: filters.expert_type });
+    }
+    
+    if (filters.carrier_tenant_id && filters.expert_type === 'carrier_internal') {
+      qb.andWhere('expert.carrier_tenant_id = :carrier', { carrier: filters.carrier_tenant_id });
+    }
+    
+    // Order : avg_rating DESC, avg_response_time_hours ASC, total_missions DESC
+    qb.orderBy('expert.avg_rating', 'DESC', 'NULLS LAST')
+      .addOrderBy('expert.avg_response_time_hours', 'ASC', 'NULLS LAST')
+      .addOrderBy('expert.total_missions', 'DESC');
+    
+    return qb.getMany();
+  }
 }
 ```
 
-**Fichiers crees / modifies** :
-```
-repo/packages/database/src/migrations/{date}-InsureProducts.ts                # ~80 lignes
-repo/packages/insure/src/entities/insure-product.entity.ts                     # ~60 lignes
-repo/packages/insure/src/services/products.service.ts                          # ~250 lignes
-repo/packages/insure/src/schemas/product.schema.ts                              # ~80 lignes
-repo/packages/insure/src/seeds/products-templates.ts                            # ~400 lignes (10+ templates 5 branches)
-repo/apps/api/src/modules/insure/controllers/products.controller.ts            # ~150 lignes
-repo/infrastructure/scripts/seed-insure-products.ts                              # ~100 lignes
-```
+### Notes implementation
 
-**Notes implementation** :
-- 2 niveaux catalog : flexibility business (Skalean templates evolutifs + brokers personnalisent)
-- Garanties JSONB : structure flexible (Sprint 15 connecteurs assureurs ajouteront leurs garanties)
-- Commission rate : configurable per product (Wafa peut negocier 15%, Atlanta 12%)
-- Sprint 15 ajoutera `insurer_id` reference connecteur reel
-- Conditions generales : doc PDF Sprint 10 (versioning)
+1. **ACAPS agrement renewal** : cron daily auto-suspend si expired + reminder 30j avant. Critique car ACAPS regulator suspend les experts non a jour.
+2. **expert_type = 'carrier_internal'** : doit avoir `carrier_tenant_id` non null. Constraint applicative + check.
+3. **Specialty + zone** : indexes GIN pour search performance.
+4. **baseline_honoraire_mad default 1500** : valeur indicative MA pour expertise auto standard.
+5. **Workflow KYB** : initial onboarding par expert ou carrier_admin -> review par super_admin_platform ou carrier_admin -> approve/reject.
 
-**Criteres validation** :
-- V1 (P0) : Migration creee + 5 branches enum
-- V2 (P0) : Templates super admin only
-- V3 (P0) : Variants tenant heritage parent
-- V4 (P0) : 10+ templates seed crees
-- V5 (P0) : Garanties JSONB structuree
-- V6 (P0) : Commission rate per product
-- V7 (P0) : Audit + Kafka events
-- V8 (P0) : Tests 10+ scenarios
+### Criteres validation V1-V10
+
+| ID | Critere | Priorite |
+|----|---------|----------|
+| V1 | Migration table insure_experts | P0 |
+| V2 | RLS active + tenant isolation | P0 |
+| V3 | Indexes performance (GIN specialty + zones) | P0 |
+| V4 | Service 6 methodes (onboard / approveKyb / rejectKyb / suspend / checkExpiry / search) | P0 |
+| V5 | Validation Zod CIN + ACAPS + email | P0 |
+| V6 | Cron daily expiry check | P0 |
+| V7 | Constraint carrier_tenant_id si carrier_internal | P0 |
+| V8 | 5 endpoints REST + permissions | P0 |
+| V9 | Tests 15+ scenarios PASS | P0 |
+| V10 | Events Kafka emis | P0 |
+
+### Fichiers crees / modifies
+
+```
+repo/packages/database/src/migrations/{date}-Sprint14-InsureExperts.ts                   # ~60 lignes
+repo/packages/insure/src/entities/insure-expert.entity.ts                                # ~80 lignes
+repo/packages/insure/src/services/experts-catalog.service.ts                              # ~350 lignes
+repo/packages/insure/src/services/experts-catalog.service.spec.ts                          # ~200 lignes
+repo/packages/insure/src/jobs/insure-experts-agrement-expiry.cron.ts                        # ~120 lignes
+repo/apps/api/src/modules/insure/controllers/experts.controller.ts                          # ~150 lignes
+```
 
 ---
 
-## Tache 4.1.2 -- Tarification Engine Basique (Lookup Tables)
+## Tache 4.1.16 -- NOUVEAU v3.0 : insure_expert_assignments + service designation
 
-**Metadonnees** : Phase 4 / Sprint 14 / P0 / 6h / Depend de 4.1.1
+**Sprint** : 14 (Phase 4 / Sprint 1)
+**Phase** : 4 -- Vertical Insure
+**Priorite** : P0
+**Effort** : 5h
+**Dependances** : 4.1.15
 
-**But** : Engine calcul prime annuelle a partir caracteristiques souscripteur + produit. Sprint 14 = lookup tables simples (multipliers per region, age, vehicle category, etc.). Sprint 30+ enrichira avec IA.
+### But
 
-**Livrables checkables** :
-- [ ] Service `repo/packages/insure/src/services/tarification.service.ts`
-- [ ] Method `calculatePremium(productId, souscripteurData, garantiesSelected): { primeAnnuelle, breakdown }` :
-  1. Get product `tarif_grille`
-  2. Compute base : `base_factor x vehicle_value` (auto) or `base_factor x age x members_count` (sante) etc.
-  3. Apply garanties selected (somme couts variables)
-  4. Apply discounts/surcharges (e.g. no claim bonus, young driver)
-  5. Apply commission rate
-  6. Retourne breakdown detaille
-- [ ] Lookup tables initiaux per branche :
-  - **Auto** : prime base = 4% valeur vehicule + multipliers (age conducteur, zone geographique, anciennete permis, vehicule categorie)
-  - **Sante** : prime base = 8000 MAD/an personne adulte + variations (age, antecedents medical bonus declares)
-  - **Multirisque habitation** : 1500 MAD/an + 0.2% valeur biens declares
-  - **RC pro** : depend metier (avocat 5000, medecin 8000, generale 3000)
-  - **Voyage** : 50 MAD/jour + multiplier destination
-- [ ] Inputs validation : Zod schemas per branche
-- [ ] Tests : 5 branches x 5 scenarios = 25 tests calcul prime
-- [ ] Cache lookup tables 1h Redis (eviter re-fetch DB chaque calcul)
+Implementer entity `insure_expert_assignments` (designations experts par carriers) + service designation + workflow accept/reject/schedule.
 
-**Pattern critique : tarification auto exemple**
+### Contexte
+
+L'expert est designe par le **carrier** sur un sinistre (decision-013). Cette table trace toutes les designations + workflow status. Sera consume par Sprint 22.7 (Expert App) et Sprint 26.5 (Carrier Portal).
+
+### Livrables checkables
+
+- [ ] Migration : table `insure_expert_assignments` :
+  ```sql
+  CREATE TABLE insure_expert_assignments (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id uuid NOT NULL REFERENCES auth_tenants(id) ON DELETE CASCADE,
+    
+    -- Carrier qui designe
+    carrier_tenant_id uuid NOT NULL REFERENCES auth_tenants(id),
+    carrier_user_id uuid NOT NULL REFERENCES auth_users(id),
+    
+    -- Expert designe
+    expert_tenant_id uuid NOT NULL REFERENCES auth_tenants(id),
+    expert_id uuid NOT NULL REFERENCES insure_experts(id),
+    expert_user_id uuid NOT NULL REFERENCES auth_users(id),
+    
+    -- Sinistre lie (FK insure_sinistres si existe, sinon uuid)
+    sinistre_id uuid NOT NULL,
+    
+    -- Garage cible (pour visite)
+    garage_tenant_id uuid REFERENCES auth_tenants(id),
+    garage_address text,
+    garage_lat decimal(10, 7),
+    garage_lng decimal(10, 7),
+    
+    -- Status workflow
+    status text NOT NULL CHECK (status IN (
+      'designated',     -- designation par carrier (initial)
+      'accepted',       -- expert a accepte
+      'rejected',       -- expert a rejete (avec raison)
+      'in_progress',    -- visite en cours
+      'completed',      -- rapport soumis
+      'cancelled'       -- annule par carrier
+    )) DEFAULT 'designated',
+    
+    -- Timestamps
+    designated_at timestamptz NOT NULL DEFAULT NOW(),
+    accepted_at timestamptz,
+    rejected_at timestamptz,
+    rejection_reason text,
+    visit_scheduled_at timestamptz,
+    visit_completed_at timestamptz,
+    report_submitted_at timestamptz,
+    completed_at timestamptz,
+    cancelled_at timestamptz,
+    cancelled_reason text,
+    
+    -- Honoraire pour cette mission
+    honoraire_mad decimal(10, 2) NOT NULL,
+    honoraire_invoice_id uuid,  -- FK books_invoices Sprint 12 (Sprint 22.7 plein integration)
+    honoraire_payment_status text CHECK (honoraire_payment_status IN ('pending', 'invoiced', 'paid', 'overdue')) DEFAULT 'pending',
+    
+    -- Notes
+    notes text,
+    
+    created_at timestamptz NOT NULL DEFAULT NOW(),
+    updated_at timestamptz NOT NULL DEFAULT NOW()
+  );
+
+  CREATE INDEX idx_expert_assignments_tenant ON insure_expert_assignments(tenant_id);
+  CREATE INDEX idx_expert_assignments_carrier ON insure_expert_assignments(carrier_tenant_id);
+  CREATE INDEX idx_expert_assignments_expert ON insure_expert_assignments(expert_id);
+  CREATE INDEX idx_expert_assignments_sinistre ON insure_expert_assignments(sinistre_id);
+  CREATE INDEX idx_expert_assignments_status ON insure_expert_assignments(status);
+  CREATE INDEX idx_expert_assignments_garage ON insure_expert_assignments(garage_tenant_id);
+
+  ALTER TABLE insure_expert_assignments ENABLE ROW LEVEL SECURITY;
+  ALTER TABLE insure_expert_assignments FORCE ROW LEVEL SECURITY;
+  CREATE POLICY expert_assignments_tenant_isolation ON insure_expert_assignments USING (app_can_access_tenant(tenant_id));
+  ```
+- [ ] Entity TypeORM `insure-expert-assignment.entity.ts` (~90 lignes)
+- [ ] Service `expert-assignments.service.ts` :
+  - `designateExpert(input)` : carrier designe expert + create assignment + create cross-tenant authorization + notify expert
+  - `acceptAssignment(assignmentId, expertUserId)` : status='accepted', notify carrier + garage
+  - `rejectAssignment(assignmentId, expertUserId, reason)` : status='rejected', trigger re-designation
+  - `scheduleVisit(assignmentId, scheduledAt)` : visit_scheduled_at, notify garage
+  - `markVisitCompleted(assignmentId)` : visit_completed_at, status='in_progress'
+  - `markReportSubmitted(assignmentId, reportId)` : report_submitted_at, status='completed'
+  - `cancelAssignment(assignmentId, reason)` : carrier annule + auto re-designate ou escalate
+  - `listMyAssignments(expertUserId, filters)` : expert voit ses missions
+  - `listCarrierAssignments(carrierTenantId, filters)` : carrier voit toutes designations
+- [ ] Cross-tenant : auto-create `garage_to_expert_request` lors designation (Sprint 7.5a type)
+- [ ] Permissions :
+  - `carrier.experts.designate` (carrier_expert_manager + carrier_admin)
+  - `expertise.missions.read` (expert_*)
+  - `expertise.missions.accept` (expert_*)
+  - `expertise.missions.reject` (expert_*)
+- [ ] Endpoints REST :
+  - `POST /api/v1/insure/expert-assignments`
+  - `GET /api/v1/insure/expert-assignments/my-missions` (expert)
+  - `GET /api/v1/insure/expert-assignments/carrier-designations` (carrier)
+  - `POST /api/v1/insure/expert-assignments/:id/accept`
+  - `POST /api/v1/insure/expert-assignments/:id/reject`
+  - `POST /api/v1/insure/expert-assignments/:id/schedule-visit`
+  - `POST /api/v1/insure/expert-assignments/:id/cancel`
+- [ ] Tests unit + integration 20+ scenarios
+
+### Pattern critique : designateExpert avec cross-tenant authorization
 
 ```typescript
-// repo/packages/insure/src/services/branche-calculators/auto.calculator.ts
-async calculate(
-  product: InsureProduct,
-  souscripteurData: AutoSouscripteurData,
-  garantiesSelected: string[],
-): Promise<PrimeBreakdown> {
-  const grille = product.tarif_grille;
-  let base = new Decimal(souscripteurData.vehicleValue).mul(grille.base_factors.vehicle_value);
-
-  // Apply age conductor multiplier
-  if (souscripteurData.driverAge < 25) {
-    base = base.mul(1 + grille.surcharges.young_driver); // +30%
+async designateExpert(input: DesignateExpertInput): Promise<InsureExpertAssignment> {
+  const validated = DesignateExpertSchema.parse(input);
+  
+  // Verify expert is active + agrement not expired
+  const expert = await this.expertsRepo.findOneOrFail({ 
+    where: { id: validated.expert_id, status: 'active' } 
+  });
+  
+  if (isBefore(expert.acaps_agrement_expiry_date, new Date())) {
+    throw new BadRequestException('Expert ACAPS agrement expired');
   }
-
-  // Apply region (Casablanca > Tanger > rural)
-  const regionMultiplier = REGION_RISK_MULTIPLIERS[souscripteurData.region] ?? 1;
-  base = base.mul(regionMultiplier);
-
-  // Apply garanties optionnelles
-  let garantiesCost = new Decimal(0);
-  for (const garantieName of garantiesSelected) {
-    const garantie = product.garanties.find(g => g.name === garantieName);
-    if (!garantie || garantie.mandatory) continue;
-    // Cost approximative (Sprint 15 connecteurs ajusteront avec assureurs)
-    if (garantieName === 'Vol') garantiesCost = garantiesCost.plus(souscripteurData.vehicleValue * 0.005);
-    if (garantieName === 'Bris de glace') garantiesCost = garantiesCost.plus(150);
-    // ...
+  
+  // Verify carrier user has permission
+  await this.rbacService.userHasPermission(
+    validated.carrier_user_id,
+    'carrier.experts.designate'
+  );
+  
+  // Create assignment
+  const assignment = await this.assignmentsRepo.save({
+    tenant_id: validated.carrier_tenant_id,
+    carrier_tenant_id: validated.carrier_tenant_id,
+    carrier_user_id: validated.carrier_user_id,
+    expert_tenant_id: expert.tenant_id,
+    expert_id: expert.id,
+    expert_user_id: expert.user_id!,
+    sinistre_id: validated.sinistre_id,
+    garage_tenant_id: validated.garage_tenant_id,
+    garage_address: validated.garage_address,
+    garage_lat: validated.garage_lat,
+    garage_lng: validated.garage_lng,
+    honoraire_mad: validated.honoraire_mad ?? expert.baseline_honoraire_mad ?? 1500,
+    status: 'designated',
+  });
+  
+  // Create cross-tenant authorization (Sprint 7.5a type garage_to_expert_request)
+  if (validated.garage_tenant_id) {
+    await this.crossTenantAuthRepo.save({
+      type: 'garage_to_expert_request',
+      from_tenant_id: validated.garage_tenant_id,
+      to_tenant_id: expert.tenant_id,
+      resource_type: 'sinistre',
+      resource_id: validated.sinistre_id,
+      created_by_user_id: validated.carrier_user_id,
+      expires_at: addDays(new Date(), 30),
+    });
   }
-
-  // Apply no-claim bonus
-  if (souscripteurData.noClaimYears >= 3) {
-    base = base.mul(1 - grille.discounts.no_claim_bonus); // -10%
-  }
-
-  const subtotalHt = base.plus(garantiesCost);
-  // TVA 14% sur prime nette d'assurance MA (taux specifique assurance)
-  const tvaInsurance = new Decimal('0.14');
-  const tva = subtotalHt.mul(tvaInsurance);
-  const total = subtotalHt.plus(tva);
-
-  return {
-    primeAnnuelle: total.toNumber(),
-    breakdown: {
-      base: base.toNumber(),
-      garanties: garantiesCost.toNumber(),
-      subtotal_ht: subtotalHt.toNumber(),
-      tva,
-      total,
+  
+  // Notify expert via Web Push + email + SMS
+  await this.notificationsService.notifyExpertNewMission(expert.user_id!, assignment.id);
+  
+  // Audit log
+  await this.auditLogService.log({
+    entity_type: 'insure_expert_assignment',
+    entity_id: assignment.id,
+    action: 'designated',
+    actor_user_id: validated.carrier_user_id,
+    details: { 
+      expert_id: expert.id, 
+      sinistre_id: validated.sinistre_id,
+      honoraire_mad: assignment.honoraire_mad 
     },
-  };
+  });
+  
+  // Emit event
+  await this.kafkaProducer.emit('insurtech.events.insure.expert.designated', {
+    assignment_id: assignment.id,
+    expert_id: expert.id,
+    carrier_tenant_id: validated.carrier_tenant_id,
+    sinistre_id: validated.sinistre_id,
+  });
+  
+  return assignment;
 }
 ```
 
-**Fichiers crees / modifies** :
-```
-repo/packages/insure/src/services/tarification.service.ts                     # ~150 lignes (orchestrator)
-repo/packages/insure/src/services/branche-calculators/auto.calculator.ts        # ~150 lignes
-repo/packages/insure/src/services/branche-calculators/sante.calculator.ts       # ~120 lignes
-repo/packages/insure/src/services/branche-calculators/habitation.calculator.ts  # ~100 lignes
-repo/packages/insure/src/services/branche-calculators/rc-pro.calculator.ts      # ~100 lignes
-repo/packages/insure/src/services/branche-calculators/voyage.calculator.ts      # ~100 lignes
-repo/packages/insure/src/data/region-risk-multipliers.ts                         # MA regions data
-repo/packages/insure/src/services/branche-calculators/{5}.spec.ts                # ~150 lignes chacun
-```
+### Criteres validation V1-V10
 
-**Notes implementation** :
-- TVA 14% specifique assurance MA (vs 20% standard)
-- Lookup tables hardcoded Sprint 14 ; Sprint 27 admin UI permettra editer
-- Region multipliers : Casablanca x1.3, Tanger x1.1, etc.
-- Sprint 30+ : IA peut consommer historique sinistres pour scoring risque
-- decimal.js critique : computations financieres
+| ID | Critere | Priorite |
+|----|---------|----------|
+| V1 | Migration table insure_expert_assignments | P0 |
+| V2 | RLS active + tenant isolation | P0 |
+| V3 | Service 9 methodes | P0 |
+| V4 | Cross-tenant auto-create garage_to_expert_request | P0 |
+| V5 | Verification expert active + agrement valid | P0 |
+| V6 | Workflow status 6 etats | P0 |
+| V7 | Permissions enforces | P0 |
+| V8 | 7 endpoints REST | P0 |
+| V9 | Events Kafka 6 types | P0 |
+| V10 | Tests 20+ scenarios PASS | P0 |
 
-**Criteres validation** :
-- V1 (P0) : 5 calculators (1 par branche) implementent interface
-- V2 (P0) : Auto : young driver +30%
-- V3 (P0) : Auto : no claim bonus -10%
-- V4 (P0) : Sante : age multiplier
-- V5 (P0) : TVA 14% appliquee
-- V6 (P0) : Cache lookup tables Redis
-- V7 (P0) : Tests 25+ scenarios
+### Fichiers crees / modifies
+
+```
+repo/packages/database/src/migrations/{date}-Sprint14-InsureExpertAssignments.ts          # ~70 lignes
+repo/packages/insure/src/entities/insure-expert-assignment.entity.ts                       # ~90 lignes
+repo/packages/insure/src/services/expert-assignments.service.ts                             # ~400 lignes
+repo/packages/insure/src/services/expert-assignments.service.spec.ts                         # ~300 lignes
+repo/apps/api/src/modules/insure/controllers/expert-assignments.controller.ts                 # ~200 lignes
+```
 
 ---
 
-## Tache 4.1.3 -- insure_quotes Entity + Devis PDF
+## Tache 4.1.17 -- NOUVEAU v3.0 : insure_expert_reports + service preview Sprint 22.7
 
-**Metadonnees** : Phase 4 / Sprint 14 / P0 / 7h / Depend de 4.1.2
+**Sprint** : 14 (Phase 4 / Sprint 1)
+**Phase** : 4 -- Vertical Insure
+**Priorite** : P0
+**Effort** : 5h
+**Dependances** : 4.1.16
 
-**But** : Quotes (devis) entity + service generation devis PDF + envoi email + tracking acceptance.
+### But
 
-**Livrables checkables** :
-- [ ] Migration : table `insure_quotes` :
-  - id, tenant_id, contact_id (FK CRM Sprint 8), product_id, branche, souscripteur_data (jsonb), garanties_selected (jsonb array), prime_breakdown (jsonb), prime_annuelle (numeric), validity_until (date), status (enum 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired'), pdf_doc_id (FK), sent_at, accepted_at, rejected_at, rejected_reason, created_by
-- [ ] Service `quotes.service.ts` :
-  - `createQuote(contactId, productId, souscripteurData, garanties): Promise<Quote>` -- compute prime + INSERT draft
-  - `sendQuote(id): Promise<void>` -- generate PDF + email contact + transition draft -> sent
-  - `markAccepted(id)` -- transition + trigger souscription (Tache 4.1.5)
-  - `markRejected(id, reason)`
-  - `findAll(filters)`
-- [ ] Validity : default 30 jours apres send (configurable)
-- [ ] Cron job : expire quotes apres validity
-- [ ] PDF devis : utilise PdfGeneratorService Sprint 10 + template `devis.hbs` (deja Sprint 10) + breakdown detaille
-- [ ] Email envoi : utilise Comm orchestrator Sprint 9 + template `quote_generated`
-- [ ] Endpoints :
-  - `POST /api/v1/insure/quotes` (create draft + auto-tarification)
-  - `POST /api/v1/insure/quotes/:id/send` (generate PDF + email)
-  - `GET /api/v1/insure/quotes/:id`
-  - `GET /api/v1/insure/quotes`
-  - `POST /api/v1/insure/quotes/:id/accept` (peut etre client via portail Sprint 17 OU broker)
-  - `POST /api/v1/insure/quotes/:id/reject`
-- [ ] Permissions : `insure.quotes.create/read/send/accept`
-- [ ] Audit + Kafka events `insure.quote_created/sent/accepted/rejected`
-- [ ] Tests : full workflow + cron expire + PDF + email
+Implementer entity `insure_expert_reports` (rapports expertise digitaux) + service basique preview. **Full version dans Sprint 22.7 Expert App** (validation devis line-by-line + signature Barid eSign).
 
-**Fichiers crees / modifies** :
+### Contexte
+
+L'expert produit un rapport apres visite garage avec decision : validated / modified / rejected sur le devis. Cette entity stocke le rapport. Sprint 14 livre la table + service minimal CRUD. Sprint 22.7 livre la logique metier complete (UI + validation devis + signature Barid).
+
+### Livrables checkables
+
+- [ ] Migration : table `insure_expert_reports` :
+  ```sql
+  CREATE TABLE insure_expert_reports (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id uuid NOT NULL REFERENCES auth_tenants(id) ON DELETE CASCADE,
+    
+    assignment_id uuid NOT NULL REFERENCES insure_expert_assignments(id) ON DELETE CASCADE,
+    expert_id uuid NOT NULL REFERENCES insure_experts(id),
+    expert_user_id uuid NOT NULL REFERENCES auth_users(id),
+    
+    -- Devis source
+    devis_id uuid NOT NULL,  -- FK repair_devis (Sprint 19)
+    
+    -- Contenu rapport (JSONB structure flexible)
+    report_content jsonb NOT NULL DEFAULT '{}'::jsonb,
+    /*
+    structure : {
+      sections: [
+        { type: 'observation', title: '...', content: '...' },
+        { type: 'damages', items: [...] },
+        { type: 'recommendations', content: '...' }
+      ],
+      findings: [...],
+      recommendations: '...'
+    }
+    */
+    
+    -- Photos
+    photos_urls text[] NOT NULL DEFAULT '{}',
+    
+    -- Decision
+    decision text CHECK (decision IN ('validated', 'modified', 'rejected')),
+    decision_justification text,
+    
+    -- Modifications devis (si decision='modified')
+    modifications jsonb,
+    /*
+    structure : {
+      lines_modified: [
+        { line_id, old_quantity, new_quantity, old_unit_price, new_unit_price, old_total_ttc, new_total_ttc, reason }
+      ],
+      total_before: 'X.XX',
+      total_after: 'Y.YY'
+    }
+    */
+    
+    -- Generated PDF
+    pdf_url text,
+    pdf_generated_at timestamptz,
+    
+    -- Signature Barid eSign (Sprint 10 + full Sprint 22.7)
+    signature_id uuid,  -- FK docs_signatures Sprint 10
+    signed_at timestamptz,
+    signature_legal_status text CHECK (signature_legal_status IN ('pending', 'signed', 'expired')) DEFAULT 'pending',
+    
+    -- Status workflow
+    status text NOT NULL CHECK (status IN ('draft', 'completed', 'signed', 'submitted_to_carrier')) DEFAULT 'draft',
+    
+    -- Submission to carrier
+    submitted_to_carrier_at timestamptz,
+    carrier_received_at timestamptz,
+    
+    -- Metadata
+    notes text,
+    created_at timestamptz NOT NULL DEFAULT NOW(),
+    updated_at timestamptz NOT NULL DEFAULT NOW()
+  );
+
+  CREATE INDEX idx_expert_reports_tenant ON insure_expert_reports(tenant_id);
+  CREATE INDEX idx_expert_reports_assignment ON insure_expert_reports(assignment_id);
+  CREATE INDEX idx_expert_reports_expert ON insure_expert_reports(expert_id);
+  CREATE INDEX idx_expert_reports_devis ON insure_expert_reports(devis_id);
+  CREATE INDEX idx_expert_reports_status ON insure_expert_reports(status);
+
+  ALTER TABLE insure_expert_reports ENABLE ROW LEVEL SECURITY;
+  ALTER TABLE insure_expert_reports FORCE ROW LEVEL SECURITY;
+  CREATE POLICY expert_reports_tenant_isolation ON insure_expert_reports USING (app_can_access_tenant(tenant_id));
+  ```
+- [ ] Entity TypeORM `insure-expert-report.entity.ts` (~100 lignes)
+- [ ] Service `expert-reports-basic.service.ts` (preview Sprint 22.7 full version) :
+  - `createDraftReport(input)` : create row with status='draft'
+  - `updateDraft(reportId, updates)` : update report_content + photos
+  - `markCompleted(reportId)` : status='draft' -> 'completed' (avant signature)
+  - `getReport(reportId)` : read avec permissions check
+  - `listAssignmentReports(assignmentId)` : tous rapports d'un assignment
+- [ ] **Pas de signature Barid dans Sprint 14** -- juste preview structure. Full integration Sprint 22.7.
+- [ ] **Pas de validation devis line-by-line dans Sprint 14** -- juste structure pour decision/modifications. Full UI Sprint 22.7.
+- [ ] Permissions :
+  - `expertise.report.create` (expert_*)
+  - `expertise.report.read` (expert_* + carrier_* du tenant + admin)
+- [ ] Endpoints REST :
+  - `POST /api/v1/insure/expert-reports`
+  - `GET /api/v1/insure/expert-reports/:id`
+  - `PUT /api/v1/insure/expert-reports/:id`
+  - `POST /api/v1/insure/expert-reports/:id/mark-completed`
+- [ ] Tests unit + integration 15+ scenarios
+
+### Notes implementation
+
+1. **Preview seulement** : Sprint 14 livre la table + CRUD basique. Logique complete Sprint 22.7 (validation devis + signature + workflow soumission carrier).
+2. **JSONB report_content** : structure flexible, schema validation Zod cote service.
+3. **decision nullable Sprint 14** : Sprint 22.7 ajoutera workflow rendant obligatoire avant submission.
+4. **signature_id nullable Sprint 14** : Sprint 22.7 integrera Barid eSign full.
+5. **Sprint 22.7 etendra ce service** : ajoutera methodes validateDevis / modifyDevis / rejectDevis / signReport / submitToCarrier.
+
+### Criteres validation V1-V8
+
+| ID | Critere | Priorite |
+|----|---------|----------|
+| V1 | Migration table insure_expert_reports | P0 |
+| V2 | RLS active + tenant isolation | P0 |
+| V3 | Service basic 5 methodes preview | P0 |
+| V4 | Indexes performance | P0 |
+| V5 | Permissions enforces | P0 |
+| V6 | 4 endpoints REST basics | P0 |
+| V7 | Sprint 22.7 extension path documente | P0 |
+| V8 | Tests 15+ scenarios basics | P0 |
+
+### Fichiers crees / modifies
+
 ```
-repo/packages/database/src/migrations/{date}-InsureQuotes.ts                  # ~50 lignes
-repo/packages/insure/src/entities/insure-quote.entity.ts                       # ~50 lignes
-repo/packages/insure/src/services/quotes.service.ts                            # ~280 lignes
-repo/packages/insure/src/jobs/expire-quotes.cron.ts                              # ~60 lignes
-repo/apps/api/src/modules/insure/controllers/quotes.controller.ts              # ~150 lignes
+repo/packages/database/src/migrations/{date}-Sprint14-InsureExpertReports.ts              # ~70 lignes
+repo/packages/insure/src/entities/insure-expert-report.entity.ts                            # ~100 lignes
+repo/packages/insure/src/services/expert-reports-basic.service.ts                            # ~250 lignes (preview)
+repo/packages/insure/src/services/expert-reports-basic.service.spec.ts                        # ~200 lignes
+repo/apps/api/src/modules/insure/controllers/expert-reports.controller.ts                     # ~150 lignes
+repo/docs/expert-reports-sprint-22.7-extension-path.md                                         # ~100 lignes (extension path Sprint 22.7)
 ```
-
-**Notes implementation** :
-- Auto-tarification a creation : `await this.tarificationService.calculate(...)` -> stocke breakdown dans quote
-- Validity 30 jours : balance UX vs evolution tarifs (matchage perso pricing strategy)
-- Quote -> Policy : Tache 4.1.5 workflow signature
-
-**Criteres validation** :
-- V1 (P0) : Create quote auto-tarification
-- V2 (P0) : Send genere PDF + email
-- V3 (P0) : Validity expiry cron
-- V4 (P0) : Accept transition + trigger souscription
-- V5 (P0) : Multi-tenant + RBAC
-- V6 (P0) : Tests 12+ scenarios
 
 ---
 
-## Tache 4.1.4 -- insure_policies Entity + Status Workflow
+# VERIFICATIONS TRANSVERSALES SPRINT 14 v3.0
 
-**Metadonnees** : Phase 4 / Sprint 14 / P0 / 6h / Depend de 4.1.3
-
-**But** : Policies entity + service avec status workflow strict (active -> renewal_requested / cancelled / expired).
-
-**Livrables checkables** :
-- [ ] Migration : table `insure_policies` :
-  - id, tenant_id, policy_number (UNIQUE per tenant, format `POL-{branche}-{YYYY}-{seq}`), quote_id (FK), contact_id (FK CRM), product_id, branche, souscripteur_data (jsonb snapshot moment souscription), garanties (jsonb), prime_annuelle, start_date, end_date, status (enum 'pending_signature' | 'active' | 'cancelled' | 'expired' | 'in_renewal' | 'renewed'), signature_workflow_id (FK Sprint 10), conditions_doc_id, signed_doc_id, cancelled_at, cancelled_reason, expires_at, created_by
-- [ ] Service `policies.service.ts` :
-  - `createFromQuote(quoteId)` -- after signature complete
-  - `cancel(id, reason)` -- mid-term cancel (avec proratisation premium)
-  - `expire(id)` -- end_date reached
-  - `findAll(filters)`
-  - `findById(id)` (avec relations contact + product + premiums)
-- [ ] Status workflow strict avec validation
-- [ ] Numerotation policy_number sequentiel UNIQUE per tenant + format `POL-AUTO-2026-00001`
-- [ ] Endpoints :
-  - `GET /api/v1/insure/policies` (filtres : status, contact, branche, expiring_soon)
-  - `GET /api/v1/insure/policies/:id`
-  - `POST /api/v1/insure/policies/:id/cancel` (body: reason)
-  - `GET /api/v1/insure/policies/:id/timeline` (history events)
-- [ ] Audit + Kafka events
-- [ ] Tests
-
-**Fichiers crees / modifies** :
-```
-repo/packages/database/src/migrations/{date}-InsurePolicies.ts               # ~70 lignes
-repo/packages/insure/src/entities/insure-policy.entity.ts                     # ~60 lignes
-repo/packages/insure/src/services/policies.service.ts                          # ~250 lignes
-repo/packages/insure/src/services/policy-numbering.service.ts                  # ~80 lignes
-repo/apps/api/src/modules/insure/controllers/policies.controller.ts           # ~180 lignes
-```
-
-**Criteres validation** :
-- V1 (P0) : policy_number sequentiel format correct
-- V2 (P0) : Status workflow transitions valid only
-- V3 (P0) : Cancel avec reason + audit
-- V4 (P0) : Filtres expiring_soon = end_date < NOW + 60j
-- V5 (P0) : Tests 10+ scenarios
+- TR-BUILD : typecheck + build + lint OK
+- TR-TEST : tests existants + nouveaux PASS sans regression
+- TR-NO-EMOJI : 0 emoji
+- TR-DB-MIGRATION : 3 nouvelles migrations idempotentes
+- TR-RLS : 3 nouvelles tables avec RLS active
+- TR-GIT-TAG : `sprint-14-complete-v3-insure-foundation`
 
 ---
 
-## Tache 4.1.5 -- Souscription Workflow : Quote -> Policy via Signature
+# JALON GO/NO-GO SPRINT 14 v3.0
 
-**Metadonnees** : Phase 4 / Sprint 14 / P0 / 6h / Depend de 4.1.4
+## GO
 
-**But** : Workflow complete : quote accepted -> generate police PDF non-signee -> send Barid eSign signature -> webhook complete -> create policy active + apply ANRT timestamp + archive.
+Criteres P0 PASS :
+1. 7 entites Insure v2.2 livrees (preserves)
+2. 3 nouvelles entites v3.0 livrees (insure_experts + assignments + reports)
+3. KYB workflow experts fonctionnel
+4. Service designation par carriers
+5. Cross-tenant garage_to_expert_request auto-create
+6. Sprint 22.7 extension path documente
+7. 65+ tests E2E PASS (50+ v2.2 + 15+ v3.0)
+8. Coverage Sprint 14 >= 85%
+9. Tag pose
 
-**Livrables checkables** :
-- [ ] Service `souscription.service.ts`
-- [ ] Method `initiateSouscription(quoteId): Promise<{ policy_id, signing_workflow_id }>` :
-  1. Quote doit etre status='accepted'
-  2. Generate policy PDF (utilise PdfGenerator Sprint 10 + template `police.hbs`)
-  3. Create policy row status='pending_signature'
-  4. Create SigningWorkflow Sprint 10 + signers [souscripteur]
-  5. Send Barid eSign
-- [ ] Consumer `signature-completed.consumer.ts` :
-  - Listen Kafka event `signature.workflow_completed`
-  - Si workflow_id = policy.signature_workflow_id : transition policy status -> 'active' + set signed_doc_id + apply ANRT timestamp + archive
-  - Trigger creation premiums Tache 4.1.7
-  - Trigger commission Tache 4.1.9
-- [ ] Endpoint `POST /api/v1/insure/quotes/:id/initiate-souscription`
-- [ ] Tests : full workflow happy path + signature decline + signature expired
+## NO-GO
 
-**Pattern critique : workflow souscription complete**
+Si critique FAIL :
+- Migration regression (impact 7 entites v2.2)
+- RLS leak nouvelles tables experts
+- Cross-tenant fuite
 
-```typescript
-// repo/packages/insure/src/services/souscription.service.ts
-async initiateSouscription(quoteId: string): Promise<SouscriptionResult> {
-  const quote = await this.quotesRepo.findOne({ where: { id: quoteId, status: 'accepted' } });
-  if (!quote) throw new BadRequestException({ code: 'QUOTE_NOT_ACCEPTED' });
-
-  const contact = await this.contactsService.findById(quote.contact_id);
-  const product = await this.productsService.findById(quote.product_id);
-
-  // 1. Generate policy number
-  const policyNumber = await this.policyNumbering.next(quote.branche);
-
-  // 2. Create policy row pending_signature
-  const policy = await this.policiesRepo.save({
-    tenant_id: getCurrentTenantId(),
-    policy_number: policyNumber,
-    quote_id: quoteId,
-    contact_id: contact.id,
-    product_id: product.id,
-    branche: quote.branche,
-    souscripteur_data: quote.souscripteur_data,
-    garanties: quote.garanties_selected,
-    prime_annuelle: quote.prime_annuelle,
-    start_date: addDays(new Date(), 1), // demarrage J+1 par defaut
-    end_date: addYears(addDays(new Date(), 1), 1),
-    status: 'pending_signature',
-  });
-
-  // 3. Generate police PDF
-  const pdfBuffer = await this.pdfGenerator.generate('police', contact.preferred_language, {
-    policy, contact, product, garanties: quote.garanties_selected, prime: quote.prime_breakdown,
-  });
-  const pdfDoc = await this.documentService.create({
-    type: 'police', title: `Police ${policyNumber}`, file: pdfBuffer,
-    related_resource_type: 'insure_policy', related_resource_id: policy.id,
-  });
-
-  // 4. Create SigningWorkflow + send Barid eSign
-  const signingWorkflow = await this.signingWorkflowService.createWorkflow(pdfDoc.id, [{
-    name: `${contact.first_name} ${contact.last_name}`,
-    email: contact.email,
-    phone: contact.phone,
-    role: 'signer', order: 1,
-  }], { signature_type: 'qualified', expires_in_days: 14 });
-
-  await this.signingWorkflowService.sendForSignature(signingWorkflow.id);
-
-  // 5. Update policy with signature_workflow_id + conditions_doc
-  await this.policiesRepo.update(policy.id, {
-    signature_workflow_id: signingWorkflow.id,
-    conditions_doc_id: pdfDoc.id,
-  });
-
-  // 6. Audit + Kafka
-  await this.kafkaPublisher.publish(Topics.INSURE_POLICY_PENDING_SIGNATURE, { /* ... */ });
-
-  return { policy_id: policy.id, signing_workflow_id: signingWorkflow.id };
-}
-```
-
-**Fichiers crees / modifies** :
-```
-repo/packages/insure/src/services/souscription.service.ts                     # ~250 lignes
-repo/packages/insure/src/consumers/signature-completed.consumer.ts             # ~150 lignes
-repo/apps/api/src/modules/insure/controllers/souscription.controller.ts       # ~80 lignes
-```
-
-**Notes implementation** :
-- Workflow critical : echec partout = inconsistance metier (police signee mais pas premium cree)
-- Idempotency : signature event redelivered ne double pas activate policy
-- start_date J+1 : permet jour souscription (legal MA)
-- end_date = start_date + 1 an (annuel renouvelable)
-- Apres signature complete : ANRT timestamp + archive 10 ans (loi 43-20)
-
-**Criteres validation** :
-- V1 (P0) : Initiate souscription cree policy + signing workflow
-- V2 (P0) : Signature completed -> policy active + premiums + commission
-- V3 (P0) : Signature declined -> policy cancelled
-- V4 (P0) : Signature expired -> policy expired
-- V5 (P0) : Idempotency consumer
-- V6 (P0) : Tests E2E full flow 8+ scenarios
+Action : revert + reviser tache + re-tenter.
 
 ---
 
-## Tache 4.1.6 -- insure_avenants Entity + Service
+# REFERENCES
 
-**Metadonnees** : Phase 4 / Sprint 14 / P0 / 5h / Depend de 4.1.5
-
-**But** : Avenants (modifications police active) : ajout/retrait garanties + recalcul prime + workflow signature similaire.
-
-**Livrables checkables** :
-- [ ] Migration : table `insure_avenants` :
-  - id, tenant_id, policy_id (FK), avenant_number (UNIQUE par policy), type (enum 'addition_garantie' | 'suppression_garantie' | 'modification_capital' | 'changement_donnees_souscripteur'), changes (jsonb : delta), prime_annuelle_after (numeric, recalcul), prime_complement (numeric : ajustement pro-rata), effective_date, signature_workflow_id, status (enum 'pending_signature' | 'active' | 'rejected'), created_by, created_at
-- [ ] Service `avenants.service.ts` :
-  - `createAvenant(policyId, type, changes)` -- recalcul + workflow signature
-  - Recalcul prime via TarificationService Tache 4.1.2
-  - Pro-rata : calcul complement prime selon jours restants police
-  - Workflow signature similaire Tache 4.1.5
-- [ ] Endpoints :
-  - `POST /api/v1/insure/policies/:id/avenants`
-  - `GET /api/v1/insure/policies/:id/avenants`
-- [ ] Tests : create + signature + impact prime
-
-**Fichiers crees / modifies** :
-```
-repo/packages/database/src/migrations/{date}-InsureAvenants.ts               # ~50 lignes
-repo/packages/insure/src/entities/insure-avenant.entity.ts                    # ~40 lignes
-repo/packages/insure/src/services/avenants.service.ts                          # ~250 lignes
-repo/apps/api/src/modules/insure/controllers/avenants.controller.ts           # ~120 lignes
-```
-
-**Criteres validation** :
-- V1 (P0) : Create avenant ajout garantie
-- V2 (P0) : Recalcul prime + complement pro-rata
-- V3 (P0) : Workflow signature trigger
-- V4 (P0) : Tests 8+ scenarios
+- decision-013-expert-acteur-central.md (workflow expert v3.0)
+- decision-012-6-acteurs-ecosystem.md (acteur 6 Expert)
+- B-7.5a Foundation (4 expert roles + cross-tenant garage_to_expert)
+- B-22.7 Expert App (consume entites v3.0)
+- B-26.5 Carrier Portal (consume insure_experts pour designation)
+- B-21 v3.0 Sinistre Workflow (consume insure_expert_assignments)
+- B-14 v2.2 (preserve -- taches 4.1.1 a 4.1.14)
+- CHECKLIST-MASTER-EXECUTION.md section 4.1 (Sprint 14)
 
 ---
 
-## Tache 4.1.7 -- insure_premiums Echeancier + Tracking
-
-**Metadonnees** : Phase 4 / Sprint 14 / P0 / 5h / Depend de 4.1.6
-
-**But** : Premiums echeancier paiement (annuel ou fractionne mensuel/trimestriel) + tracking paiements via Pay Sprint 11.
-
-**Livrables checkables** :
-- [ ] Migration : table `insure_premiums` :
-  - id, tenant_id, policy_id (FK), echeance_number (1, 2, 3...), amount (numeric), due_date, paid_amount, paid_at, status (enum 'pending' | 'paid' | 'overdue' | 'partial'), pay_transaction_id (FK Sprint 11), reminder_sent_at (jsonb : timestamps reminders envoyes)
-- [ ] Service `premiums.service.ts` :
-  - `createSchedule(policyId, frequency: 'annual' | 'quarterly' | 'monthly')` -- generate echeances
-  - `markPaid(premiumId, payTransactionId)` -- consumer Kafka pay event
-  - `markOverdue(premiumId)` -- cron daily
-  - `findByPolicy(policyId)`
-- [ ] Annual frequency : 1 echeance prime_annuelle a start_date
-- [ ] Quarterly : 4 echeances prime/4 + supplement 5% (frais fractionnement)
-- [ ] Monthly : 12 echeances prime/12 + supplement 8%
-- [ ] Consumer Kafka `pay.transaction_captured` :
-  - Si related_resource_type='insure_premium' : update premium status='paid'
-  - Trigger ecriture comptable (Sprint 12 deja consumer general)
-- [ ] Endpoints :
-  - `GET /api/v1/insure/policies/:id/premiums`
-  - `POST /api/v1/insure/premiums/:id/pay` (initiate Pay)
-- [ ] Audit + Kafka events
-- [ ] Tests
-
-**Fichiers crees / modifies** :
-```
-repo/packages/database/src/migrations/{date}-InsurePremiums.ts               # ~50 lignes
-repo/packages/insure/src/entities/insure-premium.entity.ts                    # ~40 lignes
-repo/packages/insure/src/services/premiums.service.ts                          # ~200 lignes
-repo/packages/insure/src/consumers/pay-to-premium.consumer.ts                  # ~100 lignes
-repo/apps/api/src/modules/insure/controllers/premiums.controller.ts           # ~120 lignes
-```
-
-**Criteres validation** :
-- V1 (P0) : Schedule annual / quarterly / monthly
-- V2 (P0) : Pay capture -> premium paid auto
-- V3 (P0) : Overdue cron daily
-- V4 (P0) : Tests 8+ scenarios
-
----
-
-## Tache 4.1.8 -- insure_renewals Cron 60j Avant Expiration
-
-**Metadonnees** : Phase 4 / Sprint 14 / P0 / 5h / Depend de 4.1.7
-
-**But** : Cron job auto-detect polices expirant dans 60 jours + generate renewal quote + envoie email proposal.
-
-**Livrables checkables** :
-- [ ] Migration : table `insure_renewals` :
-  - id, tenant_id, policy_id (FK), renewal_quote_id (FK insure_quotes), status (enum 'proposed' | 'accepted' | 'declined' | 'expired'), proposed_at, accepted_at, declined_at, declined_reason, new_policy_id (FK insure_policies si renewed)
-- [ ] Service `renewals.service.ts` :
-  - `proposeRenewal(policyId)` -- generate quote with same product/garanties + envoyer email
-  - `acceptRenewal(renewalId)` -- trigger souscription new policy + cancel old expiry
-  - `declineRenewal(renewalId, reason)`
-- [ ] Cron job daily : `findPoliciesExpiringIn(60)` -> propose renewal pour chaque
-- [ ] Quote renewal : meme product + garanties + recalcul tarification (peut changer)
-- [ ] Endpoints :
-  - `POST /api/v1/insure/policies/:id/propose-renewal` (manual trigger)
-  - `POST /api/v1/insure/renewals/:id/accept`
-  - `POST /api/v1/insure/renewals/:id/decline`
-- [ ] Tests : cron + workflow
-
-**Fichiers crees / modifies** :
-```
-repo/packages/database/src/migrations/{date}-InsureRenewals.ts                # ~40 lignes
-repo/packages/insure/src/entities/insure-renewal.entity.ts                    # ~35 lignes
-repo/packages/insure/src/services/renewals.service.ts                          # ~200 lignes
-repo/packages/insure/src/jobs/renewal-cron.job.ts                              # ~100 lignes
-repo/apps/api/src/modules/insure/controllers/renewals.controller.ts           # ~100 lignes
-```
-
-**Criteres validation** :
-- V1 (P0) : Cron daily detect expiring 60j
-- V2 (P0) : Renewal quote genere + email envoyee
-- V3 (P0) : Accept renewal -> new policy
-- V4 (P0) : Tests 6+ scenarios
-
----
-
-## Tache 4.1.9 -- insure_commissions Auto-Calcul + Books
-
-**Metadonnees** : Phase 4 / Sprint 14 / P0 / 5h / Depend de 4.1.8
-
-**But** : Auto-calcul commission courtier a chaque police active + tracking + integration Books (ecriture compte 706 produits).
-
-**Livrables checkables** :
-- [ ] Migration : table `insure_commissions` :
-  - id, tenant_id, policy_id (FK), premium_id (FK -- commission per echeance OU per policy), amount (numeric), commission_rate_percent, status (enum 'pending' | 'collected' | 'paid_to_broker'), collected_at, paid_at, journal_entry_id (FK books)
-- [ ] Service `commissions.service.ts` :
-  - `calculate(policyId, premiumId): Decimal` -- prime x commission_rate_percent
-  - `recordCommission(policyId, premiumId)` -- INSERT row + create journal entry (Sprint 12 : 411 client / 706 commissions)
-- [ ] Trigger via consumer Kafka `insure.premium_paid` -> recordCommission
-- [ ] Endpoint `GET /api/v1/insure/commissions` (filtres + stats)
-- [ ] Stats : total commissions YTD, per branche, per assureur
-- [ ] Tests : calcul + journal entry creation
-
-**Fichiers crees / modifies** :
-```
-repo/packages/database/src/migrations/{date}-InsureCommissions.ts             # ~40 lignes
-repo/packages/insure/src/entities/insure-commission.entity.ts                  # ~35 lignes
-repo/packages/insure/src/services/commissions.service.ts                       # ~200 lignes
-repo/packages/insure/src/consumers/premium-paid-to-commission.consumer.ts      # ~120 lignes
-repo/apps/api/src/modules/insure/controllers/commissions.controller.ts        # ~120 lignes
-```
-
-**Criteres validation** :
-- V1 (P0) : Calcul commission correct (prime x rate)
-- V2 (P0) : Premium paid -> commission recorded auto
-- V3 (P0) : Journal entry creee
-- V4 (P0) : Stats agreges
-- V5 (P0) : Tests 8+ scenarios
-
----
-
-## Tache 4.1.10 -- Cron Reminders Primes Echues
-
-**Metadonnees** : Phase 4 / Sprint 14 / P0 / 4h / Depend de 4.1.9
-
-**But** : Cron jobs envoyant reminders primes a echeance : J-15, J-7, J-3 + post-echeance (overdue).
-
-**Livrables checkables** :
-- [ ] Cron job daily `premium-reminders.job.ts` :
-  - Find premiums status='pending', due_date in [J-15, J-7, J-3, J-0, J+3, J+7, J+15]
-  - Pour chaque : envoie reminder via Comm orchestrator (Sprint 9) + template `payment_due_reminder`
-  - Track `reminder_sent_at` jsonb pour eviter doublons
-- [ ] Templates Comm 3 locales pre-remplis (Sprint 9 deja templates)
-- [ ] Escalade : J+15 overdue -> notify broker + super admin tenant (action requise)
-- [ ] Tests
-
-**Fichiers crees / modifies** :
-```
-repo/packages/insure/src/jobs/premium-reminders.cron.ts                        # ~150 lignes
-```
-
-**Criteres validation** :
-- V1 (P0) : Cron daily emit reminders
-- V2 (P0) : Anti-doublon via reminder_sent_at
-- V3 (P0) : Escalade J+15 super admin
-- V4 (P0) : Tests 6+ scenarios
-
----
-
-## Tache 4.1.11 -- Auto-Log Interactions CRM + ACAPS Data Feed
-
-**Metadonnees** : Phase 4 / Sprint 14 / P0 / 4h / Depend de 4.1.10
-
-**But** : Consumer Kafka events Insure -> auto-log interactions CRM Sprint 8 (timeline contact) + alimente ACAPS reports Sprint 12 (feed donnees reelles).
-
-**Livrables checkables** :
-- [ ] Consumer `insure-events-to-crm.consumer.ts` :
-  - Listen events `insure.policy_signed`, `insure.policy_cancelled`, `insure.premium_paid`, `insure.quote_sent`
-  - Auto-log interaction CRM type='note' avec content = "Police POL-AUTO-2026-00042 signee"
-- [ ] Update ACAPS reports (Sprint 12) : utiliser donnees reelles polices au lieu fixtures
-- [ ] Sprint 12 reports auto-enrichis :
-  - quarterly_portfolio_report consume `insure_policies` + `insure_quotes`
-  - quarterly_claims_report consume `repair_sinistres` (Sprint 22 ajoutera)
-- [ ] Endpoint resync ACAPS data : `POST /api/v1/admin/acaps/resync-source-data`
-- [ ] Tests integration
-
-**Fichiers crees / modifies** :
-```
-repo/packages/crm/src/consumers/insure-events-to-crm.consumer.ts               # ~150 lignes
-repo/packages/compliance/src/services/quarterly-portfolio-report.service.ts    # update : query reelle data
-```
-
-**Criteres validation** :
-- V1 (P0) : Insure events -> CRM interactions logged
-- V2 (P0) : ACAPS reports utilisent donnees reelles
-- V3 (P0) : Tests 6+ scenarios
-
----
-
-## Tache 4.1.12 -- Endpoints REST + Permissions
-
-**Metadonnees** : Phase 4 / Sprint 14 / P0 / 6h / Depend de 4.1.11
-
-**But** : Consolidation endpoints `/api/v1/insure/*` + permissions Insure dans matrice RBAC Sprint 7.
-
-**Livrables checkables** :
-- [ ] Endpoints livres dans taches precedentes (consolidation)
-- [ ] Permissions ajoutees catalog (Sprint 7) :
-  - `insure.products.create/read/update`
-  - `insure.quotes.create/send/accept/reject`
-  - `insure.policies.read/cancel/avenant`
-  - `insure.premiums.read/pay`
-  - `insure.renewals.propose/accept/decline`
-  - `insure.commissions.read`
-- [ ] Mise a jour PermissionsMatrix Sprint 7 : roles broker_* avec permissions Insure
-- [ ] Tests permissions per role
-
-**Fichiers crees / modifies** :
-```
-repo/packages/auth/src/rbac/permissions.enum.ts                                # update : ajout permissions Insure
-repo/packages/auth/src/rbac/permissions-matrix.ts                               # update : roles broker_* enrichis
-repo/apps/api/test/insure/permissions.e2e-spec.ts                               # tests RBAC
-```
-
-**Criteres validation** :
-- V1 (P0) : 15+ permissions Insure ajoutees
-- V2 (P0) : Roles broker_admin/user/assistant : permissions correctes
-- V3 (P0) : Tests RBAC 10+ scenarios
-
----
-
-## Tache 4.1.13 -- Dashboards Insure
-
-**Metadonnees** : Phase 4 / Sprint 14 / P1 / 4h / Depend de 4.1.12
-
-**But** : Etendre dashboards Sprint 13 avec metriques Insure-specific.
-
-**Livrables checkables** :
-- [ ] Dashboards added :
-  - `GET /api/v1/analytics/dashboards/insure-portfolio` (count polices per branche + total premium volume)
-  - `GET /api/v1/analytics/dashboards/insure-conversion` (quote -> policy conversion rate)
-  - `GET /api/v1/analytics/dashboards/insure-renewals` (renewal acceptance rate)
-  - `GET /api/v1/analytics/dashboards/insure-commissions` (commissions YTD per assureur)
-- [ ] ETL Sprint 13 : add tables fct_policies + fct_quotes + fct_commissions a sync
-- [ ] Cache Redis 5min
-- [ ] Tests
-
-**Fichiers crees / modifies** :
-```
-repo/packages/analytics/src/etl/postgres-to-clickhouse.etl.ts                  # update : sync fct_policies
-repo/infrastructure/clickhouse/schemas/fct_{policies,quotes,commissions}.sql   # 3 tables
-repo/apps/api/src/modules/analytics/services/insure-dashboards.service.ts      # ~200 lignes
-```
-
-**Criteres validation** :
-- V1 (P1) : 4 dashboards Insure
-- V2 (P1) : ETL etendu
-- V3 (P1) : Tests 6+ scenarios
-
----
-
-## Tache 4.1.14 -- Tests E2E (50+) + Fixtures + Seeds
-
-**Metadonnees** : Phase 4 / Sprint 14 / P0 / 11h / Depend de 4.1.13
-
-**But** : Suite tests E2E exhaustive + fixtures realistes 5 branches + seeds dev complete.
-
-**Livrables checkables** :
-
-**Tests E2E (50+)** :
-- [ ] Products : CRUD templates + variants + 5 branches (8)
-- [ ] Tarification : 5 calculators x 5 scenarios = 25 (25)
-- [ ] Quotes : create + send + accept + reject + expire (5)
-- [ ] Policies : create from quote + signature + cancel + expire (5)
-- [ ] Avenants : workflow + recalcul prime (3)
-- [ ] Premiums : annual / quarterly / monthly + payment integration (4)
-- [ ] Renewals : cron + accept + decline (3)
-- [ ] Commissions : auto-calcul + journal entry (3)
-
-**Fixtures** :
-- 50 polices actives (10 par branche) avec premiums + commissions historiques
-- 30 quotes en cours (mix accepted, sent, draft)
-- 10 renewals proposees
-
-**Seeds** :
-- `seed-insure.ts` : products templates + fixtures complete
-
-**Fichiers crees / modifies** :
-```
-repo/apps/api/test/insure/{50+ specs}.e2e-spec.ts
-repo/infrastructure/scripts/seed-insure.ts                                     # ~400 lignes
-```
-
-**Criteres validation** :
-- V1 (P0) : 50+ tests passent
-- V2 (P0) : CI green
-- V3 (P0) : Fixtures realistes 5 branches
-- V4 (P0) : Reproducibility 5x
-
----
-
-## Sortie du Sprint 14
-
-A la fin de l'execution des 14 taches :
-
-```
-Insure Foundation operational :
-  - 7 entities : products, quotes, policies, avenants, premiums, renewals, commissions
-  - Catalog 5 branches (auto / sante / habitation / RC pro / voyage)
-  - 10+ products templates super admin
-  - Tarification engine basique (5 calculators per branche)
-  - Quotes -> Policies workflow avec signature Barid eSign + ANRT timestamp + archive
-  - Premiums echeancier (annual / quarterly / monthly)
-  - Renewals cron 60j + workflow
-  - Commissions auto-calcul + integration Books
-  - Reminders primes (J-15/J-7/J-3 + overdue J+3/J+7/J+15)
-  - Auto-log interactions CRM + ACAPS data feed
-  - 4 dashboards Insure-specific
-
-50+ tests E2E exhaustifs
-```
-
-**Sprint 15 (Insure Connecteurs Assureurs) demarre avec** :
-- Foundation Insure operationnelle
-- Connecteurs API : Wafa Assurance, Atlanta Assurance, Saham, RMA, AXA
-- Tarification reelle assureurs (vs lookup tables Sprint 14)
-- Synchronisation polices + sinistres bidirectionnel
-
----
-
-## Specifications Format Tache (pour Generation par Cowork)
-
-Cowork genere `task-4.1.X-*.md` dans `00-pilotage/prompts-taches/sprint-14-insure-foundation/`.
-
-**Patterns code inline conserves** : produit avec garanties JSONB exemple Auto, tarification auto calculator avec decimal.js + TVA 14% MA, workflow souscription complete (6 etapes).
-
-**Reference** : `00-pilotage/documentation/3-schemas-database-PARTIE2.sql` couvre tables insure_*.
-
----
-
-**Fin du meta-prompt B-14 v2.2 format Option B.**
+**Fin du meta-prompt B-14 v3.0 Insure Foundation + 3 entites experts.**

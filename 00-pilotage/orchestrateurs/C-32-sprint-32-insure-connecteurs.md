@@ -1,835 +1,707 @@
-# ORCHESTRATEUR SPRINT 32 -- Phase 7 / Sprint 4 : Insure Connecteurs Assureurs (5 connecteurs)
-# 13 taches sequentielles + verification finale
+# ORCHESTRATEUR SPRINT 32 v3.0 -- Phase 7 / Sprint 2 : Connecteurs Insure 8 Carriers Maroc
+# REFONTE v3.0 : 18 taches sequentielles + verification finale
 # AUCUNE EMOJI AUTORISEE
 
-**Version** : v2.2 (Option B detaillee)
-**Phase** : 7 -- Hardening + Integrations + Pilote
-**Sprint** : 32 / 35 (cumul) -- Sprint 4 dans Phase 7
-**Reference meta-prompt** : `B-32-sprint-32-insure-connecteurs.md`
+**Version** : v3.0 (REFONTE complete v2.2 -- 8 carriers vs 4 carriers v2.2)
+**Phase** : 7 -- Connecteurs + Integrations Carriers
+**Sprint** : 32 / 40 (cumul v3.0)
+**Reference meta-prompt** : `B-32-sprint-32-insure-connecteurs-v3.md`
 **Reference verification** : `V-32-sprint-32-verification.md`
-**Numerotation taches** : 7.4.1 a 7.4.13
-**Effort total** : ~80 heures developpement / 2 semaines
-**Apport metier** : 5 connecteurs assureurs reels (Wafa+Atlanta+Saham+RMA+AXA)
+**Numerotation taches** : 7.2.1 a 7.2.18
+**Effort total** : ~120 heures developpement / 2.5 semaines (vs 60h v2.2)
+**Apport metier** : Couverture carriers Maroc ~85% marche (vs ~45% v2.2)
 
 ---
 
-Tu es **Claude Code (ou Cowork)**. Tu dois executer **TOUTES les 13 taches** du Sprint 32 **UNE PAR UNE** dans l'ordre defini ci-dessous, puis lancer la verification automatique du sprint.
+Tu es **Claude Code (ou Cowork)**. Execute **TOUTES les 18 taches** Sprint 32 v3.0 **UNE PAR UNE** dans l'ordre, puis lance V-32.
 
-**Cet orchestrateur extrait le contenu detaille de chaque tache depuis B-32** -- pour code complet, patterns critiques et tests exhaustifs, lire le meta-prompt B-32 reference dans chaque tache.
+**Cet orchestrateur extrait le contenu detaille depuis B-32 v3.0** -- pour patterns code @insurtech/insure-connector + 8 implementations carriers + Circuit Breaker + reconciliation + monitoring, lire B-32 dans chaque tache.
+
+**REFONTE STRATEGIQUE v3.0** :
+- 8 carriers vs 4 v2.2 (decouverte realite ecosystem Maroc Saad terrain)
+- Strategy multi-tiers :
+  - **Tier 1** : 4 carriers API REST native modern (AXA + Allianz + Saham + Sanad)
+  - **Tier 2** : 1 carrier hybrid API + scraping (Wafa Assurance)
+  - **Tier 3** : 3 carriers fallback email + manual queue (RMA + Atlanta + MAMDA)
+- Reconciliation nightly + alerting per-carrier
+- Circuit Breaker + retry exponentiel + dead-letter queue
+- Couverture marche estimee : ~85% sinistres auto Maroc
 
 ---
 
-## OBJECTIF DU SPRINT 32
+## OBJECTIF DU SPRINT 32 v3.0
 
-Sprint 32 (7.4) -- Insure Connecteurs Assureurs (5 connecteurs). Voir B-32-sprint-32-insure-connecteurs.md pour contexte detaille.
+Sprint 32 (7.2) -- Connecteurs Insure 8 carriers Maroc. Voir B-32 v3.0 pour contexte detaille.
+
+Module package @insurtech/insure-connector avec :
+- Interface commune `ICarrierConnector` (15+ methodes)
+- 8 implementations carriers specifiques (heritage Strategy pattern)
+- Capability discovery par carrier (savoir quelles operations sont supportees)
+- Fallback automatique Tier 1 -> Tier 2 -> Tier 3 si carrier degraded
+- Reconciliation diff Maroc carrier daily + alerting
+- Audit ACAPS chaque appel external API
+- Monitoring per-carrier (latency + success_rate + error_rate)
+
+---
+
+## CONNECTEURS 8 CARRIERS DETAILLES
+
+### Tier 1 -- API REST native modern (4 carriers, ~50% marche)
+1. **AXA Assurance Maroc** -- API REST + OAuth 2.0 + JSON + webhooks
+2. **Allianz Maroc** -- API REST + JWT + JSON + polling
+3. **Saham Assurance** -- API REST + API Key + JSON + webhooks
+4. **Sanad Assurance** -- API REST + Basic Auth + JSON + polling
+
+### Tier 2 -- Hybrid API REST + scraping (1 carrier, ~15% marche)
+5. **Wafa Assurance** -- API partielle (devis OK + recovery email) + scraping Puppeteer broker portal (status sinistres / paiements)
+
+### Tier 3 -- Fallback email + manual queue (3 carriers, ~20% marche)
+6. **RMA Assurance** -- 100% email + IMAP parsing replies + manual queue broker_admin
+7. **Atlanta Assurance** -- Email + fax automated + manual queue
+8. **MAMDA Mutuelle** -- Cooperative ancienne, 100% manual queue + email
+
+**Couverture totale** : ~85% sinistres auto Maroc -- vs ~45% v2.2 (4 carriers seulement)
 
 ---
 
 ## STRUCTURE DES FICHIERS
 
-**Prompts des taches** (a executer en sequence) :
 ```
 skalean-insurtech/00-pilotage/prompts-taches/sprint-32-insure-connecteurs/
-  task-7.4.1-prompt.md       # InsurerConnectorInterface + Base Abstract Class
-  task-7.4.2-prompt.md       # Wafa Assurance Connector (Priorite 1)
-  task-7.4.3-prompt.md       # Atlanta Assurance Connector
-  task-7.4.4-prompt.md       # Saham Connector
-  task-7.4.5-prompt.md       # RMA Connector
-  task-7.4.6-prompt.md       # AXA Maroc Connector
-  task-7.4.7-prompt.md       # TarificationOrchestrator (Routing + Fallback)
-  task-7.4.8-prompt.md       # SouscriptionOrchestrator (Push Police vers Assureur)
-  task-7.4.9-prompt.md       # Sync Polices Service (Pull Updates Assureurs)
-  task-7.4.10-prompt.md       # Sinistres Connector : Declaration + Pull Updates
-  task-7.4.11-prompt.md       # Webhook Receivers Per Assureur (5 Endpoints)
-  task-7.4.12-prompt.md       # Endpoints REST + Admin Monitoring
-  task-7.4.13-prompt.md       # Tests E2E (40+) avec Mocks 5 Assureurs
+  task-7.2.1-prompt.md   # Package @insurtech/insure-connector + interface commune
+  task-7.2.2-prompt.md   # Base abstract class CarrierConnectorBase + Circuit Breaker + retry
+  task-7.2.3-prompt.md   # Capability discovery + registry per carrier
+  task-7.2.4-prompt.md   # Connecteur AXA (Tier 1) -- OAuth 2.0 + webhooks
+  task-7.2.5-prompt.md   # Connecteur Allianz (Tier 1) -- JWT + polling
+  task-7.2.6-prompt.md   # Connecteur Saham (Tier 1) -- API Key + webhooks
+  task-7.2.7-prompt.md   # Connecteur Sanad (Tier 1) -- Basic Auth + polling
+  task-7.2.8-prompt.md   # NOUVEAU Connecteur Wafa (Tier 2) -- Hybrid API + Puppeteer
+  task-7.2.9-prompt.md   # NOUVEAU Connecteur RMA (Tier 3) -- Email + IMAP parsing
+  task-7.2.10-prompt.md  # NOUVEAU Connecteur Atlanta (Tier 3) -- Email + fax automated
+  task-7.2.11-prompt.md  # NOUVEAU Connecteur MAMDA (Tier 3) -- Manual queue + email
+  task-7.2.12-prompt.md  # Connector factory + selection logic per carrier
+  task-7.2.13-prompt.md  # NOUVEAU Fallback automatique degraded carriers
+  task-7.2.14-prompt.md  # Reconciliation nightly cron + diff alerts
+  task-7.2.15-prompt.md  # Audit ACAPS toutes API calls + retention 10 ans
+  task-7.2.16-prompt.md  # Monitoring per-carrier dashboard + Grafana
+  task-7.2.17-prompt.md  # NOUVEAU Manual queue broker_admin (Tier 3 carriers)
+  task-7.2.18-prompt.md  # Tests E2E + simulation 8 carriers + chaos engineering
 ```
 
-**Verification du sprint** (a lancer APRES toutes les taches) :
-```
-skalean-insurtech/00-pilotage/meta-prompts/phase-V-verification/V-32-sprint-32-verification.md
-```
-
-**Code source modifie** : `skalean-insurtech/repo/` (jamais 00-pilotage/)
-
-**Decisions strategiques applicables** : voir `00-pilotage/decisions/001-010-*.md`
+**Verification** : `V-32-sprint-32-verification.md`
+**Decisions cles** : 012 (ecosystem 6 acteurs) + 015 (Demo Day 30 juin) + Sprint 14 Insure dependency
 
 ---
 
 ## REGLES D'EXECUTION CRITIQUES
 
-### Execution sequentielle obligatoire
+Sequentielle obligatoire (compile + tests + lint + commit avant tache suivante).
 
-Tu DOIS attendre qu'une tache soit COMPLETEMENT TERMINEE avant de demarrer la suivante :
-1. **Lire** le fichier prompt de la tache
-2. **Implementer** TOUT le code demande dans `repo/`
-3. **Compiler** (`pnpm tsc --noEmit` -- 0 erreur)
-4. **Tester** (`pnpm vitest run` -- tous tests PASS)
-5. **Linter** (`pnpm lint` -- 0 erreur)
-6. **Commit** Conventional Commits (`git add -A && git commit`)
-7. **SEULEMENT APRES** le commit, passer a la tache suivante
+### Si une tache echoue : 3 tentatives reparation puis FAIL + continuer.
 
-Raison : les taches ont des **dependances** entre elles. La tache N peut importer du code cree par la tache N-1. Executer en parallele creerait des conflits irreconciliables.
+### Verification finale : V-32 automatique apres 18 taches.
 
-### Si une tache echoue
+---
 
-1. Tente de **reparer l'erreur** (3 tentatives maximum)
-2. Si impossible, **note l'erreur** dans le rapport et **passe** a la tache suivante
-3. **N'arrete JAMAIS** l'execution du sprint entier -- continue les taches restantes
-4. La verification finale V-32 identifiera taches FAIL pour reprise ciblee
+## REGLES ABSOLUES skalean-insurtech v3.0
 
-### Verification finale automatique
+**Specifique Sprint 32 v3.0** :
+- **Package @insurtech/insure-connector** (NOUVEAU v3.0) -- abstrait integrations carriers
+- **Strategy Pattern + Factory** : `ICarrierConnector` interface + 8 implementations + `CarrierConnectorFactory.create(carrierId)`
+- **Circuit Breaker** : `opossum` library -- ouvre apres 5 erreurs consecutives, half-open apres 30s
+- **Retry exponentiel** : 3 tentatives (1s + 2s + 4s) avec jitter
+- **Dead-letter queue** : Kafka topic `insurtech.dlq.carrier-calls` pour replays manuels
+- **Reconciliation nightly** : cron 02:00 Maroc -- diff carrier official vs local DB + alert > 5% gap
+- **Audit ACAPS** : every API call logged (carrier_id + endpoint + method + request_hash + response_hash + status + duration) -- 10 ans retention
+- **Capability discovery** : table `insure_carrier_capabilities` (carrier_id + capability_name + supported boolean + notes)
+- **Manual queue** (Tier 3) : interface broker_admin web pour traiter sinistres manuels avec form structure standard
+- **Style code** : Sprint 7.5a permissions `carrier.*` reutilisees -- jamais redefinir
+- **Monitoring Prometheus** : metrics per-carrier exposes `/metrics` endpoint Sprint 6
+- **Webhooks securises** : signature HMAC verification + IP allowlist
 
-APRES avoir execute les 13 taches et commite chacune :
+---
+
+## CONTEXTE PHASE 7 -- Connecteurs + Integrations Carriers
+
+Sprint 32 (7.2) -- **Connecteurs Insure 8 carriers Maroc** -- suit Sprint 31 (Connecteurs Garages) et precede Sprint 33 (Connecteurs Experts).
+
+### Modules concernes
+
+`@insurtech/insure-connector` (NOUVEAU package v3.0), `@insurtech/insure` (Sprint 14 consume), `apps/api/src/modules/connectors/`, Kafka topics, Prometheus.
+
+### Apport metier
+
+Couverture marche carriers Maroc ~85% (vs ~45% v2.2) + resilience (Circuit Breaker + fallback Tier 1 -> 2 -> 3) + audit complet ACAPS + reconciliation automatique. **Foundation Demo Day 30 juin 2026** -- sans Sprint 32, pas de demo end-to-end realistic avec carriers reels.
+
+---
+
+## EXECUTION SEQUENTIELLE DES 18 TACHES
+
+---
+
+### Tache 1 / 18 : Package @insurtech/insure-connector + interface commune
+
+**Metadonnees** : P0 | 5h | Depend de : Sprint 14 (Insure Module)
+
+**But** : Bootstrap package @insurtech/insure-connector avec interface commune ICarrierConnector + 15+ methodes standardisees.
+
+**Commande de lecture** :
 ```bash
+cat skalean-insurtech/00-pilotage/prompts-taches/sprint-32-insure-connecteurs/task-7.2.1-prompt.md
+```
+
+**Actions principales attendues** :
+- Dossier `repo/packages/insure-connector/`
+- Interface `ICarrierConnector` avec methodes :
+  - `getQuote(input)` -- devis prime
+  - `subscribePolicy(input)` -- souscription
+  - `getPolicyStatus(policyId)` -- status police
+  - `cancelPolicy(policyId, reason)` -- resiliation
+  - `submitFnol(input)` -- declaration sinistre
+  - `getSinistreStatus(sinistreId)` -- status sinistre
+  - `validateExpertReport(input)` -- validation rapport expert
+  - `approveDevis(input)` -- approbation devis garage
+  - `triggerPayment(input)` -- declenchement paiement
+  - `getPaymentStatus(paymentId)`
+  - `listClaimsHistory(policyId)`
+  - `checkCoverage(policyId, sinistreType)`
+  - `getReimbursementLimits(policyId)`
+  - `subscribeWebhook(event, url)`
+  - `healthCheck()` -- ping carrier API
+- Types `carrier.types.ts` (CarrierIdEnum + 8 valeurs)
+- Schemas Zod validation per methode
+- Tests interface 4+
+
+**Fichiers cibles principaux** :
+- `repo/packages/insure-connector/package.json`
+- `repo/packages/insure-connector/src/interfaces/ICarrierConnector.ts`
+- `repo/packages/insure-connector/src/types/carrier.types.ts`
+- `repo/packages/insure-connector/src/index.ts`
+
+**Criteres P0 cles** :
+- V1 (P0) : Package @insurtech/insure-connector cree
+- V2 (P0) : Interface 15+ methodes definies
+- V3 (P0) : 8 carriers enum
+- V4 (P0) : TypeScript strict OK
+
+**Commit** :
+```bash
+git commit -m "feat(sprint-32): package @insurtech/insure-connector + interface commune 15 methodes
+
+Task: 7.2.1
+Sprint: 32 (Phase 7 / Sprint 2)
+Phase: 7 -- Connecteurs + Integrations Carriers
+Decisions: decision-012 + decision-015 demo day"
+```
+
+---
+
+### Tache 2 / 18 : Base abstract class CarrierConnectorBase + Circuit Breaker + retry
+
+**Metadonnees** : P0 | 6h | Depend de : 7.2.1
+
+**But** : Classe abstraite parente avec Circuit Breaker + retry exponentiel + dead-letter queue + audit ACAPS.
+
+**Commande de lecture** :
+```bash
+cat skalean-insurtech/00-pilotage/prompts-taches/sprint-32-insure-connecteurs/task-7.2.2-prompt.md
+```
+
+**Actions principales attendues** :
+- Classe `CarrierConnectorBase` (abstract) avec :
+  - Circuit Breaker config (opossum library : timeout 10s + errorThresholdPercentage 50% + resetTimeout 30s)
+  - Method `executeWithResilience<T>(operation, fallback?)` -- wraps Circuit Breaker + retry
+  - Retry config : 3 tentatives avec backoff exponentiel (1s + 2s + 4s) + jitter
+  - Dead-letter queue : si toutes tentatives echouent, publish Kafka `insurtech.dlq.carrier-calls`
+  - Audit ACAPS : log every call via `acapsAuditService.logCarrierCall()` -- carrier_id + endpoint + method + request_hash + response_hash + status + duration_ms
+- Tests 10+
+
+**Fichiers cibles principaux** :
+- `repo/packages/insure-connector/src/base/CarrierConnectorBase.ts`
+- `repo/packages/insure-connector/src/circuit-breaker/CircuitBreakerConfig.ts`
+- `repo/packages/insure-connector/src/audit/CarrierAuditLogger.ts`
+
+**Criteres P0 cles** :
+- V1 (P0) : CarrierConnectorBase abstract class
+- V2 (P0) : Circuit Breaker opossum configure
+- V3 (P0) : Retry exponentiel 3 tentatives
+- V4 (P0) : Dead-letter queue Kafka publish
+- V5 (P0) : Audit ACAPS log every call
+
+**Commit** :
+```bash
+git commit -m "feat(sprint-32): base abstract class + circuit breaker + retry + dlq + audit acaps
+
+Task: 7.2.2"
+```
+
+---
+
+### Tache 3 / 18 : Capability discovery + registry per carrier
+
+**Metadonnees** : P0 | 4h | Depend de : 7.2.2
+
+**But** : Service capability discovery + table `insure_carrier_capabilities` -- savoir quelles operations sont supportees par chaque carrier.
+
+**Actions** :
+- Migration `1735000000NNN-CreateInsureCarrierCapabilities.ts` -- table avec `carrier_id`, `capability_name`, `supported boolean`, `tier (1/2/3)`, `notes`, `last_verified_at`
+- Service `carrier-capability.service.ts` :
+  - `getCapabilities(carrierId)` -- retourne map capabilities
+  - `isSupported(carrierId, capability)` -- check rapide
+  - `updateCapability(carrierId, capability, supported, notes)` -- maintenance
+- Seeds initiales 8 carriers x 15 capabilities = 120 entries
+- Tests 8+
+
+**Commit** :
+```bash
+git commit -m "feat(sprint-32): capability discovery + registry 120 entries 8 carriers
+
+Task: 7.2.3"
+```
+
+---
+
+### Tache 4 / 18 : Connecteur AXA (Tier 1) -- OAuth 2.0 + webhooks
+
+**Metadonnees** : P0 | 7h | Depend de : 7.2.3
+
+**But** : Implementation `AXAConnector extends CarrierConnectorBase` -- API REST AXA Maroc + OAuth 2.0 + webhooks signature HMAC.
+
+**Commande de lecture** :
+```bash
+cat skalean-insurtech/00-pilotage/prompts-taches/sprint-32-insure-connecteurs/task-7.2.4-prompt.md
+```
+
+**Actions principales** :
+- Classe `AXAConnector` :
+  - OAuth 2.0 client credentials flow -- tokens cached + refresh 1h avant expiration
+  - 15+ methodes implementees AXA REST API
+  - Webhook handler `/api/v1/connectors/axa/webhook` avec HMAC signature verify + IP allowlist
+  - Events recus : policy.subscribed + fnol.acknowledged + sinistre.status_changed + payment.completed
+- Service `axa-webhook-handler.service.ts.processWebhook(payload, signature)`
+- Tests 12+ (mocks AXA API)
+
+**Criteres P0 cles** :
+- V1 (P0) : AXAConnector implements ICarrierConnector
+- V2 (P0) : OAuth 2.0 token refresh
+- V3 (P0) : Webhook HMAC verification
+- V4 (P0) : 15+ methodes coverage
+
+**Commit** :
+```bash
+git commit -m "feat(sprint-32): connecteur axa tier 1 oauth 2.0 + webhooks hmac
+
+Task: 7.2.4
+Decisions: tier 1 api rest native carriers modernes"
+```
+
+---
+
+### Tache 5 / 18 : Connecteur Allianz (Tier 1) -- JWT + polling
+
+**Metadonnees** : P0 | 7h | Depend de : 7.2.4
+
+**But** : `AllianzConnector` -- API Allianz Maroc + JWT auth + polling (pas de webhooks).
+
+**Actions** :
+- JWT auth header `Authorization: Bearer <token>` -- token renewal cron 30 min
+- Polling service `allianz-polling.service.ts` cron 5 min check status changes
+- 15+ methodes Allianz REST
+- Tests 12+
+
+**Commit** :
+```bash
+git commit -m "feat(sprint-32): connecteur allianz tier 1 jwt + polling
+
+Task: 7.2.5"
+```
+
+---
+
+### Tache 6 / 18 : Connecteur Saham (Tier 1) -- API Key + webhooks
+
+**Metadonnees** : P0 | 7h | Depend de : 7.2.5
+
+**But** : `SahamConnector` -- API Saham + API Key header + webhooks.
+
+**Actions** :
+- API Key static header `X-Saham-Api-Key`
+- Webhooks Saham (similar AXA mais signature differente -- proprietary SHA1 base64)
+- 15+ methodes Saham REST
+- Tests 12+
+
+**Commit** :
+```bash
+git commit -m "feat(sprint-32): connecteur saham tier 1 api key + webhooks
+
+Task: 7.2.6"
+```
+
+---
+
+### Tache 7 / 18 : Connecteur Sanad (Tier 1) -- Basic Auth + polling
+
+**Metadonnees** : P0 | 7h | Depend de : 7.2.6
+
+**But** : `SanadConnector` -- API Sanad + Basic Auth + polling.
+
+**Actions** :
+- Basic Auth (username:password base64)
+- Polling cron 10 min
+- 15+ methodes Sanad REST
+- Tests 12+
+
+**Commit** :
+```bash
+git commit -m "feat(sprint-32): connecteur sanad tier 1 basic auth + polling
+
+Task: 7.2.7"
+```
+
+---
+
+### Tache 8 / 18 : NOUVEAU Connecteur Wafa (Tier 2) -- Hybrid API + Puppeteer
+
+**Metadonnees** : P0 | 10h | Depend de : 7.2.7
+
+**But** : **NOUVEAU v3.0** -- `WafaConnector` -- API partielle (devis + paiements) + Puppeteer scraping broker portal (status sinistres).
+
+**Commande de lecture** :
+```bash
+cat skalean-insurtech/00-pilotage/prompts-taches/sprint-32-insure-connecteurs/task-7.2.8-prompt.md
+```
+
+**Actions principales** :
+- API Wafa partielle :
+  - `getQuote()` + `subscribePolicy()` + `getPaymentStatus()` -- via API REST
+- Puppeteer scraping :
+  - Login broker portal Wafa Assurance (credentials secrets vault)
+  - Navigation pages : `/sinistres/list?filter=...` + parsing HTML
+  - Cache HTML responses 5 min (eviter overhead)
+  - User-Agent headers realistic + cookies session
+  - Re-login automatique si session expire
+- Service `wafa-scraper.service.ts.scrapeSinistreStatus(sinistreId)`
+- Anti-detection : random delays + viewport rotation
+- Audit ACAPS pour chaque scrape (legal scraping consenti via convention partenariat)
+- Tests 10+ avec html mocks
+
+**Criteres P0 cles** :
+- V1 (P0) : API REST partielle Wafa
+- V2 (P0) : Puppeteer scraping fonctionnel
+- V3 (P0) : Anti-detection delays + user-agent
+- V4 (P0) : Re-login session expired
+
+**Commit** :
+```bash
+git commit -m "feat(sprint-32): NOUVEAU connecteur wafa tier 2 hybrid api + puppeteer scraping
+
+Task: 7.2.8
+Decisions: tier 2 hybrid degraded carrier"
+```
+
+---
+
+### Tache 9 / 18 : NOUVEAU Connecteur RMA (Tier 3) -- Email + IMAP parsing
+
+**Metadonnees** : P0 | 8h | Depend de : 7.2.8
+
+**But** : **NOUVEAU v3.0** -- `RMAConnector` -- 100% email + IMAP parsing replies + manual queue broker_admin.
+
+**Commande de lecture** :
+```bash
+cat skalean-insurtech/00-pilotage/prompts-taches/sprint-32-insure-connecteurs/task-7.2.9-prompt.md
+```
+
+**Actions principales** :
+- Operations via email :
+  - `submitFnol()` -> compose email template structure RMA + send via Sprint 9 Comm + ticket id reply
+  - `getSinistreStatus()` -> IMAP fetch replies from `sinistres@rma.ma` + parse + update local DB
+- IMAP client `imap-simple` library connect `imap.rma.ma`
+- Email parser regex extract sinistre_id + status + amount_approved
+- Service `rma-imap-parser.service.ts.parseRmaReplyEmail(rawEmail)` -> structured data
+- Cron 15 min check IMAP replies
+- Fallback manual queue si parsing echoue
+- Tests 10+
+
+**Criteres P0 cles** :
+- V1 (P0) : Email submitFnol structure RMA
+- V2 (P0) : IMAP parser replies
+- V3 (P0) : Cron 15 min fetch
+- V4 (P0) : Fallback manual queue si parsing FAIL
+
+**Commit** :
+```bash
+git commit -m "feat(sprint-32): NOUVEAU connecteur rma tier 3 email + imap parsing
+
+Task: 7.2.9
+Decisions: tier 3 fallback email manual queue"
+```
+
+---
+
+### Tache 10 / 18 : NOUVEAU Connecteur Atlanta (Tier 3) -- Email + fax automated
+
+**Metadonnees** : P0 | 7h | Depend de : 7.2.9
+
+**But** : **NOUVEAU v3.0** -- `AtlantaConnector` -- email + fax automated + manual queue.
+
+**Actions** :
+- Email submit operations
+- Fax automated via service eFax API ou Twilio Fax (legacy Atlanta encore fax-driven)
+- Manual queue pour replies non-parsables
+- Tests 8+
+
+**Commit** :
+```bash
+git commit -m "feat(sprint-32): NOUVEAU connecteur atlanta tier 3 email + fax automated
+
+Task: 7.2.10"
+```
+
+---
+
+### Tache 11 / 18 : NOUVEAU Connecteur MAMDA (Tier 3) -- Manual queue + email
+
+**Metadonnees** : P0 | 6h | Depend de : 7.2.10
+
+**But** : **NOUVEAU v3.0** -- `MAMDAConnector` -- cooperative ancienne, 100% manual queue + email notification simple.
+
+**Actions** :
+- Email notification simple (pas de parsing replies)
+- 100% sinistres en manual queue broker_admin web interface (Tache 7.2.17)
+- SLA traitement manuel : 48h moyenne
+- Tests 6+
+
+**Commit** :
+```bash
+git commit -m "feat(sprint-32): NOUVEAU connecteur mamda tier 3 manual queue + email simple
+
+Task: 7.2.11"
+```
+
+---
+
+### Tache 12 / 18 : Connector factory + selection logic
+
+**Metadonnees** : P0 | 4h | Depend de : 7.2.11
+
+**But** : `CarrierConnectorFactory.create(carrierId)` -- factory pattern + capability-aware routing.
+
+**Actions** :
+- Factory class avec switch case 8 carriers
+- DI container registration (Nest.js)
+- Service `carrier-routing.service.ts.selectCarrierForOperation(operation, fallbackChain)` -- check capability + Circuit Breaker status
+- Tests 8+
+
+**Commit** :
+```bash
+git commit -m "feat(sprint-32): connector factory + selection logic 8 carriers
+
+Task: 7.2.12"
+```
+
+---
+
+### Tache 13 / 18 : NOUVEAU Fallback automatique degraded carriers
+
+**Metadonnees** : P0 | 6h | Depend de : 7.2.12
+
+**But** : **NOUVEAU v3.0** -- Logic fallback : si carrier Tier 1 down (Circuit Breaker open), fallback Tier 2 ou Tier 3 selon capability + alerting Sentry.
+
+**Actions** :
+- Service `carrier-fallback.service.ts.executeFallback(operation, primaryCarrier)`
+- Strategy : retry primary 3x -> Circuit Breaker open -> fallback Tier 2 si capability supported -> fallback Tier 3 manual
+- Alerting Sentry severity critical si fallback trigger
+- Dashboard Grafana panel "Fallback events per hour"
+- Tests 8+
+
+**Criteres P0 cles** :
+- V1 (P0) : Fallback Tier 1 -> Tier 2 fonctionnel
+- V2 (P0) : Fallback Tier 2 -> Tier 3 manual queue
+- V3 (P0) : Alerting Sentry on fallback
+
+**Commit** :
+```bash
+git commit -m "feat(sprint-32): NOUVEAU fallback automatique degraded carriers + alerting
+
+Task: 7.2.13"
+```
+
+---
+
+### Tache 14 / 18 : Reconciliation nightly cron + diff alerts
+
+**Metadonnees** : P0 | 6h | Depend de : 7.2.13
+
+**But** : Cron 02:00 Maroc -- reconciliation diff carrier official vs local DB + alert > 5% gap.
+
+**Actions** :
+- Cron NestJS `@Cron('0 2 * * *')` `carrier-reconciliation.service.ts.runNightlyReconciliation()`
+- Per carrier : fetch official records derniere 24h + diff local DB + log discrepancies
+- Threshold alert : > 5% gap -> email/Slack ops team
+- Report quotidien dans table `insure_carrier_reconciliation_reports`
+- Permission Sprint 7.5a `carrier.admin.audit`
+- Tests 6+
+
+**Commit** :
+```bash
+git commit -m "feat(sprint-32): reconciliation nightly cron + diff alerts > 5%
+
+Task: 7.2.14
+Decisions: data integrity ops critical"
+```
+
+---
+
+### Tache 15 / 18 : Audit ACAPS toutes API calls + retention 10 ans
+
+**Metadonnees** : P0 | 4h | Depend de : 7.2.14
+
+**But** : Service `carrier-audit-logger.service.ts.logCarrierCall()` -- log every external API call to ACAPS audit table (heritage Sprint 4).
+
+**Actions** :
+- Extension `compliance_acaps_audits` colonnes : `carrier_id`, `endpoint`, `http_method`, `request_hash`, `response_hash`, `http_status`, `duration_ms`
+- Tous connecteurs CarrierConnectorBase log automatique
+- Retention 10 ans (loi ACAPS)
+- Endpoint admin `GET /api/v1/connectors/audit/search` permission `carrier.admin.audit`
+- Tests 8+
+
+**Commit** :
+```bash
+git commit -m "feat(sprint-32): audit acaps carrier api calls + retention 10 ans
+
+Task: 7.2.15
+Decisions: loi acaps audit retention"
+```
+
+---
+
+### Tache 16 / 18 : Monitoring per-carrier dashboard + Grafana
+
+**Metadonnees** : P0 | 5h | Depend de : 7.2.15
+
+**But** : Metrics Prometheus per-carrier expose + Grafana dashboard "Carrier Health".
+
+**Actions** :
+- Metrics Prometheus :
+  - `carrier_api_calls_total{carrier_id, method, status}` -- counter
+  - `carrier_api_duration_seconds{carrier_id, method}` -- histogram
+  - `carrier_circuit_breaker_state{carrier_id}` -- gauge (0=closed, 1=open, 0.5=half-open)
+  - `carrier_fallback_events_total{from_carrier, to_carrier}` -- counter
+- Dashboard Grafana JSON `infrastructure/grafana/dashboards/carrier-health.json`
+- 8 panels (1 per carrier) + global overview
+- Tests 5+
+
+**Commit** :
+```bash
+git commit -m "feat(sprint-32): monitoring per-carrier prometheus + grafana dashboard
+
+Task: 7.2.16"
+```
+
+---
+
+### Tache 17 / 18 : NOUVEAU Manual queue broker_admin (Tier 3 carriers)
+
+**Metadonnees** : P0 | 8h | Depend de : 7.2.16
+
+**But** : **NOUVEAU v3.0** -- Interface web broker_admin pour traiter sinistres manuels Tier 3 carriers (RMA + Atlanta + MAMDA).
+
+**Commande de lecture** :
+```bash
+cat skalean-insurtech/00-pilotage/prompts-taches/sprint-32-insure-connecteurs/task-7.2.17-prompt.md
+```
+
+**Actions principales** :
+- Page `web-broker-app/app/admin/manual-queue/page.tsx` :
+  - Liste sinistres en attente traitement manuel (filter par carrier Tier 3)
+  - Form structure : champ par champ (sinistre_id + carrier_response_status + amount_approved + notes)
+  - Bouton "Traiter sinistre" -> update local DB + close queue item
+  - SLA tracker : afficher temps depuis queue creation (alert si > 48h)
+- Service `manual-queue.service.ts` :
+  - `listPendingItems(brokerTenantId, carrierIdFilter?)`
+  - `processItem(itemId, carrierResponse)` -- update + audit log
+  - `getQueueStats(brokerTenantId)` -- KPIs avg time, count pending
+- Permission Sprint 7.5a `carrier.manual_queue.process`
+- Tests 10+
+
+**Criteres P0 cles** :
+- V1 (P0) : Liste queue items filterable
+- V2 (P0) : Form traitement structure
+- V3 (P0) : SLA tracker 48h alert
+- V4 (P0) : Permission enforce
+
+**Commit** :
+```bash
+git commit -m "feat(sprint-32): NOUVEAU manual queue broker admin tier 3 carriers
+
+Task: 7.2.17
+Decisions: tier 3 fallback humain"
+```
+
+---
+
+### Tache 18 / 18 : Tests E2E + simulation 8 carriers + chaos engineering
+
+**Metadonnees** : P0 | 12h | Depend de : 7.2.17
+
+**But** : Tests E2E + simulation 8 carriers (mocks API REST + scraping HTML mocks + email mocks) + chaos engineering (kill carriers + verify fallback).
+
+**Actions** :
+- Tests E2E happy path 8 carriers : submitFnol -> getSinistreStatus -> approveDevis
+- Mocks WireMock pour API REST carriers (AXA + Allianz + Saham + Sanad)
+- HTML mocks Wafa scraping (fixtures fichiers)
+- Email mocks IMAP RMA (raw emails fixtures)
+- Chaos engineering tests :
+  - Tier 1 carrier down -> verify fallback Tier 2/3
+  - Circuit Breaker trip -> verify reset after 30s
+  - Reconciliation > 5% gap -> verify alerting
+- Benchmarks latency P95 < 3s per carrier
+- Coverage Sprint 32 >= 85%
+
+**Criteres P0 cles** :
+- V1 (P0) : Tests E2E 8 carriers PASS
+- V2 (P0) : Chaos tests fallback verified
+- V3 (P0) : Coverage >= 85%
+- V4 (P0) : Benchmarks P95 < 3s
+
+**Commit** :
+```bash
+git commit -m "test(sprint-32): tests e2e + simulation 8 carriers + chaos engineering
+
+Task: 7.2.18
+Sprint: 32 (Phase 7 / Sprint 2)
+Decisions: production readiness demo day 30 juin"
+```
+
+---
+
+## SYNTHESE -- Cloture Sprint 32 v3.0
+
+```bash
+# 18 commits Sprint 32
+git log --since="2.5 weeks ago" --pretty=format:"%s" -- repo/packages/insure-connector | grep "Task: 7.2" | wc -l
+# Attendu : 18
+
+# 0 emoji
+grep -rP "[\x{1F300}-\x{1F9FF}]" repo/packages/insure-connector --include="*.ts" --include="*.md" | wc -l
+# Attendu : 0
+
+# Lancer V-32
 cat skalean-insurtech/00-pilotage/meta-prompts/phase-V-verification/V-32-sprint-32-verification.md
-```
-Puis tu **executes CHAQUE section** du fichier de verification (commandes bash + checks automatiques).
 
----
-
-## REGLES ABSOLUES skalean-insurtech (a appliquer dans CHAQUE tache)
-
-### Conventions techniques
-
-- **Multi-tenant** : CHAQUE query DB filtre par `tenant_id` automatique (Subscriber + RLS) + header `x-tenant-id` obligatoire sauf `/api/v1/public/*` et `/api/v1/admin/*`
-- **Validation** : Zod uniquement (JAMAIS class-validator)
-- **Logger** : Pino via `this.logger` (JAMAIS `console.log`, JAMAIS `new Logger()`)
-- **Events** : Kafka sur `insurtech.events.{vertical}.{entity}.{action}` pour chaque action metier
-- **RBAC** : `@Roles()` + `RolesGuard` + `TenantGuard` sur chaque endpoint
-- **Tests** : Vitest, chaque fichier `.ts` a un fichier `.spec.ts` (coverage >= 85% global, 90% modules critiques)
-- **Types** : TypeScript strict, **AUCUN `any` implicite**, `noUncheckedIndexedAccess: true`
-- **Hash password** : argon2id (JAMAIS bcrypt, JAMAIS scrypt)
-- **JWT** : RS256 + key rotation 90 jours
-- **Encryption at rest** : AES-256-GCM (Atlas Cloud Services KMS)
-- **Package manager** : pnpm (JAMAIS npm ou yarn)
-- **Imports** : `@insurtech/*` pour packages partages
-- **Skalean AI** : utilise UNIQUEMENT via `@insurtech/sky` ou MCP client (JAMAIS de duplication LLM/RAG/vector store)
-- **AUCUNE EMOJI** dans le code, commentaires ou logs (decision-006 ABSOLUE)
-- **Idempotency-Key** : header obligatoire pour mutations + tools MCP write
-- **Conventional Commits** : tous commits suivent `<type>(scope): description`
-
-### Conformite InsurTech Maroc (9 lois MA)
-
-- **Audit ACAPS** : chaque ecriture sur `insure_*`, `repair_*`, `pay_*` declenche entree dans `compliance_acaps_audits` (10 ans retention)
-- **Donnees Maroc** (loi 09-08 CNDP) : aucune donnee assure/police/sinistre/paiement ne transite hors **Atlas Cloud Services Benguerir** (decision-008 -- DC1 Tier III + DC2 Tier IV)
-- **Multilinguisme** : toute communication assure (notifications/emails/WhatsApp/Sky) supporte fr/ar-MA (darija)/ar (classique)/en
-- **Conformite loi 43-20** : signatures electroniques utilisent uniquement `@insurtech/signature` (Barid eSign + ANRT TSA RFC 3161 + archivage 10 ans)
-- **Conformite loi 17-99 article 9** : droit retract 30j B2C tracable (Sprint 15 cancellation_legal_basis)
-- **Conformite loi 9-88** : ecritures comptables CGNC plan + SAFT-MA export DGI
-- **Conformite loi 43-05** : AML monitoring + SAR generation AMC
-- **TVA MA** : 5 taux (0/7/10/14/20%) -- Sprint 12
-- **CNSS** : 4.48% + **AMO** : 2.26% -- Sprint 13 paie
-- **BAM** : limit 100k MAD + 3D Secure obligatoire (Sprint 11)
-- **Notification breach** : sous 72h CNDP + Atlas Cloud Services SOC
-
----
-
-## CONTEXTE PHASE 7 -- Hardening + Integrations + Pilote
-
-### Position du Sprint 4 dans la Phase 7
-
-Sprint 32 (7.4) -- **Insure Connecteurs Assureurs (5 connecteurs)**.
-
-Voir `B-32-sprint-32-insure-connecteurs.md` (section "POSITION DANS LA PHASE" + "DEPENDANCES") pour contexte detaille des dependances cross-sprints (entrees consommees + sorties produites).
-
-### Modules concernes par cette Phase
-
-apps/mcp-server, @insurtech/sky, @insurtech/sky-ui, infrastructure (Atlas Cloud Services prod, Cloudflare CDN, K6 chaos)
-
-### Apport metier de ce sprint
-
-5 connecteurs assureurs reels (Wafa+Atlanta+Saham+RMA+AXA)
-
-### Decisions strategiques applicables
-
-Cf. `00-pilotage/decisions/`. Decisions cles pour ce sprint : voir B-32 section "Decisions strategiques applicables".
-
----
-
-## EXECUTION SEQUENTIELLE DES 13 TACHES
-
-Chaque tache ci-dessous indique : metadata (priorite/effort/deps), but extrait de B-32, actions principales (livrables checkables), fichiers cibles, criteres P0, validation et commit.
-
-**Pour code complet, patterns critiques, tests exhaustifs** : lire le prompt tache detaille genere depuis B-32.
-
----
-
-### Tache 1 / 13 : InsurerConnectorInterface + Base Abstract Class
-
-**Metadonnees** : P0 | 5h | Depend de : Depend de Sprint 14
-
-**But** : Definir interface commune pour 5 connecteurs assureurs + classe abstraite gerant HTTP + retry + circuit breaker.
-
-**Commande de lecture** :
-```bash
-cat skalean-insurtech/00-pilotage/prompts-taches/sprint-32-insure-connecteurs/task-7.4.1-prompt.md
-```
-
-**Actions principales attendues** :
-- Interface `repo/packages/insure/src/connectors/insurer-connector.interface.ts` :
-- Abstract class `base-insurer-connector.ts` :
-- Errors typed : `InsurerUnavailableError`, `InsurerInvalidDataError`, `InsurerProductNotFoundError`, `InsurerCircuitBreakerOpenError`
-- Types : `InsurerQuote`, `InsurerPolicy`, `InsurerSinistre`, `InsurerProduct`
-- Tests : interface + base class HTTP + circuit breaker
-
-**Fichiers cibles principaux** :
-  - `repo/packages/insure/src/connectors/insurer-connector.interface.ts`
-  - `repo/packages/insure/src/connectors/base-insurer-connector.ts`
-  - `repo/packages/insure/src/connectors/types.ts`
-  - `repo/packages/insure/src/connectors/errors.ts`
-  - `repo/packages/insure/package.json`
-
-**Criteres P0 cles** (verification automatique post-task) :
-  - V1 (P0) : Interface declare 8 methods
-  - V2 (P0) : Base class HTTP retry + circuit breaker
-  - V3 (P0) : Circuit breaker open -> InsurerCircuitBreakerOpenError
-
-**Validation** :
-```bash
-cd repo
-pnpm tsc --noEmit                    # Typecheck strict
-pnpm vitest run --coverage           # Tests unitaires + coverage
-pnpm lint                            # Biome lint + format check
-cd ..
-```
-
-**Commit** :
-```bash
-git add -A
-git commit -m "feat(sprint-32): insurerconnectorinterface + base abstract class
-
-Task: 7.4.1
-Sprint: 32 (Phase 7 / Sprint 4)
-Phase: 7 -- Hardening + Integrations + Pilote
-Decisions: see B-32 Tache 7.4.1"
-```
-
----
-
-### Tache 2 / 13 : Wafa Assurance Connector (Priorite 1)
-
-**Metadonnees** : P0 | 8h | Depend de : Depend de 7.4.1
-
-**But** : Implementation premier connecteur Wafa Assurance (premier partenaire commercial cible MA).
-
-**Commande de lecture** :
-```bash
-cat skalean-insurtech/00-pilotage/prompts-taches/sprint-32-insure-connecteurs/task-7.4.2-prompt.md
-```
-
-**Actions principales attendues** :
-- Service `repo/packages/insure/src/connectors/wafa/wafa.connector.ts` extends BaseInsurerConnector
-- Implement methods :
-- Authentification : API key (env `WAFA_API_KEY`) bearer + client_id/client_secret pour OAuth2 si requis
-- Mapping data Wafa -> Skalean :
-- Variables env : `WAFA_API_BASE_URL`, `WAFA_API_KEY`, `WAFA_CLIENT_ID`, `WAFA_CLIENT_SECRET`, `WAFA_WEBHOOK_SECRET`
-- Mock client `MockWafaConnector` pour tests
-
-**Fichiers cibles principaux** :
-  - `repo/packages/insure/src/connectors/wafa/wafa.connector.ts`
-  - `repo/packages/insure/src/connectors/wafa/wafa.connector.spec.ts`
-  - `repo/packages/insure/src/connectors/wafa/wafa-mapping.ts`
-  - `repo/packages/insure/src/connectors/wafa/types.ts`
-  - `repo/packages/insure/src/connectors/wafa/mock-wafa.connector.ts`
-
-**Criteres P0 cles** (verification automatique post-task) :
-  - V1 (P0) : Connector implements interface
-  - V2 (P0) : 7 methods fonctionnent (mock)
-  - V3 (P0) : HMAC signature verification
-
-**Validation** :
-```bash
-cd repo
-pnpm tsc --noEmit                    # Typecheck strict
-pnpm vitest run --coverage           # Tests unitaires + coverage
-pnpm lint                            # Biome lint + format check
-cd ..
-```
-
-**Commit** :
-```bash
-git add -A
-git commit -m "feat(sprint-32): wafa assurance connector (priorite 1)
-
-Task: 7.4.2
-Sprint: 32 (Phase 7 / Sprint 4)
-Phase: 7 -- Hardening + Integrations + Pilote
-Decisions: see B-32 Tache 7.4.2"
-```
-
----
-
-### Tache 3 / 13 : Atlanta Assurance Connector
-
-**Metadonnees** : P0 | 6h | Depend de : Depend de 7.4.2
-
-**But** : Connecteur Atlanta Assurance (autre partenaire majeur).
-
-**Commande de lecture** :
-```bash
-cat skalean-insurtech/00-pilotage/prompts-taches/sprint-32-insure-connecteurs/task-7.4.3-prompt.md
-```
-
-**Actions principales attendues** :
-- Service `atlanta.connector.ts` similaire pattern Wafa
-- Pattern reutilise : meme interface, adaptations Atlanta-specific
-- Variables env : `ATLANTA_*`
-- Mapping Atlanta -> Skalean
-- Mock + tests
-
-**Fichiers cibles principaux** :
-  - `repo/packages/insure/src/connectors/atlanta/atlanta.connector.ts`
-  - `repo/packages/insure/src/connectors/atlanta/atlanta-mapping.ts`
-  - `repo/packages/insure/src/connectors/atlanta/mock-atlanta.connector.ts`
-  - `repo/packages/insure/src/connectors/atlanta/atlanta.connector.spec.ts`
-
-**Criteres P0 cles** (verification automatique post-task) :
-  - V1 (P0) : Connector implements interface
-  - V2 (P0) : 7 methods fonctionnent
-  - V3 (P0) : Tests 10+ scenarios
-
-**Validation** :
-```bash
-cd repo
-pnpm tsc --noEmit                    # Typecheck strict
-pnpm vitest run --coverage           # Tests unitaires + coverage
-pnpm lint                            # Biome lint + format check
-cd ..
-```
-
-**Commit** :
-```bash
-git add -A
-git commit -m "feat(sprint-32): atlanta assurance connector
-
-Task: 7.4.3
-Sprint: 32 (Phase 7 / Sprint 4)
-Phase: 7 -- Hardening + Integrations + Pilote
-Decisions: see B-32 Tache 7.4.3"
-```
-
----
-
-### Tache 4 / 13 : Saham Connector
-
-**Metadonnees** : P0 | 6h | Depend de : Depend de 7.4.3
-
-**But** : Connecteur Saham (groupe Sanlam international, presence MA).
-
-**Commande de lecture** :
-```bash
-cat skalean-insurtech/00-pilotage/prompts-taches/sprint-32-insure-connecteurs/task-7.4.4-prompt.md
-```
-
-**Actions principales attendues** :
-- (Voir B-XX pour livrables detailles)
-
-**Fichiers cibles principaux** :
-  - `repo/packages/insure/src/connectors/saham/saham.connector.ts`
-  - `repo/packages/insure/src/connectors/saham/saham-mapping.ts`
-  - `repo/packages/insure/src/connectors/saham/mock-saham.connector.ts`
-  - `repo/packages/insure/src/connectors/saham/saham.connector.spec.ts`
-
-**Validation** :
-```bash
-cd repo
-pnpm tsc --noEmit                    # Typecheck strict
-pnpm vitest run --coverage           # Tests unitaires + coverage
-pnpm lint                            # Biome lint + format check
-cd ..
-```
-
-**Commit** :
-```bash
-git add -A
-git commit -m "feat(sprint-32): saham connector
-
-Task: 7.4.4
-Sprint: 32 (Phase 7 / Sprint 4)
-Phase: 7 -- Hardening + Integrations + Pilote
-Decisions: see B-32 Tache 7.4.4"
-```
-
----
-
-### Tache 5 / 13 : RMA Connector
-
-**Metadonnees** : P0 | 6h | Depend de : Depend de 7.4.4
-
-**But** : Connecteur RMA (Royale Marocaine d'Assurances, leader marche local).
-
-**Commande de lecture** :
-```bash
-cat skalean-insurtech/00-pilotage/prompts-taches/sprint-32-insure-connecteurs/task-7.4.5-prompt.md
-```
-
-**Actions principales attendues** :
-- (Voir B-XX pour livrables detailles)
-
-**Fichiers cibles principaux** :
-  - `repo/packages/insure/src/connectors/rma/rma.connector.ts`
-  - `repo/packages/insure/src/connectors/rma/rma-mapping.ts`
-  - `repo/packages/insure/src/connectors/rma/mock-rma.connector.ts`
-  - `repo/packages/insure/src/connectors/rma/rma.connector.spec.ts`
-
-**Validation** :
-```bash
-cd repo
-pnpm tsc --noEmit                    # Typecheck strict
-pnpm vitest run --coverage           # Tests unitaires + coverage
-pnpm lint                            # Biome lint + format check
-cd ..
-```
-
-**Commit** :
-```bash
-git add -A
-git commit -m "feat(sprint-32): rma connector
-
-Task: 7.4.5
-Sprint: 32 (Phase 7 / Sprint 4)
-Phase: 7 -- Hardening + Integrations + Pilote
-Decisions: see B-32 Tache 7.4.5"
-```
-
----
-
-### Tache 6 / 13 : AXA Maroc Connector
-
-**Metadonnees** : P0 | 6h | Depend de : Depend de 7.4.5
-
-**But** : Connecteur AXA (filiale internationale, leader sante MA).
-
-**Commande de lecture** :
-```bash
-cat skalean-insurtech/00-pilotage/prompts-taches/sprint-32-insure-connecteurs/task-7.4.6-prompt.md
-```
-
-**Actions principales attendues** :
-- (Voir B-XX pour livrables detailles)
-
-**Fichiers cibles principaux** :
-  - `repo/packages/insure/src/connectors/axa/axa.connector.ts`
-  - `repo/packages/insure/src/connectors/axa/axa-mapping.ts`
-  - `repo/packages/insure/src/connectors/axa/mock-axa.connector.ts`
-  - `repo/packages/insure/src/connectors/axa/axa.connector.spec.ts`
-
-**Validation** :
-```bash
-cd repo
-pnpm tsc --noEmit                    # Typecheck strict
-pnpm vitest run --coverage           # Tests unitaires + coverage
-pnpm lint                            # Biome lint + format check
-cd ..
-```
-
-**Commit** :
-```bash
-git add -A
-git commit -m "feat(sprint-32): axa maroc connector
-
-Task: 7.4.6
-Sprint: 32 (Phase 7 / Sprint 4)
-Phase: 7 -- Hardening + Integrations + Pilote
-Decisions: see B-32 Tache 7.4.6"
-```
-
----
-
-### Tache 7 / 13 : TarificationOrchestrator (Routing + Fallback)
-
-**Metadonnees** : P0 | 6h | Depend de : Depend de 7.4.6
-
-**But** : Override TarificationService Sprint 14 : si product associe a un assureur connecte -> query real-time. Si assureur down (circuit breaker open) ou pas connecte -> fallback lookup tables Sprint 14.
-
-**Commande de lecture** :
-```bash
-cat skalean-insurtech/00-pilotage/prompts-taches/sprint-32-insure-connecteurs/task-7.4.7-prompt.md
-```
-
-**Actions principales attendues** :
-- Service `repo/packages/insure/src/services/tarification-orchestrator.service.ts`
-- Method `getQuote(productId, souscripteurData): { source: 'insurer_realtime' | 'fallback_lookup', breakdown }`
-- Logic :
-- Cache 5min Redis : eviter quote storm pour produit/data identique
-- Logging : source ratio (% real-time vs fallback)
-- Tests : real-time success, fallback on circuit breaker, fallback on no connector
-
-**Fichiers cibles principaux** :
-  - `repo/packages/insure/src/services/tarification-orchestrator.service.ts`
-  - `repo/packages/insure/src/services/tarification-orchestrator.service.spec.ts`
-  - `repo/packages/insure/src/services/connector-registry.service.ts`
-
-**Criteres P0 cles** (verification automatique post-task) :
-  - V1 (P0) : Real-time success retourne `source='insurer_realtime'`
-  - V2 (P0) : Circuit breaker open -> fallback automatique
-  - V3 (P0) : Pas connecteur -> fallback Sprint 14
-
-**Validation** :
-```bash
-cd repo
-pnpm tsc --noEmit                    # Typecheck strict
-pnpm vitest run --coverage           # Tests unitaires + coverage
-pnpm lint                            # Biome lint + format check
-cd ..
-```
-
-**Commit** :
-```bash
-git add -A
-git commit -m "feat(sprint-32): tarificationorchestrator (routing + fallback)
-
-Task: 7.4.7
-Sprint: 32 (Phase 7 / Sprint 4)
-Phase: 7 -- Hardening + Integrations + Pilote
-Decisions: see B-32 Tache 7.4.7"
-```
-
----
-
-### Tache 8 / 13 : SouscriptionOrchestrator (Push Police vers Assureur)
-
-**Metadonnees** : P0 | 6h | Depend de : Depend de 7.4.7
-
-**But** : Apres signature police complete (Sprint 14), pousser police vers assureur (creation chez eux) + storage `insurer_policy_number`.
-
-**Commande de lecture** :
-```bash
-cat skalean-insurtech/00-pilotage/prompts-taches/sprint-32-insure-connecteurs/task-7.4.8-prompt.md
-```
-
-**Actions principales attendues** :
-- Consumer Kafka `signature-completed-insure-push.consumer.ts`
-- Listen event `signature.workflow_completed` filtre `related_resource_type='insure_policy'`
-- Logic :
-- Idempotency : verifier `insurer_policy_number` deja set avant submit (eviter doublons)
-- Migration : add columns `insure_policies.insurer_policy_number`, `insurer_status`, `insurer_synced_at`
-- Tests : push success, retry on transient, DLQ on permanent, idempotency
-
-**Fichiers cibles principaux** :
-  - `repo/packages/database/src/migrations/{date}-AddInsurerSyncColumns.ts`
-  - `repo/packages/insure/src/consumers/signature-completed-insure-push.consumer.ts`
-  - `repo/packages/insure/src/jobs/insurer-push-retry.worker.ts`
-
-**Criteres P0 cles** (verification automatique post-task) :
-  - V1 (P0) : Signature complete -> push assureur
-  - V2 (P0) : insurer_policy_number stocke
-  - V3 (P0) : Idempotency : 2eme call ignore
-
-**Validation** :
-```bash
-cd repo
-pnpm tsc --noEmit                    # Typecheck strict
-pnpm vitest run --coverage           # Tests unitaires + coverage
-pnpm lint                            # Biome lint + format check
-cd ..
-```
-
-**Commit** :
-```bash
-git add -A
-git commit -m "feat(sprint-32): souscriptionorchestrator (push police vers assureur)
-
-Task: 7.4.8
-Sprint: 32 (Phase 7 / Sprint 4)
-Phase: 7 -- Hardening + Integrations + Pilote
-Decisions: see B-32 Tache 7.4.8"
-```
-
----
-
-### Tache 9 / 13 : Sync Polices Service (Pull Updates Assureurs)
-
-**Metadonnees** : P0 | 6h | Depend de : Depend de 7.4.8
-
-**But** : Cron job pull updates polices depuis assureurs (cas modifications cote assureur : suspension, prime ajustee, etc.) + reconcile Skalean.
-
-**Commande de lecture** :
-```bash
-cat skalean-insurtech/00-pilotage/prompts-taches/sprint-32-insure-connecteurs/task-7.4.9-prompt.md
-```
-
-**Actions principales attendues** :
-- Service `repo/packages/insure/src/services/policy-sync.service.ts`
-- Method `syncPoliciesFromInsurer(provider): Promise<{ updated, conflicts }>` :
-- Cron job daily 6h matin
-- Endpoint manual trigger : `POST /api/v1/admin/insure/sync-policies?provider=wafa`
-- Logs : policies synced, updated, conflicts
-- Tests : sync OK + conflicts detection
-
-**Fichiers cibles principaux** :
-  - `repo/packages/insure/src/services/policy-sync.service.ts`
-  - `repo/packages/insure/src/jobs/policy-sync.cron.ts`
-  - `repo/apps/api/src/modules/admin/controllers/admin-insure-sync.controller.ts`
-
-**Criteres P0 cles** (verification automatique post-task) :
-  - V1 (P0) : Sync detect updates assureur
-  - V2 (P0) : Update Skalean
-  - V3 (P0) : Conflicts flagged
-
-**Validation** :
-```bash
-cd repo
-pnpm tsc --noEmit                    # Typecheck strict
-pnpm vitest run --coverage           # Tests unitaires + coverage
-pnpm lint                            # Biome lint + format check
-cd ..
-```
-
-**Commit** :
-```bash
-git add -A
-git commit -m "feat(sprint-32): sync polices service (pull updates assureurs)
-
-Task: 7.4.9
-Sprint: 32 (Phase 7 / Sprint 4)
-Phase: 7 -- Hardening + Integrations + Pilote
-Decisions: see B-32 Tache 7.4.9"
-```
-
----
-
-### Tache 10 / 13 : Sinistres Connector : Declaration + Pull Updates
-
-**Metadonnees** : P0 | 5h | Depend de : Depend de 7.4.9
-
-**But** : Permettre declaration sinistre depuis Skalean vers assureur + sync updates assureur retour. Sprint 22 implementera workflow sinistre complet ; Sprint 32 prepare connecteur.
-
-**Commande de lecture** :
-```bash
-cat skalean-insurtech/00-pilotage/prompts-taches/sprint-32-insure-connecteurs/task-7.4.10-prompt.md
-```
-
-**Actions principales attendues** :
-- Methods `declareSinistre()` + `getSinistre()` deja Sprint 32 dans connectors (Tache 7.4.2-6)
-- Service `sinistre-sync.service.ts` :
-- Migration prep tables sinistres (Sprint 22 enrichira) : add columns `repair_sinistres.insurer_sinistre_number`, `insurer_status`
-- Sprint 32 livre infrastructure ; Sprint 22 utilisera
-- Tests via mocks
-
-**Fichiers cibles principaux** :
-  - `repo/packages/insure/src/services/sinistre-sync.service.ts`
-  - `repo/packages/database/src/migrations/{date}-AddSinistreInsurerSync.ts`
-
-**Criteres P0 cles** (verification automatique post-task) :
-  - V1 (P0) : declareToInsurer push sinistre
-  - V2 (P0) : Sync from insurer
-  - V3 (P0) : Tests 6+ scenarios
-
-**Validation** :
-```bash
-cd repo
-pnpm tsc --noEmit                    # Typecheck strict
-pnpm vitest run --coverage           # Tests unitaires + coverage
-pnpm lint                            # Biome lint + format check
-cd ..
-```
-
-**Commit** :
-```bash
-git add -A
-git commit -m "feat(sprint-32): sinistres connector : declaration + pull updates
-
-Task: 7.4.10
-Sprint: 32 (Phase 7 / Sprint 4)
-Phase: 7 -- Hardening + Integrations + Pilote
-Decisions: see B-32 Tache 7.4.10"
-```
-
----
-
-### Tache 11 / 13 : Webhook Receivers Per Assureur (5 Endpoints)
-
-**Metadonnees** : P0 | 7h | Depend de : Depend de 7.4.10
-
-**But** : 5 endpoints webhooks (un par assureur) pour recevoir notifications real-time depuis assureurs (status update, sinistre regle, etc.).
-
-**Commande de lecture** :
-```bash
-cat skalean-insurtech/00-pilotage/prompts-taches/sprint-32-insure-connecteurs/task-7.4.11-prompt.md
-```
-
-**Actions principales attendues** :
-- 5 controllers `/api/v1/public/webhooks/{wafa,atlanta,saham,rma,axa}`
-- Pattern reutilise Sprint 9/10/11 :
-- Consumer Kafka `insurer-webhook-processor.consumer.ts` :
-- Tests E2E : 5 webhooks per provider
-
-**Fichiers cibles principaux** :
-  - `repo/apps/api/src/modules/insure/webhooks/{5 controllers}.ts`
-  - `repo/apps/api/src/modules/insure/middleware/{5 signatures}.ts`
-  - `repo/apps/api/src/modules/insure/consumers/insurer-webhook-processor.consumer.ts`
-  - `repo/apps/api/test/insure/webhooks/{5 specs}.e2e-spec.ts`
-
-**Criteres P0 cles** (verification automatique post-task) :
-  - V1 (P0) : 5 webhooks endpoints
-  - V2 (P0) : Signatures verifiees per assureur
-  - V3 (P0) : Idempotency
-
-**Validation** :
-```bash
-cd repo
-pnpm tsc --noEmit                    # Typecheck strict
-pnpm vitest run --coverage           # Tests unitaires + coverage
-pnpm lint                            # Biome lint + format check
-cd ..
-```
-
-**Commit** :
-```bash
-git add -A
-git commit -m "feat(sprint-32): webhook receivers per assureur (5 endpoints)
-
-Task: 7.4.11
-Sprint: 32 (Phase 7 / Sprint 4)
-Phase: 7 -- Hardening + Integrations + Pilote
-Decisions: see B-32 Tache 7.4.11"
-```
-
----
-
-### Tache 12 / 13 : Endpoints REST + Admin Monitoring
-
-**Metadonnees** : P0 | 4h | Depend de : Depend de 7.4.11
-
-**But** : Endpoints API publique connectors + admin monitoring health connectors.
-
-**Commande de lecture** :
-```bash
-cat skalean-insurtech/00-pilotage/prompts-taches/sprint-32-insure-connecteurs/task-7.4.12-prompt.md
-```
-
-**Actions principales attendues** :
-- Endpoint `GET /api/v1/insure/connectors` (list configured)
-- Endpoint `POST /api/v1/insure/connectors/:provider/test` (super admin : test connection)
-- Endpoint admin `GET /api/v1/admin/insure/connectors/health` :
-- Dashboard ADMIN : page health connectors (Sprint 27 enrichira UI)
-- Tests
-
-**Fichiers cibles principaux** :
-  - `repo/apps/api/src/modules/insure/controllers/connectors.controller.ts`
-  - `repo/apps/api/src/modules/admin/controllers/admin-connectors-health.controller.ts`
-
-**Criteres P0 cles** (verification automatique post-task) :
-  - V1 (P0) : List connecteurs
-  - V2 (P0) : Test connection
-  - V3 (P0) : Health endpoint admin
-
-**Validation** :
-```bash
-cd repo
-pnpm tsc --noEmit                    # Typecheck strict
-pnpm vitest run --coverage           # Tests unitaires + coverage
-pnpm lint                            # Biome lint + format check
-cd ..
-```
-
-**Commit** :
-```bash
-git add -A
-git commit -m "feat(sprint-32): endpoints rest + admin monitoring
-
-Task: 7.4.12
-Sprint: 32 (Phase 7 / Sprint 4)
-Phase: 7 -- Hardening + Integrations + Pilote
-Decisions: see B-32 Tache 7.4.12"
-```
-
----
-
-### Tache 13 / 13 : Tests E2E (40+) avec Mocks 5 Assureurs
-
-**Metadonnees** : P0 | 9h | Depend de : Depend de 7.4.12
-
-**But** : Suite tests E2E + circuit breaker scenarios + mock 5 assureurs.
-
-**Commande de lecture** :
-```bash
-cat skalean-insurtech/00-pilotage/prompts-taches/sprint-32-insure-connecteurs/task-7.4.13-prompt.md
-```
-
-**Actions principales attendues** :
-- Per connecteur (5 x 6 tests = 30) : getQuote / submitPolicy / getPolicy / cancelPolicy / declareSinistre / verifyWebhookSignature
-- TarificationOrchestrator : real-time + fallback + cache (3)
-- SouscriptionOrchestrator : push + retry + DLQ (3)
-- PolicySync : sync + conflicts (2)
-- Webhooks : 5 receivers signature verified (5)
-- Circuit breaker : open after errors + halfopen reset (2)
-
-**Fichiers cibles principaux** :
-  - `repo/apps/api/test/insure/connectors/{30+ specs}.e2e-spec.ts`
-  - `repo/apps/api/test/fixtures/mock-insurer-servers/{5 mock servers}`
-
-**Criteres P0 cles** (verification automatique post-task) :
-  - V1 (P0) : 40+ tests passent
-  - V2 (P0) : Mocks 5 assureurs fonctionnent
-  - V3 (P0) : Circuit breaker scenarios verifies
-
-**Validation** :
-```bash
-cd repo
-pnpm tsc --noEmit                    # Typecheck strict
-pnpm vitest run --coverage           # Tests unitaires + coverage
-pnpm lint                            # Biome lint + format check
-cd ..
-```
-
-**Commit** :
-```bash
-git add -A
-git commit -m "feat(sprint-32): tests e2e (40+) avec mocks 5 assureurs
-
-Task: 7.4.13
-Sprint: 32 (Phase 7 / Sprint 4)
-Phase: 7 -- Hardening + Integrations + Pilote
-Decisions: see B-32 Tache 7.4.13"
-```
-
----
-
-
-## VERIFICATION DU SPRINT 32
-
-Une fois les 13 taches terminees et commitees, **lancer la verification automatique** :
-
-```bash
-cat skalean-insurtech/00-pilotage/meta-prompts/phase-V-verification/V-32-sprint-32-verification.md
-```
-
-Le fichier de verification V-32 contient :
-
-- **Criteres P0 bloquants** : compilation TypeScript / tests Vitest / Biome lint / no-emoji / conventional commits
-- **Criteres P1 avertissements** : couverture >= 85% / dependencies coherentes / docs API / metriques performance
-- **Criteres P2 notes** : coverage >= 90% modules critiques / lighthouse score / accessibility
-- **Auto-reparation** pour criteres recuperables (e.g. relance tests flaky)
-- **Generation automatique** du rapport `sprint32-verify-report.md`
-- **Calcul score global** + statut GO / GO CONDITIONNEL / NO-GO
-
-**Score minimum requis pour GO** : >= 95% (sprint termine, GO Sprint suivant)
-**Score minimum pour GO CONDITIONNEL** : 85-94% (hot fix requis, retard <= 1 semaine)
-**En dessous de 85%** : NO-GO, **reprise sprint requise** (escalation Saad/Abla decision)
-
-Apres execution, lire le rapport :
-
-```bash
-cat skalean-insurtech/sprint32-verify-report.md
-```
-
-Si statut **GO** ou **GO CONDITIONNEL**, executer le commit de cloture :
-
-```bash
-git add skalean-insurtech/sprint32-verify-report.md
-git commit -m "chore(sprint-32): close sprint 32 with verification report
-
-- Score global : {SCORE}%
-- Statut : {GO|GO CONDITIONNEL}
-- Phase : 7 (Hardening + Integrations + Pilote)
-- Sprint : 32 (Phase 7 / Sprint 4)
-- Apport : 5 connecteurs assureurs reels (Wafa+Atlanta+Saham+RMA+AXA)
-- Tests E2E cumules : {N}+
-
-Sprint 32 completed -- handoff to Sprint 33."
+# Si V-32 GO (>= 95%)
+git tag -a "sprint-32-complete-v3-connecteurs-8-carriers" -m "Sprint 32 v3.0 Connecteurs 8 carriers Maroc complete
+
+- 8 carriers couverture ~85% marche
+- Tier 1 (4 carriers): AXA + Allianz + Saham + Sanad
+- Tier 2 (1 carrier): Wafa hybrid API + scraping
+- Tier 3 (3 carriers): RMA + Atlanta + MAMDA email + manual queue
+- Circuit Breaker + retry + DLQ + reconciliation + audit ACAPS 10 ans
+- Manual queue broker_admin web + monitoring Grafana
+- Foundation Demo Day 30 juin 2026"
+
+git push origin sprint-32-complete-v3-connecteurs-8-carriers
 ```
 
 ---
@@ -837,121 +709,107 @@ Sprint 32 completed -- handoff to Sprint 33."
 ## RESUME DU WORKFLOW
 
 ```
-[Demarrage Sprint 32]
+[Demarrage Sprint 32 v3.0]
    |
    v
-[Tache 7.4.1: InsurerConnectorInterface + Base Abstract Class]
-   | -> compile -> tests -> commit
-   v
-[Tache 7.4.2: Wafa Assurance Connector (Priorite 1)]
-   | -> compile -> tests -> commit
-   v
-[Tache 7.4.3: Atlanta Assurance Connector]
-   | -> compile -> tests -> commit
-   v
-[Tache 7.4.4: Saham Connector]
-   | -> compile -> tests -> commit
-   v
-[Tache 7.4.5: RMA Connector]
-   | -> compile -> tests -> commit
-   v
-[Tache 7.4.6: AXA Maroc Connector]
-   | -> compile -> tests -> commit
-   v
-[Tache 7.4.7: TarificationOrchestrator (Routing + Fallback)]
-   | -> compile -> tests -> commit
-   v
-[Tache 7.4.8: SouscriptionOrchestrator (Push Police vers Assureur)]
-   | -> compile -> tests -> commit
-   v
-[Tache 7.4.9: Sync Polices Service (Pull Updates Assureurs)]
-   | -> compile -> tests -> commit
-   v
-[Tache 7.4.10: Sinistres Connector : Declaration + Pull Updates]
-   | -> compile -> tests -> commit
-   v
-[Tache 7.4.11: Webhook Receivers Per Assureur (5 Endpoints)]
-   | -> compile -> tests -> commit
-   v
-[Tache 7.4.12: Endpoints REST + Admin Monitoring]
-   | -> compile -> tests -> commit
-   v
-[Tache 7.4.13: Tests E2E (40+) avec Mocks 5 Assureurs]
-   | -> compile -> tests -> commit
-   v
-[Verification automatique sprint 32 -- V-32]
+[Tache 7.2.1 : Package + interface 15 methodes]
    |
    v
-[Rapport sprint32-verify-report.md]
+[Tache 7.2.2 : Base + Circuit Breaker + retry + DLQ]
    |
    v
-[Score >= 95%] -> GO -> commit cloture sprint -> Sprint suivant
-[Score 85-94%] -> GO CONDITIONNEL -> hot fix puis cloture
-[Score < 85%]  -> NO-GO -> reprise sprint
+[Tache 7.2.3 : Capability discovery + 120 entries]
+   |
+   v
+[Taches 7.2.4-7 : Tier 1 connecteurs (AXA + Allianz + Saham + Sanad)]
+   |
+   v
+[Tache 7.2.8 : NOUVEAU Tier 2 Wafa hybrid + Puppeteer]
+   |
+   v
+[Taches 7.2.9-11 : NOUVEAUX Tier 3 (RMA + Atlanta + MAMDA)]
+   |
+   v
+[Tache 7.2.12 : Factory + selection logic]
+   |
+   v
+[Tache 7.2.13 : NOUVEAU Fallback automatique]
+   |
+   v
+[Tache 7.2.14 : Reconciliation nightly cron]
+   |
+   v
+[Tache 7.2.15 : Audit ACAPS 10 ans]
+   |
+   v
+[Tache 7.2.16 : Monitoring Grafana]
+   |
+   v
+[Tache 7.2.17 : NOUVEAU Manual queue broker_admin Tier 3]
+   |
+   v
+[Tache 7.2.18 : Tests E2E + simulation 8 carriers + chaos]
+   |
+   v
+[V-32 verification]
+   |
+   v
+[Score >= 95%] -> GO -> tag -> Sprint 33 demarre (Experts)
 ```
 
-**Duree totale estimee** : 80 heures (6h par tache moyenne -- 2 devs FTE en parallele).
+**Duree totale** : 120 heures / 2.5 semaines.
 
-**Modules skalean-insurtech affectes** : apps/mcp-server, @insurtech/sky, @insurtech/sky-ui, infrastructure (Atlas Cloud Services prod, Cloudflare CDN, K6 chaos)
+**Modules affectes** : `@insurtech/insure-connector` (NOUVEAU package), `apps/api/src/modules/connectors/`, `apps/web-broker-app/app/admin/manual-queue/`, Kafka topics DLQ + reconciliation, Prometheus + Grafana.
 
-**Apport metier principal** : 5 connecteurs assureurs reels (Wafa+Atlanta+Saham+RMA+AXA).
+**Apport metier principal** : Couverture ~85% marche carriers Maroc + resilience production-grade + audit complet ACAPS + Demo Day 30 juin foundation.
 
-**Prerequis Sprint 33** : Sprint 32 GO complet (score >= 95% verification automatique V-32).
-
-**Sprint suivant** : Sprint 33.
+**Sprint suivant** : Sprint 33 Connecteurs Experts.
 
 ---
 
 ## COMMANDES DE LANCEMENT
 
-### Prerequis Sprint 31 (verification GO)
-
+### Prerequis (Sprint 14 + 31 GO)
 ```bash
-# Verifier Sprint 31 GO
-ls skalean-insurtech/sprint31-verify-report.md
-grep '^Statut.*GO' skalean-insurtech/sprint31-verify-report.md
+ls skalean-insurtech/sprint14-verify-report.md skalean-insurtech/sprint31-verify-report.md
+grep '^Statut.*GO' skalean-insurtech/sprint14-verify-report.md skalean-insurtech/sprint31-verify-report.md
 ```
 
-### Lancement Sprint 32 (Cowork lit cet orchestrateur)
-
+### Lancement Sprint 32
 ```bash
-# Cowork command (claude-code or cowork CLI) :
 claude-code \
-  --orchestrator skalean-insurtech/00-pilotage/meta-prompts/phase-C-orchestration/C-32-sprint-32-insure-connecteurs.md \
-  --reference-prompt skalean-insurtech/00-pilotage/meta-prompts/phase-B-tasks/B-32-sprint-32-insure-connecteurs.md \
+  --orchestrator skalean-insurtech/00-pilotage/meta-prompts/phase-C-orchestration/C-32-sprint-32-insure-connecteurs-v3.md \
+  --reference-prompt skalean-insurtech/00-pilotage/meta-prompts/phase-B-tasks/B-32-sprint-32-insure-connecteurs-v3.md \
   --verification skalean-insurtech/00-pilotage/meta-prompts/phase-V-verification/V-32-sprint-32-verification.md
 ```
 
-### Suivi temps reel execution
-
+### Suivi temps reel
 ```bash
-# Tail le log Cowork
-tail -f skalean-insurtech/cowork-sprint-32.log
+# Logs connecteurs API
+cd repo/apps/api && pnpm dev
 
-# Verifier progression commits
-git log --oneline --since="2 weeks ago" -- repo/ | grep "Sprint: 32"
-```
+# Grafana local
+docker-compose up grafana
 
-### Apres completion -- verifier rapport
-
-```bash
-cat skalean-insurtech/sprint32-verify-report.md
+# Progress commits
+git log --oneline --since="2.5 weeks ago" -- repo/packages/insure-connector | grep "Sprint: 32"
 ```
 
 ---
 
 ## NOTES IMPORTANTES POUR COWORK
 
-1. **Lire d'abord B-32** complet avant generation prompts taches (contexte critique)
-2. **Generer les 13 prompts taches** dans `00-pilotage/prompts-taches/sprint-32-*/` AVANT de commencer execution
-3. **Toujours respecter l'ordre** des taches (dependances explicites)
-4. **Commit chaque tache separement** (granularite Git pour rollback facile)
-5. **NE JAMAIS modifier `00-pilotage/`** -- uniquement `repo/`
-6. **En cas de doute**, escalader Saad/Abla via Slack `#insurtech-dev` plutot que faire choix arbitraire
-7. **Documentation continue** : si tu prends une decision technique, ajouter ADR dans `repo/docs/architecture/`
+1. **Lire B-32 v3.0 complet** AVANT generation prompts (patterns 8 carriers + Puppeteer + IMAP + Circuit Breaker specifiques)
+2. **Tier 1 ~50% marche** : prioriser AXA + Allianz + Saham + Sanad (Tier 1) avant Tier 2/3
+3. **Tier 2 Wafa** : Puppeteer scraping necessite convention partenariat legal (verifier avec Saad avant scraping)
+4. **Tier 3 carriers** : 100% manual queue Tache 7.2.17 critique pour business continuity
+5. **Reconciliation > 5% gap** : alerte critical -- pas optionnel pour audit ACAPS
+6. **Manual queue SLA 48h** : verifier alerting team broker_admin operationnel
+7. **Demo Day 30 juin** : si delai Sprint 32, scope reduit possible (4 Tier 1 only sans Tier 2/3) = decision Saad/Abla
+8. **NE JAMAIS modifier 00-pilotage/** -- uniquement repo/
 
 ---
 
-**Fin de l'orchestrateur C-32 v2.2 detaille -- Sprint 32 (7.4) Insure Connecteurs Assureurs (5 connecteurs).**
+**Fin orchestrateur C-32 v3.0 -- Sprint 32 (7.2) REFONTE Connecteurs Insure 8 carriers Maroc.**
 
-**Total taches detaillees** : 13 | **Effort cumul** : ~80h | **Apport** : 5 connecteurs assureurs reels (Wafa+Atlanta+Saham+RMA+AXA)
+**Total taches** : 18 (4 Tier 1 v2.2 adaptees + 14 v3.0 nouvelles) | **Effort** : ~120h | **Apport** : ~85% couverture marche carriers Maroc

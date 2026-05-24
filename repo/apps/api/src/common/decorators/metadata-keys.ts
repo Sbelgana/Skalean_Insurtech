@@ -53,3 +53,11 @@ export const MIN_ROLE_KEY = 'rbac-min-role';
  * Metadata stockee comme { permissions: PermissionValue[], mode: 'any' | 'all' }.
  */
 export const REQUIRE_PERMISSIONS_KEY = 'rbac-require-permissions';
+
+// === Sprint 7 Tache 2.3.8 -- AbacGuard ===
+
+/**
+ * @AbacResource(type, idExtractor?) : declare resource type + extraction d'ID.
+ * Metadata { resourceType: AbacResourceType, idExtractor?: (req) => string }.
+ */
+export const ABAC_RESOURCE_KEY = 'abac-resource';

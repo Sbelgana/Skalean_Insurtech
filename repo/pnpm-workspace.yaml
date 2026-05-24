@@ -30,6 +30,8 @@ packages:
   - 'packages/analytics'                # ClickHouse OLAP + ETL + dashboards Grafana -- Sprint 13
   - 'packages/insure'                   # Vertical Broker (lifecycle police + connecteurs Sprint 32) -- Sprint 14-15
   - 'packages/repair'                   # Vertical Garage (sinistres + reparations + IA Sprint 20+29) -- Sprint 19-21
+  - 'packages/expertise'                # Foundation Expert acteur central v3.0 (decision-013) -- Sprint 7.5b foundation, impl Sprint 14/22.7
+  - 'packages/tow'                      # Foundation Tow remorqueur v3.0 (decision-012) -- Sprint 7.5b foundation, impl Sprint 22.5
   - 'packages/stock'                    # Stock pieces + FIFO + alertes seuil -- Sprint 13
   - 'packages/hr'                       # Employees + paie CNSS + AMO + IR -- Sprint 13
 

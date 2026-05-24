@@ -120,7 +120,7 @@ describe.skipIf(SKIP)('Migration CRM1735000000002', () => {
         'idx_crm_contacts_full_name_trgm',
         'idx_crm_contacts_phone_trgm',
         'idx_crm_deals_name_trgm',
-        'idx_crm_interactions_content_trgm',
+        'idx_crm_interactions_body_trgm',
         'idx_crm_interactions_subject_trgm',
       ]),
     );
@@ -140,9 +140,17 @@ describe.skipIf(SKIP)('Migration CRM1735000000002', () => {
 
   it('down() supprime les 4 tables et les 4 ENUMs CRM', async () => {
     // Revert later CRM migrations first :
+    //   - 018 Sprint 8.5 reshape interactions polymorphic + SECURITY DEFINER
     //   - 017 Sprint 8.4 reshape deals (re-creates crm_deal_stage ENUM transitoirement)
     //   - 016 Sprint 8.3 pipelines/stages
     // ... then 002's down() can prove it removes ALL of its Sprint 2 contribution.
+    const { ReshapeCrmInteractionsPolymorphic1735000000018 } = await import(
+      '../../migrations/1735000000018-ReshapeCrmInteractionsPolymorphic.js'
+    );
+    await new ReshapeCrmInteractionsPolymorphic1735000000018().down(
+      ds.createQueryRunner(),
+    );
+
     const { ReshapeCrmDealsWorkflow1735000000017 } = await import(
       '../../migrations/1735000000017-ReshapeCrmDealsWorkflow.js'
     );

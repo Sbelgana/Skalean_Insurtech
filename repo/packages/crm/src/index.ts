@@ -5,7 +5,7 @@
  * Services NestJS implementes dans apps/api/src/modules/crm/.
  */
 
-export const CRM_PACKAGE_VERSION = '0.5.0';
+export const CRM_PACKAGE_VERSION = '0.6.0';
 
 // Validators MA
 export {
@@ -93,3 +93,21 @@ export {
   type ReopenDealDto,
   type DealFiltersDto,
 } from './schemas/deal.schema.js';
+
+// Schemas Zod Interaction (Sprint 8 Tache 8.5 -- polymorphic + Hybrid mutability)
+export {
+  INTERACTION_TYPES,
+  INTERACTION_DIRECTIONS,
+  INTERACTION_STATUSES,
+  CreateInteractionSchema,
+  AnnotateInteractionSchema,
+  FilterInteractionsSchema,
+  TimelineQuerySchema,
+  type InteractionType,
+  type InteractionDirection,
+  type InteractionStatus,
+  type CreateInteractionDto,
+  type AnnotateInteractionDto,
+  type FilterInteractionsDto,
+  type TimelineQueryDto,
+} from './schemas/interaction.schema.js';

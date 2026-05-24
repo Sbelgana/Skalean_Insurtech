@@ -94,6 +94,9 @@ export const PermissionsMatrix: Record<AuthRole, PermissionsMatrixEntry> = {
     Permission.CRM_DEALS_OVERRIDE_WORKFLOW,
     Permission.CRM_PIPELINES_MANAGE,
     Permission.CRM_INTERACTIONS_CREATE,
+    Permission.CRM_INTERACTIONS_READ,
+    Permission.CRM_INTERACTIONS_SOFT_DELETE,
+    Permission.CRM_INTERACTIONS_RESTORE,
     // Booking complet
     Permission.BOOKING_ROOMS_READ,
     Permission.BOOKING_ROOMS_MANAGE,
@@ -172,6 +175,8 @@ export const PermissionsMatrix: Record<AuthRole, PermissionsMatrixEntry> = {
     Permission.CRM_DEALS_UPDATE,
     Permission.CRM_DEALS_CLOSE,
     Permission.CRM_INTERACTIONS_CREATE,
+    Permission.CRM_INTERACTIONS_READ,
+    Permission.CRM_INTERACTIONS_SOFT_DELETE,
     Permission.INSURE_QUOTES_GENERATE,
     Permission.INSURE_QUOTES_READ,
     Permission.INSURE_POLICIES_READ_OWN,
@@ -198,6 +203,8 @@ export const PermissionsMatrix: Record<AuthRole, PermissionsMatrixEntry> = {
   [AuthRole.BrokerAssistant]: [
     Permission.CRM_CONTACTS_READ_OWN,
     Permission.CRM_CONTACTS_CREATE,
+    Permission.CRM_INTERACTIONS_CREATE,
+    Permission.CRM_INTERACTIONS_READ,
     Permission.INSURE_QUOTES_GENERATE,
     Permission.BOOKING_APPOINTMENTS_CREATE,
     Permission.BOOKING_APPOINTMENTS_READ_OWN,

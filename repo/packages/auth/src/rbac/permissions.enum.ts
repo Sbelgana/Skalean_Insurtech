@@ -36,7 +36,7 @@ export const Permission = {
   TENANT_BRANDING_UPDATE: 'tenant.branding.update',
   TENANT_BILLING_READ: 'tenant.billing.read',
 
-  // === CRM (16) -- Sprint 8 ===
+  // === CRM (18) -- Sprint 8 (8.4 added CRM_DEALS_CLOSE + CRM_DEALS_OVERRIDE_WORKFLOW) ===
   CRM_CONTACTS_READ: 'crm.contacts.read',
   CRM_CONTACTS_READ_OWN: 'crm.contacts.read_own',
   CRM_CONTACTS_CREATE: 'crm.contacts.create',
@@ -52,6 +52,8 @@ export const Permission = {
   CRM_DEALS_CREATE: 'crm.deals.create',
   CRM_DEALS_UPDATE: 'crm.deals.update',
   CRM_DEALS_DELETE: 'crm.deals.delete',
+  CRM_DEALS_CLOSE: 'crm.deals.close',
+  CRM_DEALS_OVERRIDE_WORKFLOW: 'crm.deals.override_workflow',
   CRM_PIPELINES_MANAGE: 'crm.pipelines.manage',
   CRM_INTERACTIONS_CREATE: 'crm.interactions.create',
 

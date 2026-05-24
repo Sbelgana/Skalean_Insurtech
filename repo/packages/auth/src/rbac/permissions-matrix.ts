@@ -90,6 +90,8 @@ export const PermissionsMatrix: Record<AuthRole, PermissionsMatrixEntry> = {
     Permission.CRM_DEALS_CREATE,
     Permission.CRM_DEALS_UPDATE,
     Permission.CRM_DEALS_DELETE,
+    Permission.CRM_DEALS_CLOSE,
+    Permission.CRM_DEALS_OVERRIDE_WORKFLOW,
     Permission.CRM_PIPELINES_MANAGE,
     Permission.CRM_INTERACTIONS_CREATE,
     // Booking complet
@@ -168,6 +170,7 @@ export const PermissionsMatrix: Record<AuthRole, PermissionsMatrixEntry> = {
     Permission.CRM_DEALS_READ,
     Permission.CRM_DEALS_CREATE,
     Permission.CRM_DEALS_UPDATE,
+    Permission.CRM_DEALS_CLOSE,
     Permission.CRM_INTERACTIONS_CREATE,
     Permission.INSURE_QUOTES_GENERATE,
     Permission.INSURE_QUOTES_READ,

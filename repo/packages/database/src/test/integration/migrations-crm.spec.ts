@@ -37,14 +37,15 @@ describe.skipIf(SKIP)('Migration CRM1735000000002', () => {
     ]);
   });
 
-  it('cree les 5 ENUMs CRM', async () => {
+  it('cree les 4 ENUMs CRM (apres reshape Sprint 8.4 -- crm_deal_stage supprime)', async () => {
+    // Sprint 8.4 migration 017 a supprime crm_deal_stage au profit de stage_id FK
+    // -> crm_stages. Les 4 ENUMs restants sont definis par migration 002.
     const rows: Array<{ typname: string }> = await ds.query(`
       SELECT typname FROM pg_type
       WHERE typname LIKE 'crm_%' AND typtype = 'e'
       ORDER BY typname;
     `);
     expect(rows.map((r) => r.typname)).toEqual([
-      'crm_deal_stage',
       'crm_interaction_direction',
       'crm_interaction_type',
       'crm_preferred_channel',
@@ -118,7 +119,7 @@ describe.skipIf(SKIP)('Migration CRM1735000000002', () => {
         'idx_crm_contacts_email_trgm',
         'idx_crm_contacts_full_name_trgm',
         'idx_crm_contacts_phone_trgm',
-        'idx_crm_deals_title_trgm',
+        'idx_crm_deals_name_trgm',
         'idx_crm_interactions_content_trgm',
         'idx_crm_interactions_subject_trgm',
       ]),
@@ -137,9 +138,16 @@ describe.skipIf(SKIP)('Migration CRM1735000000002', () => {
     );
   });
 
-  it('down() supprime les 4 tables et les 5 ENUMs CRM', async () => {
-    // Revert later CRM migrations first (e.g. Sprint 8.3 pipelines/stages) so
-    // we can assert that 002's down() removes ALL of its Sprint 2 contribution.
+  it('down() supprime les 4 tables et les 4 ENUMs CRM', async () => {
+    // Revert later CRM migrations first :
+    //   - 017 Sprint 8.4 reshape deals (re-creates crm_deal_stage ENUM transitoirement)
+    //   - 016 Sprint 8.3 pipelines/stages
+    // ... then 002's down() can prove it removes ALL of its Sprint 2 contribution.
+    const { ReshapeCrmDealsWorkflow1735000000017 } = await import(
+      '../../migrations/1735000000017-ReshapeCrmDealsWorkflow.js'
+    );
+    await new ReshapeCrmDealsWorkflow1735000000017().down(ds.createQueryRunner());
+
     const { CreateCrmPipelinesStages1735000000016 } = await import(
       '../../migrations/1735000000016-CreateCrmPipelinesStages.js'
     );

@@ -42,6 +42,8 @@ export const TENANTED_TABLES_ORDERED: ReadonlyArray<string> = [
   'booking_rooms',
   'crm_interactions',
   'crm_deals',
+  'crm_stages',
+  'crm_pipelines',
   'crm_contacts',
   'crm_companies',
   'compliance_consent_logs',

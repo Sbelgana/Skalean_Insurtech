@@ -115,6 +115,8 @@ describe.skip('RLS isolation -- CRM tables', () => {
   });
 
   it('deals isolation cross-tenant', async () => {
+    // Sprint 8.4 reshape : INSERT crm_deals now requires company_id, pipeline_id,
+    // stage_id, name (instead of legacy title). Setup fixtures inline.
     const qrA = ds.createQueryRunner();
     await setSession(qrA, tenantA);
     const user: Array<{ id: string }> = await qrA.query(
@@ -122,19 +124,29 @@ describe.skip('RLS isolation -- CRM tables', () => {
       [tenantA],
     );
     const ownerUserId = user[0]?.id ?? tenantA;
-    const contact: Array<{ id: string }> = await qrA.query(
-      `INSERT INTO crm_contacts (tenant_id, first_name, last_name) VALUES ($1, 'F', 'L') RETURNING id;`,
+    const company: Array<{ id: string }> = await qrA.query(
+      `INSERT INTO crm_companies (tenant_id, name) VALUES ($1, 'Co-A') RETURNING id;`,
       [tenantA],
     );
+    const pipeline: Array<{ id: string }> = await qrA.query(
+      `INSERT INTO crm_pipelines (tenant_id, name) VALUES ($1, 'P-A') RETURNING id;`,
+      [tenantA],
+    );
+    const stage: Array<{ id: string }> = await qrA.query(
+      `INSERT INTO crm_stages (tenant_id, pipeline_id, name, position, color, win_probability)
+       VALUES ($1, $2, 'Lead', 0, '#FF0000', 10) RETURNING id;`,
+      [tenantA, pipeline[0]?.id],
+    );
     await qrA.query(
-      `INSERT INTO crm_deals (tenant_id, contact_id, title, owner_user_id) VALUES ($1, $2, 'Deal-A', $3);`,
-      [tenantA, contact[0]?.id, ownerUserId],
+      `INSERT INTO crm_deals (tenant_id, company_id, pipeline_id, stage_id, name, amount, owner_user_id)
+       VALUES ($1, $2, $3, $4, 'Deal-A', 1000, $5);`,
+      [tenantA, company[0]?.id, pipeline[0]?.id, stage[0]?.id, ownerUserId],
     );
     await qrA.release();
 
     const qrB = ds.createQueryRunner();
     await setSession(qrB, tenantB);
-    const rows: Array<{ title: string }> = await qrB.query(`SELECT title FROM crm_deals;`);
+    const rows: Array<{ name: string }> = await qrB.query(`SELECT name FROM crm_deals;`);
     expect(rows).toHaveLength(0);
     await qrB.release();
   });

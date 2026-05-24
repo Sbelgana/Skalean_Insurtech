@@ -10,3 +10,5 @@ export * from './compliance/index.js';
 export * from './analytics/index.js';
 export * from './stock/index.js';
 export * from './hr/index.js';
+// Sprint 7.5b foundation -- Insure (Expert entities skeleton, decision-013)
+export * from './insure/index.js';

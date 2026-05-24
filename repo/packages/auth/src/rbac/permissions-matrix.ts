@@ -409,36 +409,302 @@ export const PermissionsMatrix: Record<AuthRole, PermissionsMatrixEntry> = {
   ] as const,
 
   // ===========================================================================
-  // v3.0 NEW ROLES (Sprint 7.5a Foundation Migration)
+  // v3.0 NEW ROLES (Sprint 7 reprise -- Tache 2.3.2, populated post-Sprint 7.5a)
   //
-  // Les permissions directes des 14 nouveaux roles seront populees au Sprint 7
-  // reprise (tache 2.3.2 PermissionsMatrix v3.0) lorsque le catalog 130 perms
-  // sera complet. Pour Sprint 7.5a, entrees vides afin de preserver la contrainte
-  // exhaustivite Record<AuthRole, PermissionsMatrixEntry> sans casser les 12
-  // roles v2.2.
+  // Permissions directes des 14 nouveaux roles v3.0 (decision-012/013/014).
+  // L'heritage via RoleHierarchy DAG (Sprint 7.5a.2) ajoute automatiquement
+  // les permissions des enfants. Exemple : carrier_admin herite des 5 enfants
+  // (claims_manager + finance + compliance + expert_manager + partner_manager)
+  // donc cette entree liste UNIQUEMENT les permissions admin direct.
   // ===========================================================================
 
-  // Garage parts manager (decision-014 PartsHub).
-  [AuthRole.GaragePartsManager]: [] as const,
+  /**
+   * garage_parts_manager : PartsHub (decision-014).
+   * Sibling de garage_chef/comptable/commercial sous garage_admin.
+   * Permissions : 7 perms du module parts + comm de base + auth sessions.
+   */
+  [AuthRole.GaragePartsManager]: [
+    Permission.PARTS_SUPPLIERS_READ,
+    Permission.PARTS_SUPPLIERS_ADD_FAVORITE,
+    Permission.PARTS_ORDERS_CREATE,
+    Permission.PARTS_ORDERS_READ,
+    Permission.PARTS_ORDERS_CANCEL,
+    Permission.PARTS_COMMISSION_VIEW,
+    Permission.PARTS_INVOICES_READ,
+    Permission.COMM_MESSAGES_SEND,
+    Permission.COMM_MESSAGES_READ_OWN,
+    Permission.AUTH_SESSIONS_READ_OWN,
+    Permission.AUTH_SESSIONS_REVOKE_OWN,
+    Permission.AUTH_MFA_MANAGE,
+  ] as const,
 
-  // Carrier roles (decision-012).
-  [AuthRole.CarrierAdmin]: [] as const,
-  [AuthRole.CarrierClaimsManager]: [] as const,
-  [AuthRole.CarrierFinance]: [] as const,
-  [AuthRole.CarrierCompliance]: [] as const,
-  [AuthRole.CarrierExpertManager]: [] as const,
-  [AuthRole.CarrierPartnerManager]: [] as const,
+  // -------------- CARRIER (decision-012) --------------
 
-  // Expert roles (decision-013).
-  [AuthRole.ExpertIndependent]: [] as const,
-  [AuthRole.ExpertFirmAdmin]: [] as const,
-  [AuthRole.ExpertAssociate]: [] as const,
-  [AuthRole.ExpertCarrierInternal]: [] as const,
+  /**
+   * carrier_admin : Admin compagnie d'assurance, CRUD complet tenant carrier.
+   * Herite (via HierarchyResolver) : claims_manager + finance + compliance +
+   * expert_manager + partner_manager.
+   * Direct : tenant management + auth users + analytics global.
+   */
+  [AuthRole.CarrierAdmin]: [
+    Permission.CARRIER_DASHBOARD_READ,
+    Permission.TENANT_SETTINGS_READ,
+    Permission.TENANT_SETTINGS_UPDATE,
+    Permission.TENANT_USERS_INVITE,
+    Permission.TENANT_BRANDING_UPDATE,
+    Permission.TENANT_BILLING_READ,
+    Permission.AUTH_USERS_CREATE,
+    Permission.AUTH_USERS_READ,
+    Permission.AUTH_USERS_UPDATE,
+    Permission.AUTH_ROLES_ASSIGN,
+    Permission.AUTH_ROLES_REVOKE,
+    Permission.AUTH_SESSIONS_REVOKE_ALL,
+    Permission.ANALYTICS_DASHBOARDS_READ,
+    Permission.ANALYTICS_REPORTS_EXPORT,
+    Permission.COMM_MESSAGES_SEND,
+    Permission.COMM_MESSAGES_READ,
+    Permission.COMM_TEMPLATES_MANAGE,
+    Permission.DOCS_DOCUMENTS_READ,
+    Permission.DOCS_DOCUMENTS_CREATE,
+  ] as const,
 
-  // Tow roles (decision-012).
-  [AuthRole.TowAdmin]: [] as const,
-  [AuthRole.TowDispatcher]: [] as const,
-  [AuthRole.TowDriver]: [] as const,
+  /**
+   * carrier_claims_manager : Responsable sinistres compagnie.
+   * Designe experts, lit claims, approuve workflow (paiements deleges au finance).
+   */
+  [AuthRole.CarrierClaimsManager]: [
+    Permission.CARRIER_DASHBOARD_READ,
+    Permission.CARRIER_CLAIMS_READ,
+    Permission.CARRIER_CLAIMS_READ_ALL,
+    Permission.CARRIER_EXPERTS_DESIGNATE,
+    Permission.CARRIER_EXPERTS_READ_POOL,
+    Permission.INSURE_POLICIES_READ_ALL,
+    Permission.COMM_MESSAGES_SEND,
+    Permission.COMM_MESSAGES_READ,
+    Permission.DOCS_DOCUMENTS_READ,
+    Permission.AUTH_SESSIONS_READ_OWN,
+    Permission.AUTH_SESSIONS_REVOKE_OWN,
+    Permission.AUTH_MFA_MANAGE,
+  ] as const,
+
+  /**
+   * carrier_finance : Finance compagnie, workflow approbation paiements 4 niveaux.
+   */
+  [AuthRole.CarrierFinance]: [
+    Permission.CARRIER_DASHBOARD_READ,
+    Permission.CARRIER_PAYMENT_APPROVE_L1,
+    Permission.CARRIER_PAYMENT_APPROVE_L2,
+    Permission.CARRIER_PAYMENT_APPROVE_L3,
+    Permission.CARRIER_PAYMENT_APPROVE_L4,
+    Permission.CARRIER_PAYMENT_REJECT,
+    Permission.PAY_TRANSACTIONS_READ,
+    Permission.PAY_REFUNDS_READ,
+    Permission.BOOKS_INVOICES_READ,
+    Permission.BOOKS_JOURNALS_READ,
+    Permission.ANALYTICS_DASHBOARDS_READ,
+    Permission.AUTH_SESSIONS_READ_OWN,
+    Permission.AUTH_SESSIONS_REVOKE_OWN,
+    Permission.AUTH_MFA_MANAGE,
+  ] as const,
+
+  /**
+   * carrier_compliance : Reporting ACAPS + fraude + audit.
+   */
+  [AuthRole.CarrierCompliance]: [
+    Permission.CARRIER_DASHBOARD_READ,
+    Permission.CARRIER_COMPLIANCE_REPORTS_GENERATE,
+    Permission.CARRIER_FRAUD_ALERTS_READ,
+    Permission.COMPLIANCE_ACAPS_REPORTS_GENERATE,
+    Permission.COMPLIANCE_AML_ALERTS_REVIEW,
+    Permission.COMPLIANCE_AUDIT_TRAIL_READ,
+    Permission.ANALYTICS_DASHBOARDS_READ,
+    Permission.ANALYTICS_REPORTS_EXPORT,
+    Permission.AUTH_SESSIONS_READ_OWN,
+    Permission.AUTH_SESSIONS_REVOKE_OWN,
+    Permission.AUTH_MFA_MANAGE,
+  ] as const,
+
+  /**
+   * carrier_expert_manager : Gestion du pool experts (designation + evaluation).
+   */
+  [AuthRole.CarrierExpertManager]: [
+    Permission.CARRIER_DASHBOARD_READ,
+    Permission.CARRIER_EXPERTS_DESIGNATE,
+    Permission.CARRIER_EXPERTS_READ_POOL,
+    Permission.CARRIER_EXPERTS_EVALUATE,
+    Permission.ANALYTICS_DASHBOARDS_READ,
+    Permission.COMM_MESSAGES_SEND,
+    Permission.AUTH_SESSIONS_READ_OWN,
+    Permission.AUTH_SESSIONS_REVOKE_OWN,
+    Permission.AUTH_MFA_MANAGE,
+  ] as const,
+
+  /**
+   * carrier_partner_manager : Gestion partenaires courtiers + garages.
+   */
+  [AuthRole.CarrierPartnerManager]: [
+    Permission.CARRIER_DASHBOARD_READ,
+    Permission.CARRIER_PARTNERS_READ_STATS,
+    Permission.CARRIER_BROKERS_MANAGE,
+    Permission.ANALYTICS_DASHBOARDS_READ,
+    Permission.COMM_MESSAGES_SEND,
+    Permission.AUTH_SESSIONS_READ_OWN,
+    Permission.AUTH_SESSIONS_REVOKE_OWN,
+    Permission.AUTH_MFA_MANAGE,
+  ] as const,
+
+  // -------------- EXPERT (decision-013) --------------
+
+  /**
+   * expert_independent : Expert automobile independant ACAPS-licensed.
+   * Personne physique standalone. Permissions completes workflow expertise.
+   */
+  [AuthRole.ExpertIndependent]: [
+    Permission.EXPERTISE_MISSIONS_READ,
+    Permission.EXPERTISE_MISSIONS_ACCEPT,
+    Permission.EXPERTISE_MISSIONS_REJECT,
+    Permission.EXPERTISE_EXECUTE,
+    Permission.EXPERTISE_VALIDATE_QUOTE,
+    Permission.EXPERTISE_MODIFY_QUOTE,
+    Permission.EXPERTISE_REJECT_QUOTE,
+    Permission.EXPERTISE_REPORT_CREATE,
+    Permission.EXPERTISE_REPORT_SIGN,
+    Permission.EXPERTISE_HONORAIRES_INVOICE,
+    Permission.DOCS_DOCUMENTS_READ,
+    Permission.DOCS_DOCUMENTS_CREATE,
+    Permission.SIGNATURE_REQUESTS_CREATE,
+    Permission.SIGNATURE_CERTIFICATES_READ,
+    Permission.COMM_MESSAGES_SEND,
+    Permission.COMM_MESSAGES_READ,
+    Permission.AUTH_SESSIONS_READ_OWN,
+    Permission.AUTH_SESSIONS_REVOKE_OWN,
+    Permission.AUTH_MFA_MANAGE,
+  ] as const,
+
+  /**
+   * expert_firm_admin : Admin cabinet expertise multi-associes.
+   * Herite (via HierarchyResolver) : expert_associate.
+   * Direct : tenant management + auth users.
+   */
+  [AuthRole.ExpertFirmAdmin]: [
+    Permission.EXPERTISE_HONORAIRES_INVOICE,
+    Permission.TENANT_SETTINGS_READ,
+    Permission.TENANT_SETTINGS_UPDATE,
+    Permission.TENANT_USERS_INVITE,
+    Permission.TENANT_BILLING_READ,
+    Permission.AUTH_USERS_CREATE,
+    Permission.AUTH_USERS_READ,
+    Permission.AUTH_USERS_UPDATE,
+    Permission.AUTH_ROLES_ASSIGN,
+    Permission.AUTH_ROLES_REVOKE,
+    Permission.AUTH_SESSIONS_REVOKE_ALL,
+    Permission.ANALYTICS_DASHBOARDS_READ,
+    Permission.BOOKS_INVOICES_READ,
+    Permission.BOOKS_INVOICES_CREATE,
+  ] as const,
+
+  /**
+   * expert_associate : Expert associe cabinet, execute missions.
+   * Pas de gestion tenant/users (delegue firm_admin).
+   */
+  [AuthRole.ExpertAssociate]: [
+    Permission.EXPERTISE_MISSIONS_READ,
+    Permission.EXPERTISE_MISSIONS_ACCEPT,
+    Permission.EXPERTISE_MISSIONS_REJECT,
+    Permission.EXPERTISE_EXECUTE,
+    Permission.EXPERTISE_VALIDATE_QUOTE,
+    Permission.EXPERTISE_MODIFY_QUOTE,
+    Permission.EXPERTISE_REJECT_QUOTE,
+    Permission.EXPERTISE_REPORT_CREATE,
+    Permission.EXPERTISE_REPORT_SIGN,
+    Permission.DOCS_DOCUMENTS_READ,
+    Permission.DOCS_DOCUMENTS_CREATE,
+    Permission.SIGNATURE_REQUESTS_CREATE,
+    Permission.COMM_MESSAGES_SEND,
+    Permission.COMM_MESSAGES_READ_OWN,
+    Permission.AUTH_SESSIONS_READ_OWN,
+    Permission.AUTH_SESSIONS_REVOKE_OWN,
+    Permission.AUTH_MFA_MANAGE,
+  ] as const,
+
+  /**
+   * expert_carrier_internal : Expert salarie interne compagnie.
+   * Pas d'invoice honoraires (salaire) + lecture insure policies (carrier scope).
+   */
+  [AuthRole.ExpertCarrierInternal]: [
+    Permission.EXPERTISE_MISSIONS_READ,
+    Permission.EXPERTISE_MISSIONS_ACCEPT,
+    Permission.EXPERTISE_EXECUTE,
+    Permission.EXPERTISE_VALIDATE_QUOTE,
+    Permission.EXPERTISE_MODIFY_QUOTE,
+    Permission.EXPERTISE_REJECT_QUOTE,
+    Permission.EXPERTISE_REPORT_CREATE,
+    Permission.EXPERTISE_REPORT_SIGN,
+    Permission.INSURE_POLICIES_READ_ALL,
+    Permission.DOCS_DOCUMENTS_READ,
+    Permission.DOCS_DOCUMENTS_CREATE,
+    Permission.COMM_MESSAGES_SEND,
+    Permission.COMM_MESSAGES_READ,
+    Permission.AUTH_SESSIONS_READ_OWN,
+    Permission.AUTH_SESSIONS_REVOKE_OWN,
+    Permission.AUTH_MFA_MANAGE,
+  ] as const,
+
+  // -------------- TOW (decision-012) --------------
+
+  /**
+   * tow_admin : Admin operateur de remorquage.
+   * Herite (via HierarchyResolver) : tow_dispatcher (qui herite tow_driver).
+   * Direct : tenant management + earnings global + drivers manage.
+   */
+  [AuthRole.TowAdmin]: [
+    Permission.TOW_EARNINGS_READ,
+    Permission.TOW_DRIVERS_MANAGE,
+    Permission.TENANT_SETTINGS_READ,
+    Permission.TENANT_SETTINGS_UPDATE,
+    Permission.TENANT_USERS_INVITE,
+    Permission.TENANT_BILLING_READ,
+    Permission.AUTH_USERS_CREATE,
+    Permission.AUTH_USERS_READ,
+    Permission.AUTH_USERS_UPDATE,
+    Permission.AUTH_ROLES_ASSIGN,
+    Permission.AUTH_ROLES_REVOKE,
+    Permission.AUTH_SESSIONS_REVOKE_ALL,
+    Permission.ANALYTICS_DASHBOARDS_READ,
+    Permission.ANALYTICS_REPORTS_EXPORT,
+  ] as const,
+
+  /**
+   * tow_dispatcher : Assigne missions aux conducteurs.
+   * Herite (via HierarchyResolver) : tow_driver.
+   * Direct : missions read available + drivers visibility partielle.
+   */
+  [AuthRole.TowDispatcher]: [
+    Permission.TOW_MISSIONS_READ_AVAILABLE,
+    Permission.COMM_MESSAGES_SEND,
+    Permission.COMM_MESSAGES_READ,
+    Permission.DOCS_DOCUMENTS_READ,
+    Permission.ANALYTICS_DASHBOARDS_READ_OWN,
+  ] as const,
+
+  /**
+   * tow_driver : Conducteur, execute missions (PWA mobile).
+   * Base : missions terrain + photos + availability.
+   */
+  [AuthRole.TowDriver]: [
+    Permission.TOW_MISSIONS_READ_AVAILABLE,
+    Permission.TOW_MISSIONS_ACCEPT,
+    Permission.TOW_MISSIONS_REJECT,
+    Permission.TOW_MISSIONS_COMPLETE,
+    Permission.TOW_VEHICLE_PHOTOS_UPLOAD,
+    Permission.TOW_AVAILABILITY_TOGGLE,
+    Permission.TOW_EARNINGS_READ,
+    Permission.COMM_MESSAGES_SEND,
+    Permission.COMM_MESSAGES_READ_OWN,
+    Permission.AUTH_SESSIONS_READ_OWN,
+    Permission.AUTH_SESSIONS_REVOKE_OWN,
+    Permission.AUTH_MFA_MANAGE,
+  ] as const,
 };
 
 /** Type derive : nombre de roles dans la matrice. */

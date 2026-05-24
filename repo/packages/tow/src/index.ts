@@ -36,6 +36,10 @@ export type {
   AssignDriverToMissionInput,
 } from './types/tow-driver.types.js';
 
+// Services skeletons (Sprint 7.5b.9) -- throw NotImplementedError jusqu'a Sprint 22.5
+export { TowService } from './services/tow.service.js';
+export { TowDriverService } from './services/tow-driver.service.js';
+
 // Constantes
 export const TOW_PACKAGE_VERSION = '0.1.0';
 

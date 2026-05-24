@@ -38,6 +38,10 @@ export type {
   SignExpertReportInput,
 } from './types/expert-report.types.js';
 
+// Services skeletons (Sprint 7.5b.8) -- throw NotImplementedError jusqu'a Sprint 14/22.7
+export { ExpertService } from './services/expert.service.js';
+export { ExpertReportService } from './services/expert-report.service.js';
+
 // Constantes
 export const EXPERTISE_PACKAGE_VERSION = '0.1.0';
 

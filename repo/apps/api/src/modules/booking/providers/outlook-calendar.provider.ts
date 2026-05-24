@@ -30,7 +30,10 @@ import { Client } from '@microsoft/microsoft-graph-client';
 import { OAuthCalendarConfig } from '../config/oauth-calendar.config.js';
 import type {
   CalendarProvider,
+  ExternalCalendarEvent,
+  ExternalCalendarEventInput,
   TokenResponse,
+  WebhookNotificationParsed,
   WebhookSubscription,
   WebhookValidation,
 } from './calendar-provider.interface.js';
@@ -262,6 +265,197 @@ export class OutlookCalendarProvider implements CalendarProvider {
   // ==========================================================================
   // Helpers
   // ==========================================================================
+
+  // ==========================================================================
+  // Phase 2 (Task 8.12) -- Event CRUD + parsed webhook
+  // ==========================================================================
+
+  async createEvent(
+    accessToken: string,
+    event: ExternalCalendarEventInput,
+  ): Promise<ExternalCalendarEvent> {
+    const graph = this.buildGraphClient(accessToken);
+    const body = this.toGraphEventBody(event);
+    const created = await graph.api('/me/events').post(body);
+    return this.fromGraphEvent(created, event);
+  }
+
+  async updateEvent(
+    accessToken: string,
+    eventId: string,
+    event: ExternalCalendarEventInput,
+  ): Promise<ExternalCalendarEvent> {
+    const graph = this.buildGraphClient(accessToken);
+    const body = this.toGraphEventBody(event);
+    const updated = await graph.api(`/me/events/${eventId}`).patch(body);
+    return this.fromGraphEvent(updated, event);
+  }
+
+  async deleteEvent(accessToken: string, eventId: string): Promise<void> {
+    const graph = this.buildGraphClient(accessToken);
+    try {
+      await graph.api(`/me/events/${eventId}`).delete();
+    } catch (err) {
+      const status = (err as { statusCode?: number }).statusCode;
+      if (status === 404 || status === 410) {
+        this.logger.debug(
+          `outlook_event_delete_already_gone id=${eventId} status=${status}`,
+        );
+        return;
+      }
+      throw err;
+    }
+  }
+
+  async getEvent(
+    accessToken: string,
+    eventId: string,
+  ): Promise<ExternalCalendarEvent | null> {
+    const graph = this.buildGraphClient(accessToken);
+    try {
+      const data = await graph.api(`/me/events/${eventId}`).get();
+      return this.fromGraphEvent(data);
+    } catch (err) {
+      const status = (err as { statusCode?: number }).statusCode;
+      if (status === 404 || status === 410) return null;
+      throw err;
+    }
+  }
+
+  /**
+   * MS Graph notifications carry the change inside `body.value[]`. Each entry
+   * has `subscriptionId`, `resourceData.id`, `changeType` ('created' / 'updated'
+   * / 'deleted'), and optional `lifecycleEvent` for subscription-level events
+   * (reauth, renew, removed).
+   */
+  parseWebhookNotification(
+    _headers: Record<string, string | string[] | undefined>,
+    body: unknown,
+  ): WebhookNotificationParsed | null {
+    if (typeof body !== 'object' || body === null) return null;
+    const value = (body as { value?: unknown }).value;
+    if (!Array.isArray(value) || value.length === 0) return null;
+    const first = value[0] as {
+      subscriptionId?: string;
+      resourceData?: { id?: string };
+      changeType?: string;
+      lifecycleEvent?: string;
+    };
+    const subscriptionId = first.subscriptionId;
+    const resourceId = first.resourceData?.id;
+    if (!subscriptionId) return null;
+
+    // Lifecycle notifications can arrive without resourceData -- surface them
+    // with empty resourceId so SyncWorker can route to the right handler.
+    const lifecycleEvent = this.normalizeLifecycleEvent(first.lifecycleEvent);
+    if (lifecycleEvent) {
+      return {
+        subscriptionId,
+        resourceId: resourceId ?? '',
+        changeType: 'updated',
+        lifecycleEvent,
+      };
+    }
+
+    if (!resourceId) return null;
+
+    const changeType: 'created' | 'updated' | 'deleted' =
+      first.changeType === 'created'
+        ? 'created'
+        : first.changeType === 'deleted'
+          ? 'deleted'
+          : 'updated';
+
+    return {
+      subscriptionId,
+      resourceId,
+      changeType,
+    };
+  }
+
+  // ==========================================================================
+  // MS Graph event mappers
+  // ==========================================================================
+
+  private toGraphEventBody(event: ExternalCalendarEventInput): Record<string, unknown> {
+    return {
+      subject: event.title,
+      body: {
+        contentType: 'text',
+        content: event.description ?? '',
+      },
+      start: {
+        dateTime: event.startAt.toISOString(),
+        timeZone: event.timezone,
+      },
+      end: {
+        dateTime: event.endAt.toISOString(),
+        timeZone: event.timezone,
+      },
+      location: event.location
+        ? { displayName: event.location }
+        : undefined,
+      attendees: event.attendees.map((a) => ({
+        emailAddress: {
+          name: a.name,
+          ...(a.email ? { address: a.email } : {}),
+        },
+        type: 'required',
+      })),
+    };
+  }
+
+  private fromGraphEvent(
+    data: Record<string, unknown> | undefined | null,
+    fallbackInput?: ExternalCalendarEventInput,
+  ): ExternalCalendarEvent {
+    const d = data ?? {};
+    const start = d['start'] as { dateTime?: string; timeZone?: string } | undefined;
+    const end = d['end'] as { dateTime?: string; timeZone?: string } | undefined;
+    const location = d['location'] as { displayName?: string } | undefined;
+    const bodyContent = (d['body'] as { content?: string } | undefined)?.content;
+    const attendeesRaw =
+      (d['attendees'] as Array<{
+        emailAddress?: { name?: string; address?: string };
+      }>) ?? [];
+    const id = (d['id'] as string | undefined) ?? '';
+    const updated =
+      (d['lastModifiedDateTime'] as string | undefined) ??
+      (d['createdDateTime'] as string | undefined);
+    const created = (d['createdDateTime'] as string | undefined) ?? updated;
+    const startAt = start?.dateTime
+      ? new Date(start.dateTime)
+      : fallbackInput?.startAt ?? new Date();
+    const endAt = end?.dateTime
+      ? new Date(end.dateTime)
+      : fallbackInput?.endAt ?? new Date();
+    const timezone = start?.timeZone ?? fallbackInput?.timezone ?? 'UTC';
+    return {
+      id,
+      title: (d['subject'] as string | undefined) ?? fallbackInput?.title ?? '',
+      description: bodyContent ?? fallbackInput?.description,
+      startAt,
+      endAt,
+      timezone,
+      attendees: attendeesRaw.map((a) => ({
+        name: a.emailAddress?.name ?? a.emailAddress?.address ?? 'Unknown',
+        ...(a.emailAddress?.address ? { email: a.emailAddress.address } : {}),
+      })),
+      location: location?.displayName ?? fallbackInput?.location,
+      lastModifiedAt: updated ? new Date(updated) : new Date(),
+      createdAt: created ? new Date(created) : new Date(),
+    };
+  }
+
+  private normalizeLifecycleEvent(
+    raw: string | undefined,
+  ): 'subscriptionRenew' | 'subscriptionRemove' | 'reauthorizationRequired' | undefined {
+    if (!raw) return undefined;
+    if (raw === 'subscriptionRenew') return 'subscriptionRenew';
+    if (raw === 'subscriptionRemove') return 'subscriptionRemove';
+    if (raw === 'reauthorizationRequired') return 'reauthorizationRequired';
+    return undefined;
+  }
 
   /**
    * Extracts the refresh token from msal-node's internal token cache.

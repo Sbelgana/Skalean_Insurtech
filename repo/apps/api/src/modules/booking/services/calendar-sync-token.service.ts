@@ -125,6 +125,33 @@ export class CalendarSyncTokenService {
   }
 
   /**
+   * Phase 2 (Task 8.12) -- find all active sync tokens for a (tenant, user)
+   * pair. Used by sync worker push path : iterate user's connected providers
+   * and create/update events on each. Unauthenticated-friendly variant.
+   */
+  async findActiveTokensByUserAs(
+    tenantId: string,
+    userId: string,
+  ): Promise<BookingCalendarSyncEntity[]> {
+    return this.getRepo().find({
+      where: { tenantId, userId, syncEnabled: true },
+      order: { provider: 'ASC' },
+    });
+  }
+
+  /**
+   * Phase 2 (Task 8.12) -- cron reconciliation : enumerate every active sync.
+   * Used by reconcileAll fallback for missed webhooks. Bypasses tenant context
+   * (the cron is cross-tenant).
+   */
+  async findAllActiveTokens(): Promise<BookingCalendarSyncEntity[]> {
+    return this.getRepo().find({
+      where: { syncEnabled: true },
+      order: { tenantId: 'ASC', provider: 'ASC' },
+    });
+  }
+
+  /**
    * Lookup by webhook subscription id (Task 8.10b webhook receivers).
    * No tenant filter -- webhook payloads arrive unauthenticated, the
    * subscription id IS the authentication.

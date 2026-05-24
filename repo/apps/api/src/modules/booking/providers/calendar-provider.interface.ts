@@ -36,6 +36,49 @@ export interface WebhookSubscription {
   readonly clientState?: string;
 }
 
+/**
+ * External calendar event input (normalized DTO sent to providers).
+ * Phase 2 (Task 8.12) -- bi-directional sync push.
+ */
+export interface ExternalCalendarEventInput {
+  readonly title: string;
+  readonly description?: string;
+  readonly startAt: Date;
+  readonly endAt: Date;
+  readonly timezone: string;
+  readonly attendees: ReadonlyArray<{ name: string; email?: string }>;
+  /** Free-form location ; we typically build "Room (City)". */
+  readonly location?: string;
+}
+
+/** External calendar event response (returned by createEvent / getEvent). */
+export interface ExternalCalendarEvent extends ExternalCalendarEventInput {
+  readonly id: string;
+  readonly lastModifiedAt: Date;
+  readonly createdAt: Date;
+}
+
+/**
+ * Parsed webhook notification (provider-agnostic). Phase 2 -- consumed by
+ * CalendarSyncWorkerService.handleExternalChange.
+ */
+export interface WebhookNotificationParsed {
+  /** Provider's subscription / channel id. */
+  readonly subscriptionId: string;
+  /** External event id whose change triggered the notification. */
+  readonly resourceId: string;
+  /** Mutation type. */
+  readonly changeType: 'created' | 'updated' | 'deleted';
+  /**
+   * Microsoft only : lifecycle notifications (subscription about to expire /
+   * removed / reauth needed). Google has no equivalent ; only `null` for it.
+   */
+  readonly lifecycleEvent?:
+    | 'subscriptionRenew'
+    | 'subscriptionRemove'
+    | 'reauthorizationRequired';
+}
+
 /** Webhook validation result (from incoming HTTP request). */
 export interface WebhookValidation {
   readonly valid: boolean;
@@ -123,4 +166,40 @@ export interface CalendarProvider {
     query: Record<string, string | undefined>,
     expectedClientState: string | undefined,
   ): WebhookValidation;
+
+  // ==========================================================================
+  // Phase 2 (Task 8.12) -- Event CRUD + parsed webhook
+  // ==========================================================================
+
+  /** Creates a new event in the user's primary calendar. */
+  createEvent(
+    accessToken: string,
+    event: ExternalCalendarEventInput,
+  ): Promise<ExternalCalendarEvent>;
+
+  /** Updates an existing event (full replace -- attendees, time, title). */
+  updateEvent(
+    accessToken: string,
+    eventId: string,
+    event: ExternalCalendarEventInput,
+  ): Promise<ExternalCalendarEvent>;
+
+  /** Deletes an event by id. Idempotent ; missing event is not an error. */
+  deleteEvent(accessToken: string, eventId: string): Promise<void>;
+
+  /** Fetches an event by id. Returns null when not found (404). */
+  getEvent(accessToken: string, eventId: string): Promise<ExternalCalendarEvent | null>;
+
+  /**
+   * Extracts a normalized notification from an inbound webhook request.
+   * Returns null for unparseable / lifecycle-only / handshake payloads --
+   * caller treats null as "ack but skip processing".
+   *
+   * Validation (clientState / X-Goog-Channel-Token) is performed by
+   * validateWebhookPayload BEFORE this is called.
+   */
+  parseWebhookNotification(
+    headers: Record<string, string | string[] | undefined>,
+    body: unknown,
+  ): WebhookNotificationParsed | null;
 }

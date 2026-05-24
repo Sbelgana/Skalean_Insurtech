@@ -53,6 +53,7 @@ import type { CalendarProviderName } from '../config/oauth-calendar.config.js';
 import { OAuthCalendarConfig } from '../config/oauth-calendar.config.js';
 import { CalendarOAuth2Service } from '../services/calendar-oauth2.service.js';
 import { CalendarSyncTokenService } from '../services/calendar-sync-token.service.js';
+import { CalendarSyncWorkerService } from '../services/calendar-sync-worker.service.js';
 
 const VALID_PROVIDERS = ['google', 'outlook'] as const;
 
@@ -75,6 +76,13 @@ export class CalendarSyncController {
     private readonly tokens: CalendarSyncTokenService,
     private readonly config: OAuthCalendarConfig,
     private readonly tenantContext: TenantContextService,
+    /**
+     * Phase 2 (Task 8.12) -- after webhook validation, delegate to the sync
+     * worker for actual reconciliation. Wired async (fire-and-forget) so the
+     * webhook receiver always returns 202/200 within provider time budget
+     * (Google + MS Graph both expect < 10s).
+     */
+    private readonly syncWorker: CalendarSyncWorkerService,
   ) {}
 
   // ==========================================================================
@@ -262,7 +270,18 @@ export class CalendarSyncController {
     this.logger.log(
       `outlook_webhook_received sync_id=${row.id} resource=${validation.resourceId ?? ''} tenant=${row.tenantId}`,
     );
-    // Phase 2 (Task 8.12) : trigger CalendarSyncWorkerService.handleExternalChange here
+
+    // Phase 2 (Task 8.12) : parse + delegate to sync worker (fire-and-forget).
+    const parsed = provider.parseWebhookNotification(headers, JSON.parse(rawBody));
+    if (parsed) {
+      void this.syncWorker
+        .handleExternalChange('outlook', parsed)
+        .catch((err: Error) => {
+          this.logger.warn(
+            `outlook_webhook_sync_failed sub=${parsed.subscriptionId} err=${err.message}`,
+          );
+        });
+    }
     return { accepted: true };
   }
 
@@ -304,6 +323,18 @@ export class CalendarSyncController {
     this.logger.log(
       `google_webhook_received sync_id=${row.id} resource=${validation.resourceId ?? ''} tenant=${row.tenantId}`,
     );
+
+    // Phase 2 (Task 8.12) : delegate parsed notification to sync worker.
+    const parsed = provider.parseWebhookNotification(headers, undefined);
+    if (parsed) {
+      void this.syncWorker
+        .handleExternalChange('google', parsed)
+        .catch((err: Error) => {
+          this.logger.warn(
+            `google_webhook_sync_failed sub=${parsed.subscriptionId} err=${err.message}`,
+          );
+        });
+    }
     return { accepted: true };
   }
 }

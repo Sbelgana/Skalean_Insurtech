@@ -18,6 +18,7 @@ import { CalendarSyncController } from './calendar-sync.controller.js';
 import type { OAuthCalendarConfig } from '../config/oauth-calendar.config.js';
 import type { CalendarOAuth2Service } from '../services/calendar-oauth2.service.js';
 import type { CalendarSyncTokenService } from '../services/calendar-sync-token.service.js';
+import type { CalendarSyncWorkerService } from '../services/calendar-sync-worker.service.js';
 
 const TENANT_A = '00000000-0000-0000-0000-000000000001';
 const USER_A = '00000000-0000-0000-0000-000000000002';
@@ -28,6 +29,7 @@ interface ControllerDeps {
   tokens: CalendarSyncTokenService;
   config: OAuthCalendarConfig;
   tenantContext: TenantContextService;
+  syncWorker: CalendarSyncWorkerService;
 }
 
 function buildConfig(overrides?: { googleEnabled?: boolean; outlookEnabled?: boolean }) {
@@ -73,8 +75,18 @@ function buildController(opts: Partial<ControllerDeps> = {}): {
     }),
     ...opts.tenantContext,
   } as unknown as TenantContextService;
-  const ctrl = new CalendarSyncController(oauth, tokens, config, tenantContext);
-  return { ctrl, deps: { oauth, tokens, config, tenantContext } };
+  const syncWorker = {
+    handleExternalChange: vi.fn().mockResolvedValue(undefined),
+    ...opts.syncWorker,
+  } as unknown as CalendarSyncWorkerService;
+  const ctrl = new CalendarSyncController(
+    oauth,
+    tokens,
+    config,
+    tenantContext,
+    syncWorker,
+  );
+  return { ctrl, deps: { oauth, tokens, config, tenantContext, syncWorker } };
 }
 
 describe('CalendarSyncController (Sprint 8 Tache 8.10b)', () => {
@@ -255,7 +267,14 @@ describe('CalendarSyncController (Sprint 8 Tache 8.10b)', () => {
         }
         return { valid: true, subscriptionId: 'sub-abc', resourceId: 'event-xyz' };
       });
-      const provider = { validateWebhookPayload };
+      const provider = {
+        validateWebhookPayload,
+        parseWebhookNotification: vi.fn().mockReturnValue({
+          subscriptionId: 'sub-abc',
+          resourceId: 'event-xyz',
+          changeType: 'updated',
+        }),
+      };
       const { ctrl } = buildController({
         oauth: {
           getProviderByName: vi.fn().mockReturnValue(provider),
@@ -339,6 +358,11 @@ describe('CalendarSyncController (Sprint 8 Tache 8.10b)', () => {
           valid: true,
           subscriptionId: 'ch-xyz',
           resourceId: 'event-789',
+        }),
+        parseWebhookNotification: vi.fn().mockReturnValue({
+          subscriptionId: 'ch-xyz',
+          resourceId: 'event-789',
+          changeType: 'updated',
         }),
       };
       const { ctrl } = buildController({

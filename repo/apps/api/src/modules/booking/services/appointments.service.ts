@@ -35,7 +35,9 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   HierarchyResolver,
   Permission,
@@ -80,6 +82,30 @@ export const APPOINTMENT_ERROR_CODES = {
   REOPEN_INVALID_STATUS: 'BOOKING_APPOINTMENT_REOPEN_INVALID_STATUS',
 } as const;
 
+/**
+ * Internal flag attached to mutation calls coming from CalendarSyncWorker
+ * (external -> local sync). When set, lifecycle events are NOT emitted, which
+ * prevents the loop : webhook -> updateAs(..., skipExternalSync) -> NO event
+ * -> NO re-push to external -> NO new webhook.
+ */
+export interface SyncContext {
+  /** Skip event emission for this mutation (prevents external sync loop). */
+  readonly skipExternalSync?: boolean;
+}
+
+/** Booking lifecycle events emitted on the @nestjs/event-emitter bus. */
+export const APPOINTMENT_EVENTS = {
+  CREATED: 'booking.appointment.created',
+  UPDATED: 'booking.appointment.updated',
+  CANCELLED: 'booking.appointment.cancelled',
+} as const;
+
+/** Payload of every appointment lifecycle event. */
+export interface AppointmentLifecyclePayload {
+  readonly appointmentId: string;
+  readonly tenantId: string;
+}
+
 /** Allowed state machine transitions for forward direction. */
 const FORWARD_TRANSITIONS: Record<string, readonly string[]> = {
   scheduled: ['confirmed', 'in_progress', 'cancelled', 'no_show'],
@@ -99,7 +125,29 @@ export class AppointmentsService {
     @Inject(DATA_SOURCE_TOKEN) private readonly dataSource: DataSource,
     private readonly tenantContext: TenantContextService,
     private readonly roomsService: RoomsService,
+    /**
+     * Optional : when @nestjs/event-emitter is wired, lifecycle events are
+     * emitted on the bus and consumed by AppointmentSyncListener. Optional so
+     * unit tests can construct AppointmentsService without the emitter module.
+     */
+    @Optional() private readonly eventEmitter?: EventEmitter2,
   ) {}
+
+  /**
+   * Emit a lifecycle event UNLESS the caller explicitly opted out via
+   * `skipExternalSync`. Centralized so the sync-loop prevention rule lives in
+   * a single place.
+   */
+  private emitLifecycle(
+    type: typeof APPOINTMENT_EVENTS[keyof typeof APPOINTMENT_EVENTS],
+    payload: AppointmentLifecyclePayload,
+    sync?: SyncContext,
+  ): void {
+    if (sync?.skipExternalSync) return;
+    if (!this.eventEmitter) return;
+    // Fire-and-forget : the listener decides whether to do async work.
+    this.eventEmitter.emit(type, payload);
+  }
 
   private getRepo() {
     return this.dataSource.getRepository(BookingAppointmentEntity);
@@ -141,10 +189,11 @@ export class AppointmentsService {
   async create(
     dto: CreateAppointmentDto,
     createdByUserId: string,
+    sync?: SyncContext,
   ): Promise<BookingAppointmentEntity> {
     const tenantId = this.requireTenantId();
 
-    return this.dataSource.transaction(async (em: EntityManager) => {
+    const saved = await this.dataSource.transaction(async (em: EntityManager) => {
       // 1. Verify room exists, belongs to tenant, is active
       const room = await em
         .getRepository(BookingRoomEntity)
@@ -211,6 +260,12 @@ export class AppointmentsService {
       );
       return saved;
     });
+    this.emitLifecycle(
+      APPOINTMENT_EVENTS.CREATED,
+      { appointmentId: saved.id, tenantId },
+      sync,
+    );
+    return saved;
   }
 
   // ==========================================================================
@@ -311,6 +366,7 @@ export class AppointmentsService {
     id: string,
     dto: UpdateAppointmentDto,
     updatedByUserId: string,
+    sync?: SyncContext,
   ): Promise<BookingAppointmentEntity> {
     const tenantId = this.requireTenantId();
     const repo = this.getRepo();
@@ -345,6 +401,11 @@ export class AppointmentsService {
     const updated = await repo.findOne({ where: { id, tenantId } });
     this.logger.log(
       `booking_appointment_updated id=${id} fields=[${Object.keys(updates).join(',')}] by=${updatedByUserId}`,
+    );
+    this.emitLifecycle(
+      APPOINTMENT_EVENTS.UPDATED,
+      { appointmentId: id, tenantId },
+      sync,
     );
     return updated!;
   }
@@ -394,12 +455,20 @@ export class AppointmentsService {
     id: string,
     dto: CancelAppointmentDto,
     userId: string,
+    sync?: SyncContext,
   ): Promise<BookingAppointmentEntity> {
-    return this.transitionStatus(id, 'cancelled', userId, {
+    const tenantId = this.requireTenantId();
+    const result = await this.transitionStatus(id, 'cancelled', userId, {
       cancelled_at: new Date(),
       cancelled_by_user_id: userId,
       cancel_reason: dto.reason,
     });
+    this.emitLifecycle(
+      APPOINTMENT_EVENTS.CANCELLED,
+      { appointmentId: id, tenantId },
+      sync,
+    );
+    return result;
   }
 
   private async transitionStatus(
@@ -519,10 +588,11 @@ export class AppointmentsService {
     id: string,
     dto: RescheduleAppointmentDto,
     userId: string,
+    sync?: SyncContext,
   ): Promise<BookingAppointmentEntity> {
     const tenantId = this.requireTenantId();
 
-    return this.dataSource.transaction(async (em: EntityManager) => {
+    const result = await this.dataSource.transaction(async (em: EntityManager) => {
       const repo = em.getRepository(BookingAppointmentEntity);
       const appt = await repo.findOne({ where: { id, tenantId } });
       if (!appt) {
@@ -589,5 +659,75 @@ export class AppointmentsService {
       );
       return updated!;
     });
+    // Reschedule = time-window mutation -> external calendar must learn.
+    this.emitLifecycle(
+      APPOINTMENT_EVENTS.UPDATED,
+      { appointmentId: id, tenantId },
+      sync,
+    );
+    return result;
+  }
+
+  // ==========================================================================
+  // Phase 2 (Task 8.12) -- Sync worker helpers
+  // ==========================================================================
+
+  /**
+   * Looks up an appointment by its external-calendar event id. Used by the
+   * sync worker when receiving a webhook notification : the webhook payload
+   * carries only the provider's eventId, we map back to our local row.
+   *
+   * Returns null when not found (the row may legitimately not exist if the
+   * event was created externally and we haven't imported it yet).
+   */
+  async findByExternalIdAs(
+    tenantId: string,
+    externalEventId: string,
+  ): Promise<BookingAppointmentEntity | null> {
+    return this.getRepo().findOne({
+      where: { tenantId, externalCalendarEventId: externalEventId },
+    });
+  }
+
+  /**
+   * Persists the external-calendar reference on a local appointment row
+   * AFTER a successful create-on-external call. Pure system update : does NOT
+   * emit a lifecycle event (so the immediate-after-create push does not
+   * trigger another push).
+   */
+  async updateExternalReference(
+    tenantId: string,
+    appointmentId: string,
+    refs: {
+      externalCalendarEventId: string;
+      externalCalendarProvider: 'google' | 'outlook' | 'caldav';
+    },
+  ): Promise<void> {
+    await this.getRepo()
+      .createQueryBuilder()
+      .update(BookingAppointmentEntity)
+      .set({
+        external_calendar_event_id: refs.externalCalendarEventId,
+        external_calendar_provider: refs.externalCalendarProvider,
+      } as unknown as Record<string, unknown>)
+      .where('id = :id AND tenant_id = :tenantId', {
+        id: appointmentId,
+        tenantId,
+      })
+      .execute();
+    this.logger.log(
+      `booking_appointment_external_ref_saved id=${appointmentId} provider=${refs.externalCalendarProvider} ext_id=${refs.externalCalendarEventId} tenant=${tenantId}`,
+    );
+  }
+
+  /**
+   * Tenant-explicit lookup for the sync worker (unauthenticated cron / webhook
+   * paths). Mirrors `findOne` but accepts an explicit tenant.
+   */
+  async findByIdAs(
+    tenantId: string,
+    id: string,
+  ): Promise<BookingAppointmentEntity | null> {
+    return this.getRepo().findOne({ where: { id, tenantId } });
   }
 }

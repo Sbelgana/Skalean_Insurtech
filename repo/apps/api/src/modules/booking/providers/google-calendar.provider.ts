@@ -26,7 +26,10 @@ import { google } from 'googleapis';
 import { OAuthCalendarConfig } from '../config/oauth-calendar.config.js';
 import type {
   CalendarProvider,
+  ExternalCalendarEvent,
+  ExternalCalendarEventInput,
   TokenResponse,
+  WebhookNotificationParsed,
   WebhookSubscription,
   WebhookValidation,
 } from './calendar-provider.interface.js';
@@ -248,5 +251,163 @@ export class GoogleCalendarProvider implements CalendarProvider {
     const value = headers[lower] ?? headers[name];
     if (value === undefined) return undefined;
     return Array.isArray(value) ? value[0] : value;
+  }
+
+  // ==========================================================================
+  // Phase 2 (Task 8.12) -- Event CRUD + parsed webhook
+  // ==========================================================================
+
+  async createEvent(
+    accessToken: string,
+    event: ExternalCalendarEventInput,
+  ): Promise<ExternalCalendarEvent> {
+    const calendar = this.calendarClient(accessToken);
+    const { data } = await calendar.events.insert({
+      calendarId: 'primary',
+      requestBody: this.toGoogleEventBody(event),
+    });
+    return this.fromGoogleEvent(data as unknown as Record<string, unknown>, event);
+  }
+
+  async updateEvent(
+    accessToken: string,
+    eventId: string,
+    event: ExternalCalendarEventInput,
+  ): Promise<ExternalCalendarEvent> {
+    const calendar = this.calendarClient(accessToken);
+    const { data } = await calendar.events.update({
+      calendarId: 'primary',
+      eventId,
+      requestBody: this.toGoogleEventBody(event),
+    });
+    return this.fromGoogleEvent(data as unknown as Record<string, unknown>, event);
+  }
+
+  async deleteEvent(accessToken: string, eventId: string): Promise<void> {
+    const calendar = this.calendarClient(accessToken);
+    try {
+      await calendar.events.delete({ calendarId: 'primary', eventId });
+    } catch (err) {
+      // Idempotent : 410 Gone / 404 Not Found are fine -- event already gone.
+      const status = (err as { code?: number; status?: number }).code
+        ?? (err as { code?: number; status?: number }).status;
+      if (status === 404 || status === 410) {
+        this.logger.debug(`google_event_delete_already_gone id=${eventId} status=${status}`);
+        return;
+      }
+      throw err;
+    }
+  }
+
+  async getEvent(
+    accessToken: string,
+    eventId: string,
+  ): Promise<ExternalCalendarEvent | null> {
+    const calendar = this.calendarClient(accessToken);
+    try {
+      const { data } = await calendar.events.get({ calendarId: 'primary', eventId });
+      return this.fromGoogleEvent(data as unknown as Record<string, unknown>);
+    } catch (err) {
+      const status = (err as { code?: number; status?: number }).code
+        ?? (err as { code?: number; status?: number }).status;
+      if (status === 404 || status === 410) return null;
+      throw err;
+    }
+  }
+
+  /**
+   * Google push notifications carry NO body -- everything is in headers. We
+   * map X-Goog-Resource-State to a normalized changeType :
+   *   - `sync`        : initial channel-live confirmation -> null (skip)
+   *   - `exists`      : event added or modified -> 'updated' (caller refetches via getEvent)
+   *   - `not_exists`  : event deleted -> 'deleted'
+   *
+   * Note : Google does not distinguish create vs update in headers -- both
+   * arrive as `exists`. SyncWorker derives the actual mutation by checking
+   * if the local appointment has externalCalendarEventId set.
+   */
+  parseWebhookNotification(
+    headers: Record<string, string | string[] | undefined>,
+    _body: unknown,
+  ): WebhookNotificationParsed | null {
+    const channelId = this.headerString(headers, 'x-goog-channel-id');
+    const resourceId = this.headerString(headers, 'x-goog-resource-id');
+    const resourceState = this.headerString(headers, 'x-goog-resource-state');
+    if (!channelId || !resourceId) return null;
+    if (resourceState === 'sync') return null;
+    const changeType: 'updated' | 'deleted' =
+      resourceState === 'not_exists' ? 'deleted' : 'updated';
+    return {
+      subscriptionId: channelId,
+      resourceId,
+      changeType,
+    };
+  }
+
+  // ==========================================================================
+  // Google event mappers
+  // ==========================================================================
+
+  private calendarClient(accessToken: string) {
+    const oauth2 = this.buildOAuth2Client();
+    oauth2.setCredentials({ access_token: accessToken });
+    return google.calendar({ version: 'v3', auth: oauth2 });
+  }
+
+  private toGoogleEventBody(event: ExternalCalendarEventInput): Record<string, unknown> {
+    return {
+      summary: event.title,
+      description: event.description,
+      location: event.location,
+      start: {
+        dateTime: event.startAt.toISOString(),
+        timeZone: event.timezone,
+      },
+      end: {
+        dateTime: event.endAt.toISOString(),
+        timeZone: event.timezone,
+      },
+      attendees: event.attendees.map((a) => ({
+        displayName: a.name,
+        ...(a.email ? { email: a.email } : {}),
+      })),
+    };
+  }
+
+  private fromGoogleEvent(
+    data: Record<string, unknown> | undefined | null,
+    fallbackInput?: ExternalCalendarEventInput,
+  ): ExternalCalendarEvent {
+    const d = data ?? {};
+    const start = d['start'] as { dateTime?: string; timeZone?: string } | undefined;
+    const end = d['end'] as { dateTime?: string; timeZone?: string } | undefined;
+    const attendeesRaw = (d['attendees'] as Array<{ displayName?: string; email?: string }>) ?? [];
+    const id = (d['id'] as string | undefined) ?? '';
+    const updated = (d['updated'] as string | undefined)
+      ?? (d['created'] as string | undefined);
+    const created = (d['created'] as string | undefined) ?? updated;
+    const startAt = start?.dateTime
+      ? new Date(start.dateTime)
+      : fallbackInput?.startAt ?? new Date();
+    const endAt = end?.dateTime
+      ? new Date(end.dateTime)
+      : fallbackInput?.endAt ?? new Date();
+    const timezone = start?.timeZone ?? fallbackInput?.timezone ?? 'UTC';
+    return {
+      id,
+      title: (d['summary'] as string | undefined) ?? fallbackInput?.title ?? '',
+      description:
+        (d['description'] as string | undefined) ?? fallbackInput?.description,
+      startAt,
+      endAt,
+      timezone,
+      attendees: attendeesRaw.map((a) => ({
+        name: a.displayName ?? a.email ?? 'Unknown',
+        ...(a.email ? { email: a.email } : {}),
+      })),
+      location: (d['location'] as string | undefined) ?? fallbackInput?.location,
+      lastModifiedAt: updated ? new Date(updated) : new Date(),
+      createdAt: created ? new Date(created) : new Date(),
+    };
   }
 }

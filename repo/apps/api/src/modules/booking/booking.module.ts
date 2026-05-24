@@ -17,6 +17,7 @@
  * Reference : B-08 Sprint 8 Tache 3.2.x.
  */
 import { Module } from '@nestjs/common';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from '../auth/auth.module.js';
 import { DatabaseModule } from '../../database/database.module.js';
@@ -27,16 +28,27 @@ import { RoomsController } from './controllers/rooms.controller.js';
 import { OAuthCalendarConfig } from './config/oauth-calendar.config.js';
 import { GoogleCalendarProvider } from './providers/google-calendar.provider.js';
 import { OutlookCalendarProvider } from './providers/outlook-calendar.provider.js';
+import { AppointmentSyncListener } from './services/appointment-sync.listener.js';
 import { AppointmentsService } from './services/appointments.service.js';
 import { AvailabilityService } from './services/availability.service.js';
 import { CalendarOAuth2Service } from './services/calendar-oauth2.service.js';
 import { CalendarSyncTokenService } from './services/calendar-sync-token.service.js';
+import { CalendarSyncWorkerService } from './services/calendar-sync-worker.service.js';
 import { CalendarWebhookManagerService } from './services/calendar-webhook-manager.service.js';
 import { OAuthStateService } from './services/oauth-state.service.js';
 import { RoomsService } from './services/rooms.service.js';
 
 @Module({
-  imports: [AuthModule, DatabaseModule, ScheduleModule.forRoot()],
+  imports: [
+    AuthModule,
+    DatabaseModule,
+    ScheduleModule.forRoot(),
+    EventEmitterModule.forRoot({
+      wildcard: false,
+      // Async handlers run on a separate microtask so create() responses
+      // are not blocked by external HTTP calls (Phase 2 fire-and-forget).
+    }),
+  ],
   controllers: [
     RoomsController,
     AppointmentsController,
@@ -57,6 +69,9 @@ import { RoomsService } from './services/rooms.service.js';
     OAuthStateService,
     CalendarOAuth2Service,
     CalendarWebhookManagerService,
+    // Phase 2 (Task 8.12) -- bi-directional sync worker + listener
+    CalendarSyncWorkerService,
+    AppointmentSyncListener,
   ],
   exports: [
     RoomsService,
@@ -64,6 +79,7 @@ import { RoomsService } from './services/rooms.service.js';
     AvailabilityService,
     CalendarSyncTokenService,
     CalendarOAuth2Service,
+    CalendarSyncWorkerService,
   ],
 })
 export class BookingModule {}

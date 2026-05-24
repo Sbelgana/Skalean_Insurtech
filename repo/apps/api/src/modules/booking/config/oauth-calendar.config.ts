@@ -108,6 +108,14 @@ export class OAuthCalendarConfig implements OnModuleInit {
     return provider === 'google' ? this.google : this.outlook;
   }
 
+  /**
+   * Phase 2 (Task 8.12) -- returns true when at least one provider is enabled.
+   * Used by sync worker to no-op cleanly under placeholder credentials.
+   */
+  isAnyEnabled(): boolean {
+    return this.google.enabled || this.outlook.enabled;
+  }
+
   /** Convenience : full webhook URL for a given provider (e.g. /google or /outlook suffix). */
   webhookUrlFor(provider: CalendarProviderName): string {
     return `${this.webhookBaseUrl}/${provider}`;

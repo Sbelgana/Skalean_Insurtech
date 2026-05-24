@@ -9,8 +9,13 @@ module. The code ships with **PLACEHOLDER credentials** in env files -- boot
 detects them and disables endpoints (`HTTP 503 Service Unavailable`) until real
 values are swapped in. Zero code change required to activate.
 
-Phase 2 (Task 8.12 -- bi-directional sync worker, `AppointmentsService` hooks,
-conflict resolution) is **deferred to a follow-up session**.
+**Sprint 8.12 = Phase 2 delivered** : bi-directional sync worker
+(`CalendarSyncWorkerService`) + `AppointmentSyncListener` (`@nestjs/event-emitter`)
++ `AppointmentsService` lifecycle hooks (create / update / cancel / reschedule
+emit `booking.appointment.{created,updated,cancelled}` events) + last-modified
+conflict resolution. Loop prevention via `skipExternalSync` flag : mutations
+triggered by inbound webhooks bypass the event bus, so they cannot re-trigger
+an outbound push.
 
 This document captures :
 1. One-time setup procedure (Google Cloud Console + Azure App Registration).
@@ -161,12 +166,57 @@ manipulates plaintext, the DB stores `iv_b64:tag_b64:ciphertext_b64`.
 - `CalendarSyncController` 503 fallback + webhook receivers (20 tests).
 - Cumulative Phase 1 : **82 tests passing**.
 
-### Sprint 8.12 / 8.14 (deferred)
+### Sprint 8.12 Phase 2 (delivered)
 
-- Bi-directional sync worker (Kafka consumer + `AppointmentsService` hooks).
-- Conflict resolution (last-write-wins with provider etag).
-- E2E manual flow with real credentials in staging.
-- Webhook receiver Kafka publication on validated notifications.
+- `CalendarSyncWorkerService` push (local -> external) + pull (external -> local)
+  + conflict resolution (last-write-wins) + reconcile cron (29 tests).
+- `AppointmentSyncListener` (`@OnEvent` -> `syncAppointmentToExternal`) with
+  error-swallowing fire-and-forget semantics (4 tests).
+- `AppointmentsService` lifecycle event emission + `skipExternalSync` flag
+  + `findByExternalIdAs` / `updateExternalReference` / `findByIdAs` helpers
+  (9 tests, on top of the 28-test Task 8.9 suite -- unchanged).
+- Cumulative Phase 2 : **42 new tests** (booking module total 210 passing).
+
+### Activation flow (post-credentials) -- bi-directional sync
+
+1. Set the 6 placeholder env vars + restart (see activation procedure above).
+2. Connect a Google or Outlook account via
+   `GET /api/v1/booking/calendar/connect/google` (returns provider authUrl).
+3. Smoke test PUSH : create an appointment in Assurflow UI -> within seconds,
+   the matching event should appear in the user's connected calendar.
+4. Smoke test PULL : edit the event title in Google Calendar -> within seconds
+   (next webhook + sync cycle), the Assurflow appointment should reflect the
+   change. Verify the Pino log line `sync_pull_external_wins` and confirm no
+   re-push log line (`sync_push_updated`) follows -- proving the loop
+   prevention via `skipExternalSync` works end-to-end.
+5. Conflict scenario : edit BOTH sides within a 30-second window. Whichever
+   side has the later `lastModifiedAt` wins (external wins ties for
+   determinism across providers).
+
+### Loop prevention contract (critical)
+
+The `skipExternalSync` flag is the lynchpin :
+- Inbound webhook path : `CalendarSyncWorkerService.handleExternalChange`
+  applies the external mutation via a **direct repo update**, bypassing
+  `AppointmentsService.update / cancel`. As a result, no lifecycle event
+  is emitted, no listener fires, no push to external -> **no loop**.
+- Outbound path : `AppointmentsService.create / update / cancel / reschedule`
+  always emit lifecycle events UNLESS the caller passes
+  `{ skipExternalSync: true }`. The current code passes that flag from the
+  webhook receiver path only ; all user-driven mutations get the normal
+  emit -> push behavior.
+
+### Out of scope (deferred)
+
+- **External-only event import** : if a Google/Outlook user creates an event
+  outside Assurflow, Phase 2 does NOT create a corresponding local appointment
+  (no default-room mapping yet). Logged at debug level + recorded as success
+  outcome (no failure). Sprint 13+ may add per-provider default-room mapping.
+- **etag-based incremental sync** : reconcile cron is a no-op placeholder.
+  Phase 2 relies on webhooks for near-real-time sync ; full periodic
+  reconciliation deferred to Sprint 13 when scale justifies the complexity.
+- **E2E manual flow with real credentials** : deferred to Sprint 8.14 or
+  pilot prep with marker `requires_credentials`.
 
 ---
 

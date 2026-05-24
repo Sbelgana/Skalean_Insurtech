@@ -37,6 +37,37 @@ Ce fichier est lu par Cowork, Claude Code, et toute IA assistante avant chaque s
 
 Reference complete : `00-pilotage/documentation/5-roles-permissions.md` v3.0 + `00-pilotage/decisions/011-*.md` a `015-*.md` + `00-pilotage/meta-prompts/B-7.5a-sprint-7.5a-assurflow-foundation.md`.
 
+## v3.0 Foundation Packages (Sprint 7.5b -- 2026-05-24)
+
+**Etat plateforme** : Sprint 7.5a + Sprint 7 + Pause #5 + Sprint 7.5b livres.
+
+**2 nouveaux packages** :
+- `@insurtech/expertise` : Expert acteur central foundation (decision-013)
+  - Types : Expert / ExpertAssignment / ExpertReport
+  - Services skeletons (throw NotImplementedError jusqu'a Sprint 14/22.7)
+  - 3 tables DB : insure_experts / insure_expert_assignments / insure_expert_reports
+- `@insurtech/tow` : Tow remorqueur foundation (decision-012)
+  - Types : TowMission / TowDriver
+  - Services skeletons (throw NotImplementedError jusqu'a Sprint 22.5)
+
+**3 nouvelles migrations** :
+- 1735000000013-CreateInsureExperts (CHECK speciality 3 + status 4 + UNIQUE acaps + RLS + grants)
+- 1735000000014-CreateInsureExpertAssignments (workflow 5 statuts ACAPS + RLS)
+- 1735000000015-CreateInsureExpertReports (signature_hash + CHECK consistency + RLS)
+
+**Infrastructure stabilisation (Pause #5 recommandations integrees)** :
+- `pnpm db:reset` : DROP+CREATE+extensions+init SQL+migrations+grants automatique
+- `infrastructure/scripts/post-migration-grants.sh` : grants GRANT ALL TABLES insurtech_app (prevention Bug #5)
+- `.env.test` : Kafka port standardise 9095 + variables env complete
+- `infrastructure/scripts/seed-with-tsx.sh` : wrapper ts-node experimental decorators (Sprint 8 prep)
+- `repo/infra/README.md` : clarification compose files legacy vs actif v3.0
+
+**Tests cumules post Sprint 7.5b** : ~1718 PASS (auth 591 + api 885 + database 95 + 28 expertise/tow + 6 insure RLS + 14 RLS apps/api + bootstrap 22).
+
+**Architecture skeleton pattern** : services future-feature lancent `NotImplementedError('method', 'Sprint N')` jusqu'au sprint cible -- permet developpement parallele sans casser build.
+
+Reference complete : `repo/docs/architecture/foundation-packages-v3.md`.
+
 ---
 
 

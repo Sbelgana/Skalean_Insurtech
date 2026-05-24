@@ -1,4 +1,9 @@
-export { BookingRoomEntity } from './booking-room.entity.js';
+export {
+  BookingRoomEntity,
+  type BookingRoomType,
+  type BookingBusinessHoursDay,
+  type BookingBusinessHours,
+} from './booking-room.entity.js';
 export { BookingAppointmentEntity, type BookingAppointmentStatus } from './booking-appointment.entity.js';
 export { BookingCalendarSyncEntity, type BookingCalendarProvider } from './booking-calendar-sync.entity.js';
 export { TimeRangeTransformer, type TimeRange } from './transformers/time-range.transformer.js';

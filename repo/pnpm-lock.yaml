@@ -116,6 +116,9 @@ importers:
       '@insurtech/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@insurtech/booking':
+        specifier: workspace:*
+        version: link:../../packages/booking
       '@insurtech/comm':
         specifier: workspace:*
         version: link:../../packages/comm
@@ -1305,6 +1308,10 @@ importers:
         version: 2.1.8(@types/node@22.10.5)(@vitest/ui@2.1.8)(happy-dom@15.11.7)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.47.1)
 
   packages/booking:
+    dependencies:
+      zod:
+        specifier: 3.24.1
+        version: 3.24.1
     devDependencies:
       '@types/node':
         specifier: 22.10.5

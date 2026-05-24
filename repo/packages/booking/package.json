@@ -21,6 +21,9 @@
     "lint": "biome check --no-errors-on-unmatched src",
     "clean": "rm -rf dist .turbo"
   },
+  "dependencies": {
+    "zod": "3.24.1"
+  },
   "devDependencies": {
     "@types/node": "22.10.5",
     "typescript": "5.7.3",

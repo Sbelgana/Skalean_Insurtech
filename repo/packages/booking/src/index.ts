@@ -8,7 +8,7 @@
  * propres ressources bookables (parking remorquage, bureaux expert).
  */
 
-export const BOOKING_PACKAGE_VERSION = '0.2.0';
+export const BOOKING_PACKAGE_VERSION = '0.3.0';
 
 // Schemas Zod Room (Sprint 8 Tache 8.8)
 export {
@@ -34,3 +34,27 @@ export {
   type UpdateRoomDto,
   type FilterRoomsDto,
 } from './schemas/room.schema.js';
+
+// Schemas Zod Appointment (Sprint 8 Tache 8.9)
+export {
+  APPOINTMENT_STATUSES,
+  EXTERNAL_CALENDAR_PROVIDERS,
+  AppointmentStatusSchema,
+  ExternalCalendarProviderSchema,
+  AttendeeSchema,
+  CreateAppointmentSchema,
+  UpdateAppointmentSchema,
+  RescheduleAppointmentSchema,
+  CancelAppointmentSchema,
+  ReopenAppointmentSchema,
+  FilterAppointmentsSchema,
+  type AppointmentStatus,
+  type ExternalCalendarProvider,
+  type AttendeeDto,
+  type CreateAppointmentDto,
+  type UpdateAppointmentDto,
+  type RescheduleAppointmentDto,
+  type CancelAppointmentDto,
+  type ReopenAppointmentDto,
+  type FilterAppointmentsDto,
+} from './schemas/appointment.schema.js';

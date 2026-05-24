@@ -107,6 +107,7 @@ export const PermissionsMatrix: Record<AuthRole, PermissionsMatrixEntry> = {
     Permission.BOOKING_APPOINTMENTS_CREATE,
     Permission.BOOKING_APPOINTMENTS_UPDATE,
     Permission.BOOKING_APPOINTMENTS_DELETE,
+    Permission.BOOKING_APPOINTMENTS_OVERRIDE_WORKFLOW,
     Permission.BOOKING_CALENDAR_SYNC,
     // Insure CRUD polices + quotes + commissions
     Permission.INSURE_POLICIES_READ_ALL,

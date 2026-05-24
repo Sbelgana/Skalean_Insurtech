@@ -63,7 +63,7 @@ export const Permission = {
   CRM_CUSTOM_FIELDS_MANAGE: 'crm.custom_fields.manage',
   CRM_CUSTOM_FIELDS_DELETE: 'crm.custom_fields.delete',
 
-  // === BOOKING (7) -- Sprint 8 ===
+  // === BOOKING (8) -- Sprint 8 (8.9 added OVERRIDE_WORKFLOW for reopen cancelled) ===
   BOOKING_ROOMS_READ: 'booking.rooms.read',
   BOOKING_ROOMS_MANAGE: 'booking.rooms.manage',
   BOOKING_APPOINTMENTS_READ: 'booking.appointments.read',
@@ -71,6 +71,7 @@ export const Permission = {
   BOOKING_APPOINTMENTS_CREATE: 'booking.appointments.create',
   BOOKING_APPOINTMENTS_UPDATE: 'booking.appointments.update',
   BOOKING_APPOINTMENTS_DELETE: 'booking.appointments.delete',
+  BOOKING_APPOINTMENTS_OVERRIDE_WORKFLOW: 'booking.appointments.override_workflow',
   BOOKING_CALENDAR_SYNC: 'booking.calendar.sync',
 
   // === COMM (5) -- Sprint 9 ===

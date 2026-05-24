@@ -28,3 +28,18 @@ export const ANALYST_ALLOWED_KEY = 'analyst-allowed';
 
 /** Explicit write : seul super_admin_platform passe (analyst bloque). */
 export const SUPER_ADMIN_WRITE_KEY = 'super-admin-write';
+
+// === Sprint 7 Tache 2.3.4 -- RoleGuard ===
+
+/**
+ * @Role(role | role[]) : exige un role specifique (OR si liste).
+ * Metadata stockee comme readonly AuthRole[].
+ */
+export const ROLE_KEY = 'rbac-role';
+
+/**
+ * @MinRole(role) : exige le role specifie OU n'importe lequel de ses ancetres
+ * dans la hierarchie (super_admin_platform passe toujours via wildcard).
+ * Metadata stockee comme single AuthRole.
+ */
+export const MIN_ROLE_KEY = 'rbac-min-role';

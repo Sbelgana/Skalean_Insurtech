@@ -23,6 +23,7 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
+    "test:e2e:unit": "vitest run --config vitest.e2e.config.ts",
     "clean": "rm -rf dist .turbo coverage test-results playwright-report .tsbuildinfo",
     "prebuild": "rm -rf dist"
   },

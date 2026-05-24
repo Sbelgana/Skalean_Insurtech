@@ -111,14 +111,14 @@ export type AbacDecisionReason =
 
 export interface AbacResult {
   readonly allowed: boolean;
-  readonly reason?: AbacDecisionReason;
+  readonly reason?: AbacDecisionReason | undefined;
   /** Nom du policy qui a refuse (pour debug + audit). */
-  readonly policy?: string;
+  readonly policy?: string | undefined;
   /** Permission evaluee (echo). */
-  readonly permission?: PermissionValue;
+  readonly permission?: PermissionValue | undefined;
   /** Resource evaluee (echo). */
-  readonly resourceType?: AbacResourceType;
-  readonly resourceId?: string;
+  readonly resourceType?: AbacResourceType | undefined;
+  readonly resourceId?: string | undefined;
 }
 
 // ============================================================================

@@ -27,6 +27,7 @@ import { AddCustomFieldsDefinitions1735000000020 } from '../../migrations/173500
 import { ExtendBookingRoomsMetadata1735000000021 } from '../../migrations/1735000000021-ExtendBookingRoomsMetadata.js';
 import { ExtendBookingAppointmentsAddEnum1735000000022 } from '../../migrations/1735000000022-ExtendBookingAppointments.js';
 import { ReshapeBookingAppointments1735000000023 } from '../../migrations/1735000000023-ReshapeBookingAppointments.js';
+import { ExtendBookingCalendarSyncs1735000000024 } from '../../migrations/1735000000024-ExtendBookingCalendarSyncs.js';
 
 export interface TestDataSourceOptions {
   migrationsRun?: boolean;
@@ -40,7 +41,7 @@ const baseOptions = (): DataSourceOptions => ({
   password: process.env['TEST_DATABASE_PASSWORD'] ?? process.env['DATABASE_PASSWORD'] ?? 'skalean_dev_only',
   database: process.env['TEST_DATABASE_NAME'] ?? process.env['DATABASE_NAME'] ?? 'skalean_insurtech',
   entities: [...systemEntities, ...crmEntities, ...bookingEntities, ...commEntities, ...docsEntities, ...payEntities, ...booksEntities, ...complianceEntities, ...analyticsEntities, ...stockEntities, ...hrEntities, ...insureEntities],
-  migrations: [InitialSystem1735000000001, CRM1735000000002, Booking1735000000003, Communications1735000000004, DocsPayments1735000000005, BooksCompliance1735000000006, AnalyticsStockHr1735000000007, CreateCrmPipelinesStages1735000000016, ReshapeCrmDealsWorkflow1735000000017, ReshapeCrmInteractionsPolymorphic1735000000018, AddTrigramIndexesCrm1735000000019, AddCustomFieldsDefinitions1735000000020, ExtendBookingRoomsMetadata1735000000021, ExtendBookingAppointmentsAddEnum1735000000022, ReshapeBookingAppointments1735000000023],
+  migrations: [InitialSystem1735000000001, CRM1735000000002, Booking1735000000003, Communications1735000000004, DocsPayments1735000000005, BooksCompliance1735000000006, AnalyticsStockHr1735000000007, CreateCrmPipelinesStages1735000000016, ReshapeCrmDealsWorkflow1735000000017, ReshapeCrmInteractionsPolymorphic1735000000018, AddTrigramIndexesCrm1735000000019, AddCustomFieldsDefinitions1735000000020, ExtendBookingRoomsMetadata1735000000021, ExtendBookingAppointmentsAddEnum1735000000022, ReshapeBookingAppointments1735000000023, ExtendBookingCalendarSyncs1735000000024],
   migrationsRun: false,
   synchronize: false,
   logging: process.env['TEST_DATABASE_LOG'] === 'true',

@@ -14,6 +14,8 @@ import { createEncryptedColumnTransformer } from './transformers/encrypted-colum
 
 export type BookingCalendarProvider = 'google' | 'outlook' | 'caldav';
 
+export type BookingCalendarLastSyncStatus = 'success' | 'partial' | 'failed';
+
 const TOKEN_TRANSFORMER = createEncryptedColumnTransformer('CALENDAR_TOKEN_ENCRYPTION_KEY');
 
 @Entity('booking_calendar_syncs')
@@ -79,6 +81,23 @@ export class BookingCalendarSyncEntity {
 
   @Column({ name: 'metadata', type: 'jsonb', default: () => "'{}'::jsonb" })
   metadata!: Record<string, unknown>;
+
+  // ===== Sprint 8.10 -- Webhook subscription + auto-disable threshold =====
+
+  @Column({ name: 'webhook_subscription_id', type: 'varchar', length: 300, nullable: true })
+  webhookSubscriptionId!: string | null;
+
+  @Column({ name: 'webhook_resource_id', type: 'varchar', length: 300, nullable: true })
+  webhookResourceId!: string | null;
+
+  @Column({ name: 'webhook_expires_at', type: 'timestamptz', nullable: true })
+  webhookExpiresAt!: Date | null;
+
+  @Column({ name: 'last_sync_status', type: 'varchar', length: 20, nullable: true })
+  lastSyncStatus!: BookingCalendarLastSyncStatus | null;
+
+  @Column({ name: 'consecutive_failures', type: 'int', default: 0 })
+  consecutiveFailures!: number;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;

@@ -8,7 +8,7 @@
  * propres ressources bookables (parking remorquage, bureaux expert).
  */
 
-export const BOOKING_PACKAGE_VERSION = '0.3.0';
+export const BOOKING_PACKAGE_VERSION = '0.4.0';
 
 // Schemas Zod Room (Sprint 8 Tache 8.8)
 export {
@@ -58,3 +58,23 @@ export {
   type ReopenAppointmentDto,
   type FilterAppointmentsDto,
 } from './schemas/appointment.schema.js';
+
+// Schemas Zod Calendar Sync (Sprint 8 Tache 8.10 -- foundation only)
+export {
+  CALENDAR_PROVIDERS,
+  CALENDAR_SYNC_STATUSES,
+  CalendarProviderSchema,
+  CalendarSyncStatusSchema,
+  SaveCalendarTokensSchema,
+  SaveWebhookSubscriptionSchema,
+  RecordSyncOutcomeSchema,
+  FilterCalendarSyncsSchema,
+  ConnectionInfoSchema,
+  type CalendarProvider,
+  type CalendarSyncStatus,
+  type SaveCalendarTokensDto,
+  type SaveWebhookSubscriptionDto,
+  type RecordSyncOutcomeDto,
+  type FilterCalendarSyncsDto,
+  type ConnectionInfoDto,
+} from './schemas/calendar-sync.schema.js';

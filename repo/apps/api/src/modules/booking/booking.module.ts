@@ -17,12 +17,13 @@ import { DatabaseModule } from '../../database/database.module.js';
 import { AppointmentsController } from './controllers/appointments.controller.js';
 import { RoomsController } from './controllers/rooms.controller.js';
 import { AppointmentsService } from './services/appointments.service.js';
+import { CalendarSyncTokenService } from './services/calendar-sync-token.service.js';
 import { RoomsService } from './services/rooms.service.js';
 
 @Module({
   imports: [AuthModule, DatabaseModule],
   controllers: [RoomsController, AppointmentsController],
-  providers: [RoomsService, AppointmentsService],
-  exports: [RoomsService, AppointmentsService],
+  providers: [RoomsService, AppointmentsService, CalendarSyncTokenService],
+  exports: [RoomsService, AppointmentsService, CalendarSyncTokenService],
 })
 export class BookingModule {}

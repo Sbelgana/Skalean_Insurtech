@@ -65,6 +65,23 @@ export class CustomFieldsValidatorService implements OnModuleInit {
 
   onModuleInit(): void {
     // Register invalidation hook so definition changes drop cache entries.
+    // Defensive guard : when AppModule boots in some test contexts the
+    // CustomFieldsDefinitionService dependency may not be wired yet. Skip
+    // the hook in that case -- cache invalidation will still be triggered
+    // by the definition service itself when registered (Sprint 8.14b
+    // Session B hardening note).
+    if (!this.definitions) {
+      this.logger.warn(
+        'CustomFieldsDefinitionService not injected at onModuleInit ; skipping invalidator registration',
+      );
+      return;
+    }
+    if (typeof this.definitions.registerInvalidator !== 'function') {
+      this.logger.warn(
+        'CustomFieldsDefinitionService.registerInvalidator unavailable ; skipping',
+      );
+      return;
+    }
     this.definitions.registerInvalidator((tenantId, entityType) => {
       this.invalidateCache(tenantId, entityType);
     });

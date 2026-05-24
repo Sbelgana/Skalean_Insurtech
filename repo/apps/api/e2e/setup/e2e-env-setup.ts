@@ -15,35 +15,63 @@
  *   - Calendar OAuth providers return 503 cleanly (controller fallback path)
  */
 
+import { generateKeyPairSync } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import * as dotenv from 'dotenv';
 
 process.env['NODE_ENV'] = 'test';
 
-// Load .env.test first (test overrides), then .env (base values).
+// When run via `pnpm --filter @insurtech/api test:e2e:unit`, cwd is
+// apps/api/. The .env / .env.test live at the monorepo root (repo/).
+// Probe multiple candidate paths so the setup works regardless of how
+// vitest is invoked.
 const cwd = process.cwd();
-const candidates = [
-  resolve(cwd, '.env.test'),
-  resolve(cwd, '.env'),
+const repoRootCandidates = [
+  cwd, // already at root (rare)
+  resolve(cwd, '..', '..'), // from apps/api -> repo
+  resolve(cwd, '..'), // safety net
 ];
-for (const path of candidates) {
-  if (existsSync(path)) {
-    dotenv.config({ path, override: false });
+function findRoot(): string {
+  for (const candidate of repoRootCandidates) {
+    if (existsSync(resolve(candidate, '.env'))) return candidate;
   }
+  return cwd;
+}
+const repoRoot = findRoot();
+
+const envPath = resolve(repoRoot, '.env');
+if (existsSync(envPath)) {
+  dotenv.config({ path: envPath, override: false });
+}
+const envTestPath = resolve(repoRoot, '.env.test');
+if (existsSync(envTestPath)) {
+  dotenv.config({ path: envTestPath, override: true });
 }
 
-// Test stack overrides (postgres 5433, redis 6380, kafka 9095 per Sprint 7.5b)
+// HARD override : test stack pointers (postgres 5433, redis 6380, kafka 9095).
+// This is the authoritative source of truth -- whatever .env or .env.test
+// said, E2E tests target the local test docker compose stack.
+//   postgres container : skalean-postgres-test
+//     -- user `skalean`, password `skalean_test`, db `skalean_insurtech_test`
+//   redis container    : skalean-redis-test  -- requirepass skalean_redis_test
+//   kafka container    : skalean-kafka-test  -- KRaft mode, no auth
 process.env['DATABASE_URL'] =
-  process.env['TEST_DATABASE_URL'] ??
-  process.env['DATABASE_URL'] ??
   'postgresql://skalean:skalean_test@localhost:5433/skalean_insurtech_test';
-// Test Redis runs with `--requirepass skalean_redis_test` (skalean-redis-test container).
+process.env['DATABASE_HOST'] = 'localhost';
+process.env['DATABASE_PORT'] = '5433';
+process.env['DATABASE_USER'] = 'skalean';
+process.env['DATABASE_PASSWORD'] = 'skalean_test';
+process.env['DATABASE_NAME'] = 'skalean_insurtech_test';
+
 process.env['REDIS_URL'] = 'redis://:skalean_redis_test@localhost:6380';
 process.env['REDIS_HOST'] = 'localhost';
 process.env['REDIS_PORT'] = '6380';
 process.env['REDIS_PASSWORD'] = 'skalean_redis_test';
-process.env['KAFKA_BROKERS'] = process.env['KAFKA_BROKERS'] ?? 'localhost:9095';
+
+process.env['KAFKA_BROKERS'] = 'localhost:9095';
+process.env['KAFKA_CLIENT_ID'] = 'skalean-insurtech-e2e';
+process.env['KAFKA_GROUP_ID'] = 'skalean-insurtech-e2e';
 
 // Disable OTel exporters during tests.
 process.env['OTEL_TRACES_EXPORTER'] = 'none';
@@ -72,22 +100,15 @@ process.env['CALENDAR_WEBHOOK_BASE_URL'] =
   'https://placeholder.ngrok-free.app/api/v1/booking/calendar/webhook';
 
 // Auth service hardening : pepper / mfa keys / argon2 params.
-// Each value uses a deterministic 48-char base64 alphabet for reproducibility.
-const TEST_PEPPER = 'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4';
-const TEST_MFA_KEY = 'b1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4'; // 48 hex
-if (
-  !process.env['PASSWORD_PEPPER'] ||
-  process.env['PASSWORD_PEPPER'].length < 32
-) {
-  process.env['PASSWORD_PEPPER'] = TEST_PEPPER;
-}
-process.env['PASSWORD_PEPPER_VERSION'] = process.env['PASSWORD_PEPPER_VERSION'] ?? '1';
-if (
-  !process.env['MFA_SECRET_ENCRYPTION_KEY'] ||
-  process.env['MFA_SECRET_ENCRYPTION_KEY'].length < 32
-) {
-  process.env['MFA_SECRET_ENCRYPTION_KEY'] = TEST_MFA_KEY;
-}
+// PASSWORD_PEPPER : >= 32 chars (any ASCII).
+// MFA_SECRET_ENCRYPTION_KEY : 64 hex chars OR 43 base64 chars OR 32-byte raw.
+// HARD override so .env / .env.test cannot leak values too short for prod schema.
+process.env['PASSWORD_PEPPER'] =
+  'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4';
+process.env['PASSWORD_PEPPER_VERSION'] = '1';
+// 64 hex chars = 32 bytes (AES-256-GCM key).
+process.env['MFA_SECRET_ENCRYPTION_KEY'] =
+  '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 // Calendar token encryption (AES-256-GCM 32-byte hex = 64 chars).
 process.env['CALENDAR_TOKEN_ENCRYPTION_KEY'] =
   process.env['CALENDAR_TOKEN_ENCRYPTION_KEY'] ??
@@ -100,3 +121,17 @@ process.env['JWT_SECRET'] =
 process.env['JWT_REFRESH_SECRET'] =
   process.env['JWT_REFRESH_SECRET'] ??
   'replace-with-32-char-minimum-refresh-secret-dev-only';
+
+// JWT keypair (RS256) -- generate a fresh keypair per test process so the
+// helper does not depend on .env JWT_PRIVATE_KEY (which is base64-encoded
+// multi-line PEM and finicky to load via dotenv). Pattern heritage from
+// apps/api/test/auth-flow-e2e.spec.ts (Sprint 5).
+if (!process.env['JWT_PRIVATE_KEY'] || !process.env['JWT_PUBLIC_KEY']) {
+  const kp = generateKeyPairSync('rsa', {
+    modulusLength: 2048,
+    publicKeyEncoding: { type: 'spki', format: 'pem' },
+    privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+  });
+  process.env['JWT_PRIVATE_KEY'] = kp.privateKey;
+  process.env['JWT_PUBLIC_KEY'] = kp.publicKey;
+}

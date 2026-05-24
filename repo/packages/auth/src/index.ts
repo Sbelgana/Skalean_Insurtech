@@ -104,4 +104,7 @@ export {
 // Sprint 7 Tache 2.3.1 -- RBAC catalog (12 roles + 85+ permissions)
 export * from './rbac/index.js';
 
+// Sprint 7 Tache 2.3.6 -- ABAC types + interfaces
+export * from './abac/index.js';
+
 export const AUTH_PACKAGE_VERSION = '0.1.0';

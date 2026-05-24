@@ -1,24 +1,34 @@
-# ROLES ET PERMISSIONS skalean-insurtech v2.2
+# ROLES ET PERMISSIONS Assurflow v3.0 (anciennement Skalean InsurTech v2.2)
 
-**Version** : 2.2.0
-**Date** : Mai 2026
-**Source** : Sprint 7 RBAC (B-07) + Sprint 25 Cross-Tenant (B-25)
+**Version** : 3.0.0 (Sprint 7.5a Foundation Migration)
+**Date** : Mai 2026 (mise a jour 2026-05-23)
+**Source** : Sprint 7 RBAC (B-07) + Sprint 7.5a Foundation (B-7.5a) + Sprint 25 Cross-Tenant (B-25)
+**Decisions** : decision-011 + decision-012 + decision-013 + decision-014
 **AUCUNE EMOJI AUTORISEE**
 
 ---
 
 ## 1. VUE D'ENSEMBLE
 
-skalean-insurtech utilise un systeme RBAC (Role-Based Access Control) augmente d'ABAC (Attribute-Based Access Control) pour les regles contextuelles.
+Assurflow utilise un systeme RBAC (Role-Based Access Control) augmente d'ABAC (Attribute-Based Access Control) pour les regles contextuelles. La migration v2.2 -> v3.0 (Sprint 7.5a) est purement additive : les 12 roles et 90+ permissions v2.2 sont conserves a l'identique.
 
-**12 roles utilisateurs** definis dans Sprint 7 :
+**26 roles utilisateurs** (Sprint 7.5a -- v3.0) :
 - 2 roles Skalean staff (Platform Niveau 1)
-- 5 roles Tenant cabinet courtier (Niveau 2)
-- 5 roles Tenant garage (Niveau 2)
+- 3 roles Tenant Broker (Niveau 2)
+- 6 roles Tenant Garage (Niveau 2) -- inclut garage_parts_manager (PartsHub, decision-014)
+- 6 roles Tenant Carrier (Niveau 2) -- decision-012 ecosysteme 6 acteurs
+- 4 roles Tenant Expert (Niveau 2) -- decision-013 expert acteur central agree ACAPS
+- 3 roles Tenant Tow (Niveau 2) -- decision-012 remorqueur
 - 1 role Assure (Niveau 3 -- L3 dans tenant)
 - 1 role Prospect (Public)
 
-**85+ permissions distinctes** organisees en ~15 modules (auth / crm / booking / comm / docs / pay / books / compliance / analytics / insure / repair / stock / hr / admin / cross_tenant).
+**~130 permissions distinctes** organisees en 24 modules :
+- 20 modules v2.2 (auth / tenant / crm / booking / comm / docs / signature / pay / books / compliance / analytics / insure / repair / stock / hr / admin / cross_tenant / sky / mcp / public)
+- 4 modules v3.0 ajoutes Sprint 7.5a : carrier (15 perms) / expertise (10 perms) / tow (8 perms) / parts (7 perms)
+
+**7 types cross-tenant authorization** (3 v2.2 + 4 v3.0) -- voir section 6.
+
+**Decisions strategiques fondatrices** : 011 Rebranding Skalean/Assurflow + 012 Ecosysteme 6 acteurs + 013 Expert acteur central + 014 PartsHub.
 
 ---
 
@@ -390,4 +400,204 @@ MFA disabled (faciliter tests).
 
 ---
 
-**Fin du document 5-roles-permissions.md v2.2.**
+**Fin du document v2.2. -- Section v3.0 ci-dessous.**
+
+---
+
+# PARTIE II -- ASSURFLOW v3.0 EXTENSION (Sprint 7.5a Foundation Migration)
+
+Date : 2026-05-23. Decisions : 011 + 012 + 013 + 014. Reference : B-7.5a.
+
+## 11. NOUVEAUX ROLES v3.0 (14 ajoutes)
+
+L'extension v3.0 est strictement additive : les 12 roles v2.2 sont conserves a l'identique (pas de renommage, pas de suppression).
+
+### 11.1 Garage parts manager (PartsHub -- decision-014)
+
+| Role | Description | Tenant |
+|------|-------------|--------|
+| **garage_parts_manager** | Responsable pieces garage (fournisseurs, commandes, commissions) | Garage |
+
+Permissions principales (module `parts.*`, 7 perms) :
+- `parts.suppliers.read`, `parts.suppliers.add_to_favorites`
+- `parts.orders.create`, `parts.orders.read`, `parts.orders.cancel_within_window`
+- `parts.commission.view_dashboard`
+- `parts.invoices.read`
+
+### 11.2 Roles Tenant Carrier (compagnie d'assurance -- decision-012)
+
+| Role | Description | Hierarchie |
+|------|-------------|------------|
+| **carrier_admin** | Admin compagnie (CRUD complet tenant carrier) | herite les 5 enfants |
+| **carrier_claims_manager** | Responsable sinistres -- designe experts, approuve indemnisations | base |
+| **carrier_finance** | Workflow approbation paiements 4 niveaux | base |
+| **carrier_compliance** | Reporting ACAPS, fraude, audit | base |
+| **carrier_expert_manager** | Pool experts (designation, evaluation) | base |
+| **carrier_partner_manager** | Gestion partenaires courtiers/garages | base |
+
+Permissions principales (module `carrier.*`, 15 perms) :
+- Dashboard / claims : `carrier.dashboard.read`, `carrier.claims.read`, `carrier.claims.read_all`
+- Paiement multi-niveaux : `carrier.payment.approve_level1` a `approve_level4`, `carrier.payment.reject`
+- Experts pool : `carrier.experts.designate`, `carrier.experts.read_pool`, `carrier.experts.evaluate`
+- Partners : `carrier.partners.read_stats`, `carrier.brokers.manage`
+- Compliance / fraude : `carrier.compliance_reports.generate`, `carrier.fraud_alerts.read`
+
+### 11.3 Roles Tenant Expert (expert agree ACAPS -- decision-013)
+
+| Role | Description | Tenant |
+|------|-------------|--------|
+| **expert_independent** | Expert automobile independant agree ACAPS (personne physique) | Expert (independant) |
+| **expert_firm_admin** | Admin cabinet expertise multi-associes | Expert (cabinet) -- herite expert_associate |
+| **expert_associate** | Expert associe cabinet expertise | Expert (cabinet) |
+| **expert_carrier_internal** | Expert salarie interne compagnie | Carrier (role interne) |
+
+**Regle d'independance** (decision-013) : aucun de ces roles ne peut etre rattache au tenant Garage. L'expert qui contre-expertise un devis ne peut pas appartenir a la structure qui a etabli ce devis (exigence agrement ACAPS).
+
+Permissions principales (module `expertise.*`, 10 perms) :
+- Missions : `expertise.missions.read`, `expertise.missions.accept`, `expertise.missions.reject`
+- Workflow devis : `expertise.work.execute`, `expertise.quote.validate`, `expertise.quote.modify`, `expertise.quote.reject`
+- Rapports : `expertise.report.create`, `expertise.report.sign` (Barid eSign loi 43-20)
+- Honoraires : `expertise.honoraires.invoice`
+
+### 11.4 Roles Tenant Tow (remorqueur -- decision-012)
+
+| Role | Description | Hierarchie |
+|------|-------------|------------|
+| **tow_admin** | Admin operateur remorquage | herite tow_dispatcher + tow_driver |
+| **tow_dispatcher** | Dispatcher (assigne missions aux conducteurs) | herite tow_driver |
+| **tow_driver** | Conducteur (PWA mobile, execute missions) | base |
+
+Permissions principales (module `tow.*`, 8 perms) :
+- Missions : `tow.missions.read_available`, `tow.missions.accept`, `tow.missions.reject`, `tow.missions.complete`
+- Operations : `tow.vehicle_photos.upload`, `tow.availability.toggle`
+- Gestion : `tow.earnings.read`, `tow.drivers.manage`
+
+WebAuthn biometric login prefere pour tow_driver (PWA mobile, terrain, sans clavier).
+
+---
+
+## 12. ROLE HIERARCHY v3.0
+
+```
+super_admin_platform (top)  -- bypass tout
+
+analyst_support             -- read-only universal
+
+broker_admin
+  └── broker_user
+        └── broker_assistant
+
+garage_admin
+  ├── garage_chef
+  │     └── garage_technicien
+  ├── garage_comptable
+  ├── garage_commercial
+  └── garage_parts_manager   -- v3.0 (PartsHub)
+
+carrier_admin                -- v3.0
+  ├── carrier_claims_manager
+  ├── carrier_finance
+  ├── carrier_compliance
+  ├── carrier_expert_manager
+  └── carrier_partner_manager
+
+expert_firm_admin            -- v3.0
+  └── expert_associate
+expert_independent           -- v3.0 (terminal)
+expert_carrier_internal      -- v3.0 (terminal, rattache tenant Carrier)
+
+tow_admin                    -- v3.0
+  └── tow_dispatcher
+        └── tow_driver
+
+assure (L3 in tenant)
+prospect (public)
+```
+
+Heritage v3.0 : `getEffectivePermissions(carrier_admin)` resout recursivement les 5 enfants.
+
+Cross-domain prohibition etendue : aucune chaine d'heritage ne peut traverser broker <-> garage <-> carrier <-> expert <-> tow (verifie au boot par MatrixValidator).
+
+---
+
+## 13. CROSS-TENANT AUTHORIZATIONS v3.0 (7 TYPES)
+
+Les 3 types v2.2 sont conserves et 4 nouveaux types sont ajoutes en v3.0 :
+
+| # | Type | Description | Origine |
+|---|------|-------------|---------|
+| 1 | broker_to_garage_assignment | Le courtier assigne un sinistre a un garage | v2.2 |
+| 2 | assure_to_garage_visit | L'assure autorise un garage a voir son sinistre | v2.2 |
+| 3 | multi_tenant_user_access | Un utilisateur opere pour plusieurs tenants | v2.2 |
+| 4 | client_to_tower_dispatch | L'assure/courtier declenche une mission de remorquage | v3.0 |
+| 5 | tower_to_garage_delivery | Le remorqueur livre le vehicule au garage cible | v3.0 |
+| 6 | garage_to_expert_request | Le garage notifie l'expert designe pour validation devis | v3.0 |
+| 7 | garage_to_carrier_quote | Le garage envoie le devis a la compagnie en copie | v3.0 |
+
+**Resources** (8 types, +3 v3.0) : sinistre, police, devis, facture, tenant (v2.2) + mission, expertise, parts_order (v3.0).
+
+**Helper Postgres `app_can_access_tenant(target_tenant uuid)`** etendu Sprint 7.5a tache 7.5a.5 :
+- Cond 1 : super admin bypass (inchangee)
+- Cond 2 : same tenant (inchangee)
+- Cond 3 : EXISTS query bidirectionnelle sur cross_tenant_authorizations avec les 7 types v3.0 (active = non revoque ET non expire)
+
+---
+
+## 14. WORKFLOW SINISTRE v3.0 (expert acteur central)
+
+Workflow de bout en bout demontre au Demo Day 30 juin 2026 (decision-015) :
+
+1. **Survenance sinistre** : assure declare via app web ou WhatsApp.
+2. **Assignation courtier** : `broker_to_garage_assignment` (type 1).
+3. **Remorquage** : `client_to_tower_dispatch` (type 4) + `tower_to_garage_delivery` (type 5).
+4. **Devis garage** + commande pieces : role `garage_parts_manager` active PartsHub.
+5. **Designation expert** par compagnie : `carrier_claims_manager` ou `carrier_expert_manager` cree entree dans `expert_designations` (status = `designated`).
+6. **Acces expert au devis** : `garage_to_expert_request` (type 6). L'expert valide, modifie ou rejette.
+7. **Mise en copie compagnie** : `garage_to_carrier_quote` (type 7).
+8. **Cloture designation** : status passe a `completed` dans `expert_designations`.
+
+Table `expert_designations` (Sprint 7.5a tache 7.5a.4) : tenant_id, carrier_tenant_id, carrier_user_id, expert_tenant_id, expert_user_id, sinistre_id, status (5 valeurs), timestamps, motif rejet. RLS active via `app_can_access_tenant`.
+
+---
+
+## 15. MATRICE 26 ROLES x 130 PERMISSIONS (resume)
+
+| Acteur | Nb roles | Modules permissions principaux | Total perms approx |
+|--------|----------|--------------------------------|---------------------|
+| Platform (Skalean) | 2 | wildcard / read-only universal | super_admin: 999, analyst: 35 |
+| Broker | 3 | crm, insure, booking, comm, analytics | 30-60 par role |
+| Garage | 6 | repair, stock, hr, parts (parts_mgr) | 15-55 par role |
+| Carrier | 6 | carrier (15), partage avec insure/pay/compliance | 10-50 par role |
+| Expert | 4 | expertise (10), partage avec docs/signature | 20-30 par role |
+| Tow | 3 | tow (8), partage avec comm | 10-30 par role |
+| Assure (L3) | 1 | *_own permissions cross-modules | 15 |
+| Prospect | 1 | public.* | 4 |
+
+Total : 26 roles x ~130 permissions (catalog complet `Permission` style `as const`, jamais enum).
+
+---
+
+## 16. CONFORMITE REGLEMENTAIRE v3.0
+
+- **Loi 09-08 CNDP** : tous les tenants Carrier + Expert + Tow traitent des donnees d'assures. Residence MA stricte (decision-008, Atlas Cloud Services Benguerir).
+- **ACAPS** : roles expert documentes avec numero agrement (table expert, sprint ulterieur). Independance materialisee par regle "expert jamais rattache tenant Garage".
+- **Loi 17-99 Code des assurances** : tenant Carrier porte le risque, paie l'indemnisation, designe l'expert.
+- **Loi 43-20 signature electronique** : rapports d'expertise signes via Barid eSign (decision-009).
+- **Loi 9-88 comptabilite** : Carrier doit pouvoir exporter SAFT-MA pour DGI.
+- **Loi 43-05 AML** : roles `carrier_compliance` + `carrier_fraud_alerts.read` pour monitoring SAR.
+
+---
+
+## 17. SEEDS DEV v3.0 (a venir Sprint 8+)
+
+Le seed `pnpm seeds:rbac` sera etendu en Sprint 8 pour ajouter :
+- 6 carrier users (Wafa Assurance demo)
+- 4 expert users (Cabinet expertise Bennani + 1 independant + 1 carrier internal)
+- 3 tow users (Remorquage Atlas demo)
+- 1 garage_parts_manager additionnel
+
+Total seed users : 26 (vs 12 v2.2).
+
+---
+
+**Fin du document 5-roles-permissions.md v3.0 (Sprint 7.5a Foundation Migration).**

@@ -13,10 +13,13 @@ node_modules/
 .env
 .env.local
 .env.*.local
+.env.development
 .env.development.local
-.env.test.local
+.env.production
 .env.production.local
+.env.staging
 .env.staging.local
+# Note : .env.test reste TRACKE (fixtures dev pour CI sans secrets prod). .env.example reste TRACKE.
 
 # ============================================================
 # Build outputs

@@ -165,6 +165,18 @@ export class CalendarSyncTokenService {
     dto: SaveCalendarTokensDto,
   ): Promise<BookingCalendarSyncEntity> {
     const tenantId = this.requireTenantId();
+    return this.saveTokensAs(tenantId, userId, dto);
+  }
+
+  /**
+   * Tenant-explicit variant for unauthenticated callers (e.g. OAuth callback
+   * where the CSRF state payload provides the tenant + user). Task 8.10b.
+   */
+  async saveTokensAs(
+    tenantId: string,
+    userId: string,
+    dto: SaveCalendarTokensDto,
+  ): Promise<BookingCalendarSyncEntity> {
     const repo = this.getRepo();
 
     const existing = await repo.findOne({
@@ -233,6 +245,51 @@ export class CalendarSyncTokenService {
     dto: SaveWebhookSubscriptionDto,
   ): Promise<void> {
     const row = await this.findById(id);
+    await this.persistWebhookSubscription(id, row.provider, dto);
+  }
+
+  /**
+   * Tenant-explicit variant for OAuth callback path (unauthenticated).
+   * Also persists the clientState used for webhook validation in metadata.
+   * Task 8.10b.
+   */
+  async saveWebhookSubscriptionAs(
+    tenantId: string,
+    id: string,
+    dto: SaveWebhookSubscriptionDto,
+    clientState: string,
+  ): Promise<void> {
+    const row = await this.getRepo().findOne({ where: { id, tenantId } });
+    if (!row) {
+      throw new NotFoundException({
+        code: CALENDAR_SYNC_ERROR_CODES.NOT_FOUND,
+        message: `Calendar sync ${id} not found`,
+      });
+    }
+    // Merge clientState into metadata jsonb so webhook receivers can validate
+    // incoming notifications. Webhook validation pulls it from row.metadata.webhookClientState.
+    const newMetadata = { ...(row.metadata ?? {}), webhookClientState: clientState };
+    await this.getRepo()
+      .createQueryBuilder()
+      .update(BookingCalendarSyncEntity)
+      .set({
+        webhook_subscription_id: dto.webhookSubscriptionId,
+        webhook_resource_id: dto.webhookResourceId ?? null,
+        webhook_expires_at: dto.webhookExpiresAt,
+        metadata: newMetadata,
+      } as unknown as Record<string, unknown>)
+      .where('id = :id', { id })
+      .execute();
+    this.logger.log(
+      `calendar_sync_webhook_saved id=${id} provider=${row.provider} subscription_id=${dto.webhookSubscriptionId} expires_at=${dto.webhookExpiresAt.toISOString()} tenant=${tenantId}`,
+    );
+  }
+
+  private async persistWebhookSubscription(
+    id: string,
+    provider: string,
+    dto: SaveWebhookSubscriptionDto,
+  ): Promise<void> {
     await this.getRepo()
       .createQueryBuilder()
       .update(BookingCalendarSyncEntity)
@@ -244,7 +301,7 @@ export class CalendarSyncTokenService {
       .where('id = :id', { id })
       .execute();
     this.logger.log(
-      `calendar_sync_webhook_saved id=${id} provider=${row.provider} subscription_id=${dto.webhookSubscriptionId} expires_at=${dto.webhookExpiresAt.toISOString()}`,
+      `calendar_sync_webhook_saved id=${id} provider=${provider} subscription_id=${dto.webhookSubscriptionId} expires_at=${dto.webhookExpiresAt.toISOString()}`,
     );
   }
 
@@ -254,7 +311,34 @@ export class CalendarSyncTokenService {
     dto: RecordSyncOutcomeDto,
   ): Promise<BookingCalendarSyncEntity> {
     const tenantId = this.requireTenantId();
-    const row = await this.findById(id);
+    return this.recordSyncOutcomeAs(tenantId, id, dto);
+  }
+
+  /**
+   * Tenant-explicit variant for unauthenticated callers (cron, webhook
+   * receivers, OAuth callback refresh-failure path). Task 8.10b.
+   */
+  async recordSyncOutcomeAs(
+    tenantId: string,
+    id: string,
+    dto: RecordSyncOutcomeDto,
+  ): Promise<BookingCalendarSyncEntity> {
+    const row = await this.getRepo().findOne({ where: { id, tenantId } });
+    if (!row) {
+      throw new NotFoundException({
+        code: CALENDAR_SYNC_ERROR_CODES.NOT_FOUND,
+        message: `Calendar sync ${id} not found`,
+      });
+    }
+    return this.recordOutcomeOnRow(tenantId, row, dto);
+  }
+
+  private async recordOutcomeOnRow(
+    tenantId: string,
+    row: BookingCalendarSyncEntity,
+    dto: RecordSyncOutcomeDto,
+  ): Promise<BookingCalendarSyncEntity> {
+    const id = row.id;
 
     const isSuccess = dto.status === 'success';
     const newFailures = isSuccess ? 0 : row.consecutiveFailures + 1;
@@ -274,11 +358,11 @@ export class CalendarSyncTokenService {
       .where('id = :id', { id })
       .execute();
 
-    const updated = await this.findById(id);
+    const updated = await this.getRepo().findOne({ where: { id, tenantId } });
     this.logger.log(
       `calendar_sync_recorded id=${id} status=${dto.status} consecutive_failures=${newFailures} auto_disabled=${shouldAutoDisable} tenant=${tenantId}`,
     );
-    return updated;
+    return updated!;
   }
 
   /** Disable sync (manual disconnect or after auto-disable). Preserves tokens. */

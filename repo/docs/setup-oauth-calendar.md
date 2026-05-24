@@ -1,16 +1,55 @@
-# Calendar Sync OAuth Setup -- Sprint 8.10
+# Calendar Sync OAuth Setup -- Sprint 8.10 + 8.10b
 
 ## Status
 
-**Sprint 8.10 = foundation only**. DB persistence, AES-256-GCM token encryption,
-and webhook subscription tracking are implemented. Real OAuth provider
-integration (Google Calendar API, Microsoft Graph) and webhook receivers are
-**deferred to Task 8.10b / Sprint 8.14** when:
+**Sprint 8.10b = Phase 1 delivered** : OAuth providers (`googleapis` +
+`@azure/msal-node` / `@microsoft/microsoft-graph-client`), webhook subscriptions
++ validation, cron renewal, controller endpoints, all wired into the booking
+module. The code ships with **PLACEHOLDER credentials** in env files -- boot
+detects them and disables endpoints (`HTTP 503 Service Unavailable`) until real
+values are swapped in. Zero code change required to activate.
 
-1. Developer credentials are provisioned (Google Cloud Console + Azure App Reg)
-2. A public callback / webhook URL is available (ngrok for dev, real domain prod)
+Phase 2 (Task 8.12 -- bi-directional sync worker, `AppointmentsService` hooks,
+conflict resolution) is **deferred to a follow-up session**.
 
-This document captures the setup steps required to activate Task 8.10b.
+This document captures :
+1. One-time setup procedure (Google Cloud Console + Azure App Registration).
+2. Activation procedure (swap placeholders -> real values + restart).
+3. Smoke tests verifying provider availability.
+
+---
+
+## Activation procedure (post-credentials)
+
+Once steps below produce real client IDs + secrets :
+
+1. Copy `.env.example` -> `.env.development` (gitignored).
+2. Replace the **6 placeholder values** :
+   ```
+   GOOGLE_OAUTH_CLIENT_ID=<real-google-client-id>
+   GOOGLE_OAUTH_CLIENT_SECRET=<real-google-secret>
+   GOOGLE_OAUTH_REDIRECT_URI=https://<ngrok-or-domain>/api/v1/booking/calendar/callback/google
+   MICROSOFT_OAUTH_CLIENT_ID=<real-azure-app-id>
+   MICROSOFT_OAUTH_CLIENT_SECRET=<real-azure-client-secret>
+   MICROSOFT_OAUTH_REDIRECT_URI=https://<ngrok-or-domain>/api/v1/booking/calendar/callback/outlook
+   CALENDAR_WEBHOOK_BASE_URL=https://<ngrok-or-domain>/api/v1/booking/calendar/webhook
+   ```
+3. Generate + set `CALENDAR_TOKEN_ENCRYPTION_KEY` (`openssl rand -hex 32`).
+4. Restart API (`pnpm --filter @insurtech/api dev`).
+5. Smoke test :
+   ```bash
+   # Webhook health probe (public) -- should report google + outlook enabled
+   curl https://localhost:4000/api/v1/booking/calendar/webhook/health
+
+   # Authenticated initiate (requires JWT + BOOKING_CALENDAR_SYNC permission)
+   curl -H "Authorization: Bearer $TOKEN" \
+     https://localhost:4000/api/v1/booking/calendar/connect/google
+   # -> { "authUrl": "https://accounts.google.com/o/oauth2/..." }
+   ```
+6. If provider returns 503 with code `CALENDAR_PROVIDER_DISABLED`, the value
+   still starts with `PLACEHOLDER_` -- recheck env loading.
+
+---
 
 ---
 
@@ -105,18 +144,29 @@ manipulates plaintext, the DB stores `iv_b64:tag_b64:ciphertext_b64`.
 
 ## Testing strategy
 
-### Sprint 8.10 (current)
+### Sprint 8.10 (foundation)
 
 - Unit tests : `CalendarSyncTokenService` + `EncryptedColumnTransformer` --
   round-trip encryption, save/lookup/disable/recordSync flows, multi-tenant
   isolation. No HTTP / OAuth provider calls.
 
-### Sprint 8.10b / 8.14 (deferred)
+### Sprint 8.10b Phase 1 (delivered)
 
-- Mocked HTTP tests for `GoogleCalendarProvider` + `OutlookCalendarProvider`
-  using `nock` or `msw`.
-- E2E manual flow with real credentials in staging environment.
-- Webhook receiver tests with fixture payloads from Google / MS Graph docs.
+- `OAuthCalendarConfig` placeholder detection (12 tests).
+- `OAuthStateService` CSRF state generation + redis storage (8 tests, ioredis-mock).
+- `GoogleCalendarProvider` authorization URL + webhook validation (8 tests, nock).
+- `OutlookCalendarProvider` authorization URL + webhook handshake (10 tests).
+- `CalendarOAuth2Service` orchestrator (14 tests, mocked providers).
+- `CalendarWebhookManagerService` cron renewal (10 tests).
+- `CalendarSyncController` 503 fallback + webhook receivers (20 tests).
+- Cumulative Phase 1 : **82 tests passing**.
+
+### Sprint 8.12 / 8.14 (deferred)
+
+- Bi-directional sync worker (Kafka consumer + `AppointmentsService` hooks).
+- Conflict resolution (last-write-wins with provider etag).
+- E2E manual flow with real credentials in staging.
+- Webhook receiver Kafka publication on validated notifications.
 
 ---
 

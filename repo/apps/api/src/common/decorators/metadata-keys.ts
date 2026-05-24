@@ -43,3 +43,13 @@ export const ROLE_KEY = 'rbac-role';
  * Metadata stockee comme single AuthRole.
  */
 export const MIN_ROLE_KEY = 'rbac-min-role';
+
+// === Sprint 7 Tache 2.3.5 -- PermissionGuard ===
+
+/**
+ * @RequirePermission(permission) ou @RequireAnyPermission(perms[]) /
+ * @RequireAllPermissions(perms[]). Le guard distingue via REQUIRE_PERMISSIONS_MODE.
+ *
+ * Metadata stockee comme { permissions: PermissionValue[], mode: 'any' | 'all' }.
+ */
+export const REQUIRE_PERMISSIONS_KEY = 'rbac-require-permissions';

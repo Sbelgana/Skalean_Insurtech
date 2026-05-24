@@ -6,13 +6,16 @@
 **Audit qualite** : 98.0% GO (cf `audits/AUDIT-TRIADE-BCV-REPORT.md`)
 **AUCUNE EMOJI AUTORISEE**
 
-> **NOTE v3.0 (2026-05-24)** : Sprint 7.5a Assurflow Foundation Migration LIVRE.
-> - Foundation v3.0 : 26 roles + 7 cross-tenant types + 130 permissions
+> **NOTE v3.0 (2026-05-24)** : Sprint 7.5a + Sprint 7 + Pause #5 + Sprint 7.5b LIVRES.
+> - Sprint 7.5a Foundation v3.0 : 26 roles + 7 cross-tenant types + 130 permissions
+> - Sprint 7 RBAC v3.0 complete : RbacService + 4 ABAC policies + audit + cache Redis distribue
+> - Pause #5 validation runtime : 11/11 cibles PASS + 5 bugs fixes (migration NOW() + grants + DB reset)
+> - Sprint 7.5b Foundation Packages : @insurtech/expertise + @insurtech/tow + 3 entities Expert (RLS)
 > - Decisions strategiques 011-015 formalisees (rebrand Skalean/Assurflow, ecosystem 6 acteurs, expert ACAPS, PartsHub, Demo Day 30/06/2026)
-> - Tag Git : `sprint-7.5a-complete-v3-foundation`
-> - Sprint 7 reprise possible tache 2.3.2 sur architecture v3.0 propre
-> - Sprint 7.5b (refactor docs massif + nouveaux sprints Tow/Expert/Carrier/Sky AI pre-training) a venir apres Sprint 7 complet
-> - References : `meta-prompts/B-7.5a-sprint-7.5a-assurflow-foundation.md` + `decisions/011-*.md` a `015-*.md`
+> - Tags Git : `sprint-7.5a-complete-v3-foundation` + `sprint-07-complete-v3` + `pause-5-validation-complete` + `sprint-7.5b-complete-v3-foundation-packages`
+> - Tests cumules : ~1718 PASS (auth 591 + api 885 + database 95 + 28 expertise/tow + 6 insure RLS + 14 RLS apps/api + bootstrap 22)
+> - Sprint 8 ready : CRM + Booking sur architecture v3.0 propre
+> - References : `meta-prompts/B-7.5a-*.md` + `meta-prompts/B-7.5b-*.md` + `decisions/011-*.md` a `015-*.md` + `pause-5-validation-runtime.md`
 
 **Changelog v2.2 FINAL** :
 - 35 meta-prompts B-XX (specifications detaillees Option B) -- 1.4 Mo

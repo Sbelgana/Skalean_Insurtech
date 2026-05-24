@@ -105,11 +105,23 @@ export type CreateFieldDefinitionDto = z.infer<typeof CreateFieldDefinitionSchem
  * Update schema -- entityType + fieldKey are immutable (changement = destructeur).
  * Other fields nullable.optional() for partial update.
  */
+/** Validation rules for Update -- truly optional (no .default()) to keep the
+ * input/output types properly optional in the inferred Dto. */
+const ValidationRulesPartialSchema = z
+  .object({
+    min: z.number().optional(),
+    max: z.number().optional(),
+    minLength: z.number().int().min(0).optional(),
+    maxLength: z.number().int().min(1).optional(),
+    pattern: z.string().max(500).optional(),
+  })
+  .optional();
+
 export const UpdateFieldDefinitionSchema = z.object({
   fieldLabel: z.string().min(1).max(150).optional(),
   fieldType: FieldTypeSchema.optional(),
   options: z.array(CustomFieldOptionSchema).max(100).nullable().optional(),
-  validationRules: ValidationRulesSchema,
+  validationRules: ValidationRulesPartialSchema,
   required: z.boolean().optional(),
   displayOrder: z.number().int().min(0).optional(),
   active: z.boolean().optional(),

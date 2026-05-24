@@ -1,6 +1,44 @@
-# CLAUDE.md -- Skalean InsurTech v2.2 IA Guide
+# CLAUDE.md -- Assurflow v3.0 IA Guide (anciennement Skalean InsurTech v2.2)
 
 Ce fichier est lu par Cowork, Claude Code, et toute IA assistante avant chaque session de travail sur ce projet. Respecter ces conventions ABSOLUMENT.
+
+## v3.0 Foundation (Sprint 7.5a Foundation Migration -- 2026-05-24)
+
+**Rebranding** (decision-011) : Skalean = editeur (societe), Assurflow = produit InsurTech. Marque produit changee ; namespace technique `@insurtech/*` conserve (pas de refactor).
+
+**26 roles utilisateurs** (decision-012) -- extension additive de 12 -> 26 :
+- Platform N1 : super_admin_platform + analyst_support (2)
+- Tenant Broker N2 : broker_admin / broker_user / broker_assistant (3)
+- Tenant Garage N2 : garage_admin / chef / technicien / comptable / commercial / parts_manager (6, +parts_manager v3.0)
+- Tenant Carrier N2 : carrier_admin / claims_manager / finance / compliance / expert_manager / partner_manager (6 v3.0)
+- Tenant Expert N2 : expert_independent / firm_admin / associate / carrier_internal (4 v3.0, decision-013)
+- Tenant Tow N2 : tow_admin / tow_dispatcher / tow_driver (3 v3.0)
+- L3 + Public : assure + prospect (2)
+
+**7 cross-tenant authorization types** (decision-012) :
+- v2.2 : broker_to_garage_assignment, assure_to_garage_visit, multi_tenant_user_access
+- v3.0 : client_to_tower_dispatch, tower_to_garage_delivery, garage_to_expert_request, garage_to_carrier_quote
+
+**130 permissions** dans 24 modules (`Permission = {...} as const` -- jamais enum) :
+- 20 modules v2.2 conserves
+- 4 modules v3.0 ajoutes : carrier (15 perms), expertise (10), tow (8), parts (7)
+
+**Decisions strategiques formalisees** (15 totales) :
+- 001-010 : monorepo, multi-tenant, TypeORM, Kafka, Skalean AI, no-emoji, AI defere, data residency MA, signature 43-20, insure connecteurs defere
+- 011 Rebranding Skalean (editeur) / Assurflow (produit InsurTech)
+- 012 Ecosystem 6 acteurs (vs 3 v2.2) -- 26 roles / 7 cross-tenant / 130 perms
+- 013 Expert acteur central designe par carrier (4 roles, agrement ACAPS, independance vs garage)
+- 014 PartsHub Phase 1 module integre verticale Garage (role garage_parts_manager + 7 perms)
+- 015 Demo Day 30 juin 2026 scope complet v3.0 (pilote Marrakech, date dure)
+
+**Workflow sinistre v3.0** : assure declare -> broker assigne garage -> tow remorque -> garage devis + PartsHub commande pieces -> carrier designe expert -> expert valide/modifie/rejette devis -> compagnie en CC. 7 cross-tenant types + table `expert_designations` materialisent le flux.
+
+**Conformite v3.0** : nouveaux tenants Carrier + Expert + Tow soumis a residence MA (loi 09-08 CNDP) et chiffrement at rest. Expert ACAPS-licensed, independance materialisee par regle "expert jamais rattache tenant Garage". Carrier porte le risque (loi 17-99). Signature rapport expertise via Barid eSign (loi 43-20).
+
+Reference complete : `00-pilotage/documentation/5-roles-permissions.md` v3.0 + `00-pilotage/decisions/011-*.md` a `015-*.md` + `00-pilotage/meta-prompts/B-7.5a-sprint-7.5a-assurflow-foundation.md`.
+
+---
+
 
 ## 1. Conventions critiques
 

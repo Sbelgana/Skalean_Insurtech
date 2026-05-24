@@ -1,10 +1,18 @@
-# INDEX -- Skalean_Insurtech v2.2
+# INDEX -- Assurflow v3.0 (anciennement Skalean_Insurtech v2.2)
 
-**Version** : 2.2.0 (FINAL detaillee)
+**Version** : 3.0.0 -- Foundation Migration Sprint 7.5a livre (2026-05-24)
 **Date** : Mai 2026
-**Statut** : LIVRE -- Triade B/C/V complete (105 fichiers / 4.9 Mo)
+**Statut** : LIVRE -- Triade B/C/V complete (105 fichiers / 4.9 Mo) + Sprint 7.5a foundation v3.0
 **Audit qualite** : 98.0% GO (cf `audits/AUDIT-TRIADE-BCV-REPORT.md`)
 **AUCUNE EMOJI AUTORISEE**
+
+> **NOTE v3.0 (2026-05-24)** : Sprint 7.5a Assurflow Foundation Migration LIVRE.
+> - Foundation v3.0 : 26 roles + 7 cross-tenant types + 130 permissions
+> - Decisions strategiques 011-015 formalisees (rebrand Skalean/Assurflow, ecosystem 6 acteurs, expert ACAPS, PartsHub, Demo Day 30/06/2026)
+> - Tag Git : `sprint-7.5a-complete-v3-foundation`
+> - Sprint 7 reprise possible tache 2.3.2 sur architecture v3.0 propre
+> - Sprint 7.5b (refactor docs massif + nouveaux sprints Tow/Expert/Carrier/Sky AI pre-training) a venir apres Sprint 7 complet
+> - References : `meta-prompts/B-7.5a-sprint-7.5a-assurflow-foundation.md` + `decisions/011-*.md` a `015-*.md`
 
 **Changelog v2.2 FINAL** :
 - 35 meta-prompts B-XX (specifications detaillees Option B) -- 1.4 Mo

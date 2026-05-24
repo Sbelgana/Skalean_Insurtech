@@ -1,11 +1,16 @@
-# Skalean InsurTech
+# Assurflow (edite par Skalean) -- anciennement Skalean InsurTech
 
-> Plateforme InsurTech marocaine -- 2 SaaS B2B + 1 admin + 3 apps clientes + 1 MCP server expose tools metier a Skalean AI
+> Plateforme InsurTech marocaine -- ecosystem 6 acteurs : Broker + Garage + Carrier + Expert + Tow + Customer/Assure
 
-**Version** : 2.2.0
+**Version** : 3.0.0 -- Foundation Migration Sprint 7.5a livre (2026-05-24)
 **Date** : Mai 2026
-**Statut** : 35/35 sprints meta-prompts livres -- documentation v2.2 alignee
+**Statut** : 35/35 sprints meta-prompts livres + Sprint 7.5a foundation v3.0 -- documentation v3.0 partielle (refactor massif Sprint 7.5b)
 **AUCUNE EMOJI AUTORISEE**
+
+> **NOTE v3.0 (2026-05-24)** : Migration v2.2 -> v3.0 livre via Sprint 7.5a Foundation.
+> - 26 roles + 7 cross-tenant types + 130 permissions (extension additive, 12 roles v2.2 preserves verbatim).
+> - 5 decisions strategiques formalisees : 011 Rebrand Skalean/Assurflow, 012 Ecosystem 6 acteurs, 013 Expert acteur central, 014 PartsHub Phase 1, 015 Demo Day 30/06/2026.
+> - Namespace technique `@insurtech/*` conserve (refactor reporte Phase 2 post-pilote, decision-011).
 
 ---
 

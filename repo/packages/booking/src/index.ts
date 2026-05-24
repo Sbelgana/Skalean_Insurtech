@@ -8,7 +8,7 @@
  * propres ressources bookables (parking remorquage, bureaux expert).
  */
 
-export const BOOKING_PACKAGE_VERSION = '0.5.0';
+export const BOOKING_PACKAGE_VERSION = '0.6.0';
 
 // Schemas Zod Room (Sprint 8 Tache 8.8)
 export {
@@ -86,3 +86,16 @@ export {
   type FreeSlotDto,
   type FindFreeSlotsQueryDto,
 } from './schemas/availability.schema.js';
+
+// Schemas Zod iCal feed (Sprint 8 Tache 8.13)
+export {
+  ICAL_TOKEN_SCOPES,
+  IcalTokenScopeSchema,
+  CreateIcalTokenSchema,
+  IcalTokenCreatedSchema,
+  IcalTokenSummarySchema,
+  type IcalTokenScope,
+  type CreateIcalTokenDto,
+  type IcalTokenCreatedDto,
+  type IcalTokenSummaryDto,
+} from './schemas/ical-token.schema.js';

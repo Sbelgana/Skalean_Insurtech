@@ -24,6 +24,7 @@ import { DatabaseModule } from '../../database/database.module.js';
 import { AppointmentsController } from './controllers/appointments.controller.js';
 import { AvailabilityController } from './controllers/availability.controller.js';
 import { CalendarSyncController } from './controllers/calendar-sync.controller.js';
+import { IcalFeedController } from './controllers/ical-feed.controller.js';
 import { RoomsController } from './controllers/rooms.controller.js';
 import { OAuthCalendarConfig } from './config/oauth-calendar.config.js';
 import { GoogleCalendarProvider } from './providers/google-calendar.provider.js';
@@ -35,6 +36,9 @@ import { CalendarOAuth2Service } from './services/calendar-oauth2.service.js';
 import { CalendarSyncTokenService } from './services/calendar-sync-token.service.js';
 import { CalendarSyncWorkerService } from './services/calendar-sync-worker.service.js';
 import { CalendarWebhookManagerService } from './services/calendar-webhook-manager.service.js';
+import { IcalFeedService } from './services/ical-feed.service.js';
+import { IcalRendererService } from './services/ical-renderer.service.js';
+import { IcalTokenService } from './services/ical-token.service.js';
 import { OAuthStateService } from './services/oauth-state.service.js';
 import { RoomsService } from './services/rooms.service.js';
 
@@ -54,6 +58,7 @@ import { RoomsService } from './services/rooms.service.js';
     AppointmentsController,
     AvailabilityController,
     CalendarSyncController,
+    IcalFeedController,
   ],
   providers: [
     // Core booking
@@ -72,6 +77,10 @@ import { RoomsService } from './services/rooms.service.js';
     // Phase 2 (Task 8.12) -- bi-directional sync worker + listener
     CalendarSyncWorkerService,
     AppointmentSyncListener,
+    // Task 8.13 -- iCal feed export (RFC 5545)
+    IcalTokenService,
+    IcalRendererService,
+    IcalFeedService,
   ],
   exports: [
     RoomsService,
@@ -80,6 +89,8 @@ import { RoomsService } from './services/rooms.service.js';
     CalendarSyncTokenService,
     CalendarOAuth2Service,
     CalendarSyncWorkerService,
+    IcalTokenService,
+    IcalFeedService,
   ],
 })
 export class BookingModule {}

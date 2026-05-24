@@ -15,15 +15,21 @@ export {
   type BookingCalendarProvider,
   type BookingCalendarLastSyncStatus,
 } from './booking-calendar-sync.entity.js';
+export {
+  BookingIcalTokenEntity,
+  type BookingIcalTokenScope,
+} from './booking-ical-token.entity.js';
 export { TimeRangeTransformer, type TimeRange } from './transformers/time-range.transformer.js';
 export { createEncryptedColumnTransformer } from './transformers/encrypted-column.transformer.js';
 
 import { BookingRoomEntity } from './booking-room.entity.js';
 import { BookingAppointmentEntity } from './booking-appointment.entity.js';
 import { BookingCalendarSyncEntity } from './booking-calendar-sync.entity.js';
+import { BookingIcalTokenEntity } from './booking-ical-token.entity.js';
 
 export const bookingEntities = [
   BookingRoomEntity,
   BookingAppointmentEntity,
   BookingCalendarSyncEntity,
+  BookingIcalTokenEntity,
 ] as const;

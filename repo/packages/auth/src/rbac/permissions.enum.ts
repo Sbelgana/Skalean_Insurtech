@@ -73,6 +73,9 @@ export const Permission = {
   BOOKING_APPOINTMENTS_DELETE: 'booking.appointments.delete',
   BOOKING_APPOINTMENTS_OVERRIDE_WORKFLOW: 'booking.appointments.override_workflow',
   BOOKING_CALENDAR_SYNC: 'booking.calendar.sync',
+  // Task 8.13 -- iCal feed export (RFC 5545, public URL token-based)
+  BOOKING_ICAL_MANAGE: 'booking.ical.manage',
+  BOOKING_ICAL_ADMIN: 'booking.ical.admin',
 
   // === COMM (5) -- Sprint 9 ===
   COMM_MESSAGES_SEND: 'comm.messages.send',

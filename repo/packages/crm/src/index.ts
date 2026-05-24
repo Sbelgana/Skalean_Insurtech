@@ -5,7 +5,7 @@
  * Services NestJS implementes dans apps/api/src/modules/crm/.
  */
 
-export const CRM_PACKAGE_VERSION = '0.3.0';
+export const CRM_PACKAGE_VERSION = '0.4.0';
 
 // Validators MA
 export {
@@ -58,3 +58,20 @@ export {
   type ContactFiltersDto,
   type LinkContactToCompanyDto,
 } from './schemas/contact.schema.js';
+
+// Schemas Zod Pipeline + Stage (Sprint 8 Tache 8.3)
+export {
+  HEX_COLOR_REGEX,
+  CreatePipelineSchema,
+  UpdatePipelineSchema,
+  PipelineFiltersSchema,
+  CreateStageSchema,
+  UpdateStageSchema,
+  ReorderStagesSchema,
+  type CreatePipelineDto,
+  type UpdatePipelineDto,
+  type PipelineFiltersDto,
+  type CreateStageDto,
+  type UpdateStageDto,
+  type ReorderStagesDto,
+} from './schemas/pipeline.schema.js';

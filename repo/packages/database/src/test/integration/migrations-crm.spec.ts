@@ -95,9 +95,11 @@ describe.skipIf(SKIP)('Migration CRM1735000000002', () => {
   });
 
   it('16 policies RLS creees (4 tables x 4 actions)', async () => {
+    // Scope strictly to Sprint 2 tables. Later migrations (e.g. 016 Sprint 8.3 pipelines/stages)
+    // add more crm_* policies that must not affect this assertion.
     const rows: Array<{ count: number }> = await ds.query(`
       SELECT count(*)::int AS count FROM pg_policies
-      WHERE tablename LIKE 'crm_%';
+      WHERE tablename IN ('crm_companies', 'crm_contacts', 'crm_deals', 'crm_interactions');
     `);
     expect(rows[0]?.count).toBe(16);
   });
@@ -136,6 +138,13 @@ describe.skipIf(SKIP)('Migration CRM1735000000002', () => {
   });
 
   it('down() supprime les 4 tables et les 5 ENUMs CRM', async () => {
+    // Revert later CRM migrations first (e.g. Sprint 8.3 pipelines/stages) so
+    // we can assert that 002's down() removes ALL of its Sprint 2 contribution.
+    const { CreateCrmPipelinesStages1735000000016 } = await import(
+      '../../migrations/1735000000016-CreateCrmPipelinesStages.js'
+    );
+    await new CreateCrmPipelinesStages1735000000016().down(ds.createQueryRunner());
+
     const { CRM1735000000002 } = await import('../../migrations/1735000000002-CRM.js');
     const migration = new CRM1735000000002();
     await migration.down(ds.createQueryRunner());

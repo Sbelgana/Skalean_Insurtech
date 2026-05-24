@@ -19,6 +19,7 @@ import { Communications1735000000004 } from '../../migrations/1735000000004-Comm
 import { DocsPayments1735000000005 } from '../../migrations/1735000000005-DocsPayments.js';
 import { BooksCompliance1735000000006 } from '../../migrations/1735000000006-BooksCompliance.js';
 import { AnalyticsStockHr1735000000007 } from '../../migrations/1735000000007-AnalyticsStockHr.js';
+import { CreateCrmPipelinesStages1735000000016 } from '../../migrations/1735000000016-CreateCrmPipelinesStages.js';
 
 export interface TestDataSourceOptions {
   migrationsRun?: boolean;
@@ -32,7 +33,7 @@ const baseOptions = (): DataSourceOptions => ({
   password: process.env['TEST_DATABASE_PASSWORD'] ?? process.env['DATABASE_PASSWORD'] ?? 'skalean_dev_only',
   database: process.env['TEST_DATABASE_NAME'] ?? process.env['DATABASE_NAME'] ?? 'skalean_insurtech',
   entities: [...systemEntities, ...crmEntities, ...bookingEntities, ...commEntities, ...docsEntities, ...payEntities, ...booksEntities, ...complianceEntities, ...analyticsEntities, ...stockEntities, ...hrEntities, ...insureEntities],
-  migrations: [InitialSystem1735000000001, CRM1735000000002, Booking1735000000003, Communications1735000000004, DocsPayments1735000000005, BooksCompliance1735000000006, AnalyticsStockHr1735000000007],
+  migrations: [InitialSystem1735000000001, CRM1735000000002, Booking1735000000003, Communications1735000000004, DocsPayments1735000000005, BooksCompliance1735000000006, AnalyticsStockHr1735000000007, CreateCrmPipelinesStages1735000000016],
   migrationsRun: false,
   synchronize: false,
   logging: process.env['TEST_DATABASE_LOG'] === 'true',

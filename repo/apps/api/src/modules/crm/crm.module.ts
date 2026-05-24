@@ -7,16 +7,17 @@
  *   - 8.3 Pipelines + Stages (livre Tache 8.3)
  *   - 8.4 Deals + State Machine (livre Tache 8.4)
  *   - 8.5 Interactions polymorphic + Timeline (livre Tache 8.5)
- *   - 8.6 Full-Text Search pg_trgm
+ *   - 8.6 FTS pg_trgm cross-entity search (livre Tache 8.6)
  *   - 8.7 Custom Fields JSONB + Zod runtime
  *
- * Reference : B-08 Tache 3.1.1 + 3.1.2 + 3.1.3 + 3.1.4 + 3.1.5.
+ * Reference : B-08 Tache 3.1.1 + 3.1.2 + 3.1.3 + 3.1.4 + 3.1.5 + 3.1.6.
  */
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module.js';
 import { DatabaseModule } from '../../database/database.module.js';
 import { CompaniesController } from './controllers/companies.controller.js';
 import { ContactsController } from './controllers/contacts.controller.js';
+import { CrmSearchController } from './controllers/crm-search.controller.js';
 import { DealsController } from './controllers/deals.controller.js';
 import {
   InteractionsController,
@@ -26,6 +27,7 @@ import { PipelinesController } from './controllers/pipelines.controller.js';
 import { StagesController } from './controllers/stages.controller.js';
 import { CompaniesService } from './services/companies.service.js';
 import { ContactsService } from './services/contacts.service.js';
+import { CrmSearchService } from './services/crm-search.service.js';
 import { DealsService } from './services/deals.service.js';
 import { InteractionsService } from './services/interactions.service.js';
 import { PipelinesService } from './services/pipelines.service.js';
@@ -41,6 +43,7 @@ import { StagesService } from './services/stages.service.js';
     DealsController,
     InteractionsController,
     InteractionsTimelineController,
+    CrmSearchController,
   ],
   providers: [
     CompaniesService,
@@ -49,6 +52,7 @@ import { StagesService } from './services/stages.service.js';
     StagesService,
     DealsService,
     InteractionsService,
+    CrmSearchService,
   ],
   exports: [
     CompaniesService,
@@ -57,6 +61,7 @@ import { StagesService } from './services/stages.service.js';
     StagesService,
     DealsService,
     InteractionsService,
+    CrmSearchService,
   ],
 })
 export class CRMModule {}

@@ -36,7 +36,7 @@ export const Permission = {
   TENANT_BRANDING_UPDATE: 'tenant.branding.update',
   TENANT_BILLING_READ: 'tenant.billing.read',
 
-  // === CRM (21) -- Sprint 8 (8.4 added CLOSE + OVERRIDE_WORKFLOW ; 8.5 added INTERACTIONS_READ + SOFT_DELETE + RESTORE) ===
+  // === CRM (22) -- Sprint 8 (8.4 +CLOSE/OVERRIDE_WORKFLOW ; 8.5 +INTERACTIONS_READ/SOFT_DELETE/RESTORE ; 8.6 +SEARCH_READ) ===
   CRM_CONTACTS_READ: 'crm.contacts.read',
   CRM_CONTACTS_READ_OWN: 'crm.contacts.read_own',
   CRM_CONTACTS_CREATE: 'crm.contacts.create',
@@ -59,6 +59,7 @@ export const Permission = {
   CRM_INTERACTIONS_READ: 'crm.interactions.read',
   CRM_INTERACTIONS_SOFT_DELETE: 'crm.interactions.soft_delete',
   CRM_INTERACTIONS_RESTORE: 'crm.interactions.restore',
+  CRM_SEARCH_READ: 'crm.search.read',
 
   // === BOOKING (7) -- Sprint 8 ===
   BOOKING_ROOMS_READ: 'booking.rooms.read',

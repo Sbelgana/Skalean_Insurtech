@@ -5,7 +5,7 @@
  * Services NestJS implementes dans apps/api/src/modules/crm/.
  */
 
-export const CRM_PACKAGE_VERSION = '0.6.0';
+export const CRM_PACKAGE_VERSION = '0.7.0';
 
 // Validators MA
 export {
@@ -111,3 +111,14 @@ export {
   type FilterInteractionsDto,
   type TimelineQueryDto,
 } from './schemas/interaction.schema.js';
+
+// Schemas Zod Search (Sprint 8 Tache 8.6 -- FTS pg_trgm cross-CRM)
+export {
+  SEARCH_ENTITY_TYPES,
+  SearchEntityTypeSchema,
+  GlobalSearchSchema,
+  EntityScopedSearchSchema,
+  type SearchEntityType,
+  type GlobalSearchDto,
+  type EntityScopedSearchDto,
+} from './schemas/search.schema.js';

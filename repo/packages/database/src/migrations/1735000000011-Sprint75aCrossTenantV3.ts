@@ -55,10 +55,13 @@ export class Sprint75aCrossTenantV31735000000011 implements MigrationInterface {
       `CREATE INDEX IF NOT EXISTS idx_cta_type        ON cross_tenant_authorizations (type);`,
     );
     // Index partiel actif (Sprint 6 framework) :
+    // Bug fix Pause #5 : retirer expires_at > NOW() du predicate car NOW() est
+    // STABLE (pas IMMUTABLE) -- viole CheckPredicate Postgres. Le filtering
+    // expires_at est effectue au runtime dans le helper app_can_access_tenant.
     await q.query(`
       CREATE INDEX IF NOT EXISTS idx_cta_active
         ON cross_tenant_authorizations (from_tenant_id, to_tenant_id, type)
-        WHERE revoked_at IS NULL AND expires_at > NOW();
+        WHERE revoked_at IS NULL;
     `);
 
     // CHECK constraint type : drop si existant, recreer avec 7 valeurs v3.0

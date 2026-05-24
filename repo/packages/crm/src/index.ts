@@ -5,7 +5,7 @@
  * Services NestJS implementes dans apps/api/src/modules/crm/.
  */
 
-export const CRM_PACKAGE_VERSION = '0.7.0';
+export const CRM_PACKAGE_VERSION = '0.8.0';
 
 // Validators MA
 export {
@@ -122,3 +122,24 @@ export {
   type GlobalSearchDto,
   type EntityScopedSearchDto,
 } from './schemas/search.schema.js';
+
+// Schemas Zod Custom Fields (Sprint 8 Tache 8.7 -- JSONB + Zod runtime dynamic)
+export {
+  CUSTOM_FIELD_ENTITY_TYPES,
+  CUSTOM_FIELD_TYPES,
+  FIELD_KEY_REGEX,
+  EntityTypeSchema as CustomFieldEntityTypeSchema,
+  FieldTypeSchema as CustomFieldTypeSchema,
+  CustomFieldOptionSchema,
+  ValidationRulesSchema,
+  CreateFieldDefinitionSchema,
+  UpdateFieldDefinitionSchema,
+  FieldDefinitionFiltersSchema,
+  type CustomFieldEntityTypeDto,
+  type CustomFieldTypeDto,
+  type CustomFieldOptionDto,
+  type ValidationRulesDto,
+  type CreateFieldDefinitionDto,
+  type UpdateFieldDefinitionDto,
+  type FieldDefinitionFiltersDto,
+} from './schemas/custom-fields.schema.js';

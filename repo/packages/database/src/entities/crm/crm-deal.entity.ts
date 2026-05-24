@@ -103,6 +103,10 @@ export class CrmDealEntity {
   @Column({ name: 'description', type: 'text', nullable: true })
   description!: string | null;
 
+  /** Custom fields per tenant -- validated by CustomFieldsValidatorService (Sprint 8.7). */
+  @Column({ name: 'custom_fields', type: 'jsonb', default: () => "'{}'::jsonb" })
+  customFields!: Record<string, unknown>;
+
   @Column({ name: 'closed_won', type: 'boolean', nullable: true })
   closedWon!: boolean | null;
 

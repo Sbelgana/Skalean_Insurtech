@@ -98,6 +98,8 @@ export const PermissionsMatrix: Record<AuthRole, PermissionsMatrixEntry> = {
     Permission.CRM_INTERACTIONS_SOFT_DELETE,
     Permission.CRM_INTERACTIONS_RESTORE,
     Permission.CRM_SEARCH_READ,
+    Permission.CRM_CUSTOM_FIELDS_MANAGE,
+    Permission.CRM_CUSTOM_FIELDS_DELETE,
     // Booking complet
     Permission.BOOKING_ROOMS_READ,
     Permission.BOOKING_ROOMS_MANAGE,

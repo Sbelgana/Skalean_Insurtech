@@ -137,4 +137,8 @@ export class CrmInteractionEntity {
 
   @Column({ name: 'deleted_by', type: 'uuid', nullable: true })
   deletedBy!: string | null;
+
+  /** Custom fields per tenant -- validated by CustomFieldsValidatorService (Sprint 8.7). */
+  @Column({ name: 'custom_fields', type: 'jsonb', default: () => "'{}'::jsonb" })
+  customFields!: Record<string, unknown>;
 }

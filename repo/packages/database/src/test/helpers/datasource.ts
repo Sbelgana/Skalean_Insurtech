@@ -23,6 +23,7 @@ import { CreateCrmPipelinesStages1735000000016 } from '../../migrations/17350000
 import { ReshapeCrmDealsWorkflow1735000000017 } from '../../migrations/1735000000017-ReshapeCrmDealsWorkflow.js';
 import { ReshapeCrmInteractionsPolymorphic1735000000018 } from '../../migrations/1735000000018-ReshapeCrmInteractionsPolymorphic.js';
 import { AddTrigramIndexesCrm1735000000019 } from '../../migrations/1735000000019-AddTrigramIndexesCrm.js';
+import { AddCustomFieldsDefinitions1735000000020 } from '../../migrations/1735000000020-AddCustomFieldsDefinitions.js';
 
 export interface TestDataSourceOptions {
   migrationsRun?: boolean;
@@ -36,7 +37,7 @@ const baseOptions = (): DataSourceOptions => ({
   password: process.env['TEST_DATABASE_PASSWORD'] ?? process.env['DATABASE_PASSWORD'] ?? 'skalean_dev_only',
   database: process.env['TEST_DATABASE_NAME'] ?? process.env['DATABASE_NAME'] ?? 'skalean_insurtech',
   entities: [...systemEntities, ...crmEntities, ...bookingEntities, ...commEntities, ...docsEntities, ...payEntities, ...booksEntities, ...complianceEntities, ...analyticsEntities, ...stockEntities, ...hrEntities, ...insureEntities],
-  migrations: [InitialSystem1735000000001, CRM1735000000002, Booking1735000000003, Communications1735000000004, DocsPayments1735000000005, BooksCompliance1735000000006, AnalyticsStockHr1735000000007, CreateCrmPipelinesStages1735000000016, ReshapeCrmDealsWorkflow1735000000017, ReshapeCrmInteractionsPolymorphic1735000000018, AddTrigramIndexesCrm1735000000019],
+  migrations: [InitialSystem1735000000001, CRM1735000000002, Booking1735000000003, Communications1735000000004, DocsPayments1735000000005, BooksCompliance1735000000006, AnalyticsStockHr1735000000007, CreateCrmPipelinesStages1735000000016, ReshapeCrmDealsWorkflow1735000000017, ReshapeCrmInteractionsPolymorphic1735000000018, AddTrigramIndexesCrm1735000000019, AddCustomFieldsDefinitions1735000000020],
   migrationsRun: false,
   synchronize: false,
   logging: process.env['TEST_DATABASE_LOG'] === 'true',

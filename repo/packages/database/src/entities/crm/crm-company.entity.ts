@@ -69,6 +69,10 @@ export class CrmCompanyEntity {
   @Column({ name: 'notes', type: 'text', nullable: true })
   notes!: string | null;
 
+  /** Custom fields per tenant -- validated by CustomFieldsValidatorService (Sprint 8.7). */
+  @Column({ name: 'custom_fields', type: 'jsonb', default: () => "'{}'::jsonb" })
+  customFields!: Record<string, unknown>;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 

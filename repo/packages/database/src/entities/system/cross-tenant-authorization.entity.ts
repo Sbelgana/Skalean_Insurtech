@@ -10,17 +10,67 @@ import {
 import { AuthTenant } from './auth-tenant.entity.js';
 import { AuthUser } from './auth-user.entity.js';
 
+/**
+ * Cross-tenant authorization types (Sprint 6 framework, extended Sprint 7.5a v3.0).
+ *
+ * v2.2 (3 types) : broker_to_garage_assignment, assure_to_garage_visit, multi_tenant_user_access.
+ * v3.0 (+4 types, decision-012) :
+ *   - client_to_tower_dispatch    : assure/courtier declenche mission remorquage
+ *   - tower_to_garage_delivery    : remorqueur livre vehicule au garage cible
+ *   - garage_to_expert_request    : garage notifie expert designe pour validation devis
+ *   - garage_to_carrier_quote     : garage envoie devis a la compagnie en copie
+ */
 export type CrossTenantAuthorizationType =
   | 'broker_to_garage_assignment'
   | 'assure_to_garage_visit'
-  | 'multi_tenant_user_access';
+  | 'multi_tenant_user_access'
+  | 'client_to_tower_dispatch'
+  | 'tower_to_garage_delivery'
+  | 'garage_to_expert_request'
+  | 'garage_to_carrier_quote';
 
+/**
+ * Cross-tenant resource types (Sprint 6 framework, extended Sprint 7.5a v3.0).
+ *
+ * v2.2 (5 types) : sinistre, police, devis, facture, tenant.
+ * v3.0 (+3 types, decision-012/013/014) :
+ *   - mission     : tow mission (decision-012 cross-tenant types 4/5)
+ *   - expertise   : expert report / contre-expertise (decision-013)
+ *   - parts_order : PartsHub order (decision-014)
+ */
 export type CrossTenantResourceType =
   | 'sinistre'
   | 'police'
   | 'devis'
   | 'facture'
-  | 'tenant';
+  | 'tenant'
+  | 'mission'
+  | 'expertise'
+  | 'parts_order';
+
+/** All cross-tenant authorization types (frozen array for iteration/validation). */
+export const ALL_CROSS_TENANT_AUTHORIZATION_TYPES: readonly CrossTenantAuthorizationType[] =
+  Object.freeze([
+    'broker_to_garage_assignment',
+    'assure_to_garage_visit',
+    'multi_tenant_user_access',
+    'client_to_tower_dispatch',
+    'tower_to_garage_delivery',
+    'garage_to_expert_request',
+    'garage_to_carrier_quote',
+  ]);
+
+/** All cross-tenant resource types (frozen array for iteration/validation). */
+export const ALL_CROSS_TENANT_RESOURCE_TYPES: readonly CrossTenantResourceType[] = Object.freeze([
+  'sinistre',
+  'police',
+  'devis',
+  'facture',
+  'tenant',
+  'mission',
+  'expertise',
+  'parts_order',
+]);
 
 /**
  * Cross-tenant authorization (Sprint 6 framework / Sprint 26 runtime).

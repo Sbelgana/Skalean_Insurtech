@@ -10,6 +10,8 @@ export { AuthSession } from './auth-session.entity.js';
 export { AuditLog, type AuditChanges } from './audit-log.entity.js';
 export { ConsumerProcessedEvent } from './consumer-processed-event.entity.js';
 export {
+  ALL_CROSS_TENANT_AUTHORIZATION_TYPES,
+  ALL_CROSS_TENANT_RESOURCE_TYPES,
   CrossTenantAuthorization,
   type CrossTenantAuthorizationType,
   type CrossTenantResourceType,

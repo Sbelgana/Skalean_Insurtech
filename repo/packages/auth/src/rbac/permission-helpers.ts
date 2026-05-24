@@ -7,7 +7,7 @@
 import { ALL_PERMISSIONS, type PermissionValue } from './permissions.enum.js';
 import { PERMISSION_NAMING_REGEX, RBAC_WILDCARD } from './rbac-constants.js';
 
-/** 20 modules supportes. */
+/** 24 modules supportes (v3.0 : +carrier +expertise +tow +parts). */
 export const Module = {
   AUTH: 'auth',
   TENANT: 'tenant',
@@ -29,6 +29,11 @@ export const Module = {
   SKY: 'sky',
   MCP: 'mcp',
   PUBLIC: 'public',
+  // v3.0 -- Sprint 7.5a
+  CARRIER: 'carrier',
+  EXPERTISE: 'expertise',
+  TOW: 'tow',
+  PARTS: 'parts',
 } as const;
 
 export type ModuleValue = (typeof Module)[keyof typeof Module];
@@ -80,6 +85,28 @@ export const Action = {
   SUBMIT: 'submit',
   PROCESS: 'process',
   USER: 'user',
+  // v3.0 -- Sprint 7.5a (decision-012/013/014)
+  APPROVE_LEVEL1: 'approve_level1',
+  APPROVE_LEVEL2: 'approve_level2',
+  APPROVE_LEVEL3: 'approve_level3',
+  APPROVE_LEVEL4: 'approve_level4',
+  DESIGNATE: 'designate',
+  READ_POOL: 'read_pool',
+  EVALUATE: 'evaluate',
+  READ_STATS: 'read_stats',
+  VALIDATE_QUOTE: 'validate_quote',
+  MODIFY_QUOTE: 'modify_quote',
+  REJECT_QUOTE: 'reject_quote',
+  READ_AVAILABLE: 'read_available',
+  ACCEPT: 'accept',
+  TOGGLE: 'toggle',
+  ADD_TO_FAVORITES: 'add_to_favorites',
+  CANCEL_WITHIN_WINDOW: 'cancel_within_window',
+  VIEW_DASHBOARD: 'view_dashboard',
+  VALIDATE: 'validate',
+  MODIFY: 'modify',
+  SIGN: 'sign',
+  INVOICE: 'invoice',
 } as const;
 
 export type ActionValue = (typeof Action)[keyof typeof Action];

@@ -9,9 +9,10 @@ export const RBAC_WILDCARD = '*' as const;
 
 /**
  * Regex stricte naming permissions : {module}.{resource}.{action}
- * Lettres minuscules + underscore, debute par lettre.
+ * Lettres minuscules + underscore, debute par lettre. Chiffres autorises apres
+ * la 1ere lettre (ex : carrier.payment.approve_level1, v3.0 Sprint 7.5a).
  */
-export const PERMISSION_NAMING_REGEX = /^[a-z][a-z_]*\.[a-z][a-z_]*\.[a-z][a-z_]*$/;
+export const PERMISSION_NAMING_REGEX = /^[a-z][a-z_0-9]*\.[a-z][a-z_0-9]*\.[a-z][a-z_0-9]*$/;
 
 /** Regex stricte naming roles : lettres minuscules + underscore. */
 export const ROLE_NAMING_REGEX = /^[a-z][a-z_]*$/;

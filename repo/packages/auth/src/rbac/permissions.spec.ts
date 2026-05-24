@@ -73,8 +73,8 @@ describe('RBAC catalog -- Permission + helpers + metadata', () => {
   // Modules
   // ==========================================================================
 
-  it('8. has 20 modules', () => {
-    expect(ALL_MODULES.length).toBe(20);
+  it('8. has 24 modules (v3.0 : +carrier +expertise +tow +parts)', () => {
+    expect(ALL_MODULES.length).toBe(24);
   });
 
   it('9. every permission has a valid module', () => {

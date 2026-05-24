@@ -1,15 +1,19 @@
 /**
- * Catalog 85+ permissions Skalean InsurTech v2.2.
+ * Catalog ~130 permissions Assurflow v3.0 (Sprint 7.5a Foundation extension).
  *
- * Sprint 7 / Tache 2.3.1.
+ * Sprint 7 / Tache 2.3.1 : 90 perms v2.2.
+ * Sprint 7.5a / Tache 7.5a.6 : +40 perms v3.0 (carrier 15 + expertise 10 + tow 8 + parts 7).
  *
  * Convention naming : {module}.{resource}.{action}
- *   module : 20 modules (auth, tenant, crm, booking, comm, docs, signature, pay,
+ *   module : 24 modules (auth, tenant, crm, booking, comm, docs, signature, pay,
  *            books, compliance, analytics, insure, repair, stock, hr, admin,
- *            cross_tenant, sky, mcp, public)
+ *            cross_tenant, sky, mcp, public, carrier, expertise, tow, parts)
  *   resource : entite metier (contacts, polices, sinistres, ...)
  *   action : read, read_own, read_all, read_assigned, create, create_own, update,
  *            update_own, delete, assign, approve, reject, cancel, etc.
+ *
+ * Style : `export const Permission = {...} as const` (jamais enum, decision interne).
+ * References : decision-012 + decision-013 + decision-014.
  */
 
 export const Permission = {
@@ -189,15 +193,70 @@ export const Permission = {
   PUBLIC_QUOTES_GENERATE: 'public.quotes.generate',
   PUBLIC_KYC_SUBMIT: 'public.kyc.submit',
   PUBLIC_PAYMENTS_PROCESS: 'public.payments.process',
+
+  // ==========================================================================
+  // v3.0 NEW MODULES (Sprint 7.5a Foundation Migration, decision-012/013/014)
+  // ==========================================================================
+
+  // === CARRIER (15) -- Sprint 7.5a, decision-012 carrier roles ===
+  CARRIER_DASHBOARD_READ: 'carrier.dashboard.read',
+  CARRIER_CLAIMS_READ: 'carrier.claims.read',
+  CARRIER_CLAIMS_READ_ALL: 'carrier.claims.read_all',
+  CARRIER_PAYMENT_APPROVE_L1: 'carrier.payment.approve_level1',
+  CARRIER_PAYMENT_APPROVE_L2: 'carrier.payment.approve_level2',
+  CARRIER_PAYMENT_APPROVE_L3: 'carrier.payment.approve_level3',
+  CARRIER_PAYMENT_APPROVE_L4: 'carrier.payment.approve_level4',
+  CARRIER_PAYMENT_REJECT: 'carrier.payment.reject',
+  CARRIER_EXPERTS_DESIGNATE: 'carrier.experts.designate',
+  CARRIER_EXPERTS_READ_POOL: 'carrier.experts.read_pool',
+  CARRIER_EXPERTS_EVALUATE: 'carrier.experts.evaluate',
+  CARRIER_PARTNERS_READ_STATS: 'carrier.partners.read_stats',
+  CARRIER_COMPLIANCE_REPORTS_GENERATE: 'carrier.compliance_reports.generate',
+  CARRIER_FRAUD_ALERTS_READ: 'carrier.fraud_alerts.read',
+  CARRIER_BROKERS_MANAGE: 'carrier.brokers.manage',
+
+  // === EXPERTISE (10) -- Sprint 7.5a, decision-013 expert workflow ===
+  EXPERTISE_MISSIONS_READ: 'expertise.missions.read',
+  EXPERTISE_MISSIONS_ACCEPT: 'expertise.missions.accept',
+  EXPERTISE_MISSIONS_REJECT: 'expertise.missions.reject',
+  EXPERTISE_EXECUTE: 'expertise.work.execute',
+  EXPERTISE_VALIDATE_QUOTE: 'expertise.quote.validate',
+  EXPERTISE_MODIFY_QUOTE: 'expertise.quote.modify',
+  EXPERTISE_REJECT_QUOTE: 'expertise.quote.reject',
+  EXPERTISE_REPORT_CREATE: 'expertise.report.create',
+  EXPERTISE_REPORT_SIGN: 'expertise.report.sign',
+  EXPERTISE_HONORAIRES_INVOICE: 'expertise.honoraires.invoice',
+
+  // === TOW (8) -- Sprint 7.5a, decision-012 tow tenant roles ===
+  TOW_MISSIONS_READ_AVAILABLE: 'tow.missions.read_available',
+  TOW_MISSIONS_ACCEPT: 'tow.missions.accept',
+  TOW_MISSIONS_REJECT: 'tow.missions.reject',
+  TOW_MISSIONS_COMPLETE: 'tow.missions.complete',
+  TOW_VEHICLE_PHOTOS_UPLOAD: 'tow.vehicle_photos.upload',
+  TOW_AVAILABILITY_TOGGLE: 'tow.availability.toggle',
+  TOW_EARNINGS_READ: 'tow.earnings.read',
+  TOW_DRIVERS_MANAGE: 'tow.drivers.manage',
+
+  // === PARTS HUB (7) -- Sprint 7.5a, decision-014 garage_parts_manager ===
+  PARTS_SUPPLIERS_READ: 'parts.suppliers.read',
+  PARTS_SUPPLIERS_ADD_FAVORITE: 'parts.suppliers.add_to_favorites',
+  PARTS_ORDERS_CREATE: 'parts.orders.create',
+  PARTS_ORDERS_READ: 'parts.orders.read',
+  PARTS_ORDERS_CANCEL: 'parts.orders.cancel_within_window',
+  PARTS_COMMISSION_VIEW: 'parts.commission.view_dashboard',
+  PARTS_INVOICES_READ: 'parts.invoices.read',
 } as const;
 
-/** Union litterale 85+ valeurs permissions. */
+/** Union litterale ~130 valeurs permissions Assurflow v3.0. */
 export type PermissionValue = (typeof Permission)[keyof typeof Permission];
 
 /** Liste runtime de toutes les valeurs permissions. */
 export const ALL_PERMISSIONS: readonly PermissionValue[] = Object.freeze(
   Object.values(Permission),
 );
+
+/** Compte runtime des permissions (utilise par tests et dashboards). */
+export const PERMISSIONS_COUNT = Object.keys(Permission).length;
 
 /** Map inverse cle UPPER_SNAKE -> valeur lower.dot. Utile debug. */
 export const PermissionKeys = Object.freeze(

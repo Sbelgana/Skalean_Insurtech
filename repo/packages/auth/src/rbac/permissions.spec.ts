@@ -55,11 +55,11 @@ describe('RBAC catalog -- Permission + helpers + metadata', () => {
   // Roles
   // ==========================================================================
 
-  it('5. has exactly 12 roles', () => {
-    expect(ALL_AUTH_ROLES.length).toBe(12);
+  it('5. has exactly 26 roles (v3.0 Sprint 7.5a Foundation)', () => {
+    expect(ALL_AUTH_ROLES.length).toBe(26);
   });
 
-  it('6. RoleMetadata has entries for all 12 roles', () => {
+  it('6. RoleMetadata has entries for all 26 roles', () => {
     for (const role of ALL_AUTH_ROLES) {
       expect(RoleMetadata[role]).toBeDefined();
     }

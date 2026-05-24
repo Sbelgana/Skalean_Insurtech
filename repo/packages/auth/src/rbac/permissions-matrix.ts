@@ -407,12 +407,44 @@ export const PermissionsMatrix: Record<AuthRole, PermissionsMatrixEntry> = {
     Permission.PUBLIC_KYC_SUBMIT,
     Permission.PUBLIC_PAYMENTS_PROCESS,
   ] as const,
+
+  // ===========================================================================
+  // v3.0 NEW ROLES (Sprint 7.5a Foundation Migration)
+  //
+  // Les permissions directes des 14 nouveaux roles seront populees au Sprint 7
+  // reprise (tache 2.3.2 PermissionsMatrix v3.0) lorsque le catalog 130 perms
+  // sera complet. Pour Sprint 7.5a, entrees vides afin de preserver la contrainte
+  // exhaustivite Record<AuthRole, PermissionsMatrixEntry> sans casser les 12
+  // roles v2.2.
+  // ===========================================================================
+
+  // Garage parts manager (decision-014 PartsHub).
+  [AuthRole.GaragePartsManager]: [] as const,
+
+  // Carrier roles (decision-012).
+  [AuthRole.CarrierAdmin]: [] as const,
+  [AuthRole.CarrierClaimsManager]: [] as const,
+  [AuthRole.CarrierFinance]: [] as const,
+  [AuthRole.CarrierCompliance]: [] as const,
+  [AuthRole.CarrierExpertManager]: [] as const,
+  [AuthRole.CarrierPartnerManager]: [] as const,
+
+  // Expert roles (decision-013).
+  [AuthRole.ExpertIndependent]: [] as const,
+  [AuthRole.ExpertFirmAdmin]: [] as const,
+  [AuthRole.ExpertAssociate]: [] as const,
+  [AuthRole.ExpertCarrierInternal]: [] as const,
+
+  // Tow roles (decision-012).
+  [AuthRole.TowAdmin]: [] as const,
+  [AuthRole.TowDispatcher]: [] as const,
+  [AuthRole.TowDriver]: [] as const,
 };
 
 /** Type derive : nombre de roles dans la matrice. */
 export type PermissionsMatrixKeys = keyof typeof PermissionsMatrix;
 
-/** Liste figee des 12 roles dans la matrice. */
+/** Liste figee des 26 roles dans la matrice (v3.0 Sprint 7.5a). */
 export const ALL_ROLES_IN_MATRIX = Object.keys(PermissionsMatrix) as readonly AuthRole[];
 
 /**

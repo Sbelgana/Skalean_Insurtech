@@ -20,9 +20,9 @@ import {
 } from '../../src/types/auth-roles.js';
 
 describe('AuthRole enum', () => {
-  it('should declare exactly 12 roles', () => {
-    expect(Object.keys(AuthRole)).toHaveLength(12);
-    expect(ALL_AUTH_ROLES).toHaveLength(12);
+  it('should declare exactly 26 roles (v3.0 Sprint 7.5a Foundation)', () => {
+    expect(Object.keys(AuthRole)).toHaveLength(26);
+    expect(ALL_AUTH_ROLES).toHaveLength(26);
   });
 
   it('should have stable string values for each role', () => {
@@ -139,14 +139,15 @@ describe('getRoleHierarchy', () => {
     expect(getRoleHierarchy(AuthRole.BrokerAssistant)).toEqual([AuthRole.BrokerAssistant]);
   });
 
-  it('garage_admin includes 5 garage roles', () => {
+  it('garage_admin includes 6 garage roles (v3.0 : +garage_parts_manager)', () => {
     const h = getRoleHierarchy(AuthRole.GarageAdmin);
     expect(h).toContain(AuthRole.GarageAdmin);
     expect(h).toContain(AuthRole.GarageChef);
     expect(h).toContain(AuthRole.GarageTechnicien);
     expect(h).toContain(AuthRole.GarageComptable);
     expect(h).toContain(AuthRole.GarageCommercial);
-    expect(h).toHaveLength(5);
+    expect(h).toContain(AuthRole.GaragePartsManager);
+    expect(h).toHaveLength(6);
   });
 
   it('garage_chef includes itself and technicien', () => {

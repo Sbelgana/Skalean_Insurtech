@@ -90,3 +90,10 @@ export {
   validatePermissionsMatrix,
   type MatrixValidationResult,
 } from './matrix-validator.js';
+
+// Sprint 7 Tache 2.3.3 -- RbacService
+export {
+  RbacService,
+  type RbacAccessResult,
+  type RbacAbacContext,
+} from './rbac.service.js';

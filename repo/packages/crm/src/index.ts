@@ -5,7 +5,7 @@
  * Services NestJS implementes dans apps/api/src/modules/crm/.
  */
 
-export const CRM_PACKAGE_VERSION = '0.2.0';
+export const CRM_PACKAGE_VERSION = '0.3.0';
 
 // Validators MA
 export {
@@ -18,6 +18,25 @@ export {
   type IceValidationResult,
 } from './validators/ice.validator.js';
 
+export {
+  CIN_REGEX,
+  CIN_VALIDATION_MESSAGE,
+  validateCin,
+  cinRefinement,
+  type CinValidationError,
+  type CinValidationResult,
+} from './validators/cin.validator.js';
+
+export {
+  PHONE_MA_REGEX,
+  PHONE_MA_VALIDATION_MESSAGE,
+  normalizePhoneMa,
+  validatePhoneMa,
+  phoneMaRefinement,
+  type PhoneMaValidationError,
+  type PhoneMaValidationResult,
+} from './validators/phone-ma.validator.js';
+
 // Schemas Zod Company
 export {
   CreateCompanySchema,
@@ -27,3 +46,15 @@ export {
   type UpdateCompanyDto,
   type CompanyFiltersDto,
 } from './schemas/company.schema.js';
+
+// Schemas Zod Contact (Sprint 8 Tache 8.2)
+export {
+  CreateContactSchema,
+  UpdateContactSchema,
+  ContactFiltersSchema,
+  LinkContactToCompanySchema,
+  type CreateContactDto,
+  type UpdateContactDto,
+  type ContactFiltersDto,
+  type LinkContactToCompanyDto,
+} from './schemas/contact.schema.js';

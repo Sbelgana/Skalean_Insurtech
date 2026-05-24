@@ -35,6 +35,7 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import {
   HierarchyResolver,
@@ -59,6 +60,7 @@ import {
   type EntityManager,
 } from '@insurtech/database';
 import { DATA_SOURCE_TOKEN } from '../../../database/data-source.provider.js';
+import { CustomFieldsValidatorService } from './custom-fields-validator.service.js';
 
 export interface PaginatedDeals {
   readonly items: readonly CrmDealEntity[];
@@ -90,7 +92,21 @@ export class DealsService {
   constructor(
     @Inject(DATA_SOURCE_TOKEN) private readonly dataSource: DataSource,
     private readonly tenantContext: TenantContextService,
+    /**
+     * Optional : when provided, `customFields` payloads are validated against
+     * tenant definitions. Sprint 8 Task 8.14 (D3).
+     */
+    @Optional()
+    private readonly customFieldsValidator?: CustomFieldsValidatorService,
   ) {}
+
+  private async resolveCustomFields(
+    customFields: Record<string, unknown> | undefined,
+  ): Promise<Record<string, unknown> | undefined> {
+    if (customFields === undefined) return undefined;
+    if (!this.customFieldsValidator) return customFields;
+    return this.customFieldsValidator.validate('deal', customFields);
+  }
 
   private getRepo() {
     return this.dataSource.getRepository(CrmDealEntity);
@@ -204,6 +220,8 @@ export class DealsService {
         }
       }
 
+      const validatedCustom = await this.resolveCustomFields(dto.customFields);
+
       // 4. Insert deal
       const deal = em.getRepository(CrmDealEntity).create({
         tenantId,
@@ -217,6 +235,7 @@ export class DealsService {
         expectedCloseDate: dto.expectedCloseDate ?? null,
         ownerUserId: dto.ownerUserId,
         description: dto.description ?? null,
+        ...(validatedCustom !== undefined ? { customFields: validatedCustom } : {}),
         closedWon: null,
         closedAt: null,
         createdBy: createdByUserId,
@@ -351,6 +370,9 @@ export class DealsService {
       }
       if (dto.ownerUserId !== undefined) updates['owner_user_id'] = dto.ownerUserId;
       if (dto.description !== undefined) updates['description'] = dto.description ?? null;
+      if (dto.customFields !== undefined) {
+        updates['custom_fields'] = await this.resolveCustomFields(dto.customFields);
+      }
 
       await em
         .createQueryBuilder()

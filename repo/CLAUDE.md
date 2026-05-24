@@ -68,6 +68,34 @@ Reference complete : `00-pilotage/documentation/5-roles-permissions.md` v3.0 + `
 
 Reference complete : `repo/docs/architecture/foundation-packages-v3.md`.
 
+## Sprint 8 (CRM + Booking) -- 13/14 + Task 8.14 Phase 1 -- 2026-05-24
+
+**Etat** : 13 tasks livrees + Phase 1 dette technique resolue. Phase 2 (E2E + seeds) deferee.
+
+**Modules livres** :
+- CRM complet : Companies + Contacts + Pipelines/Stages + Deals + Interactions + FTS + Custom Fields
+- Booking complet : Rooms + Appointments (EXCLUDE GIST anti-double-booking) + Availability + Calendar Sync OAuth (Google + Outlook bi-directional) + iCal feed RFC 5545
+
+**Catalog perms** : 138 -> 141 (+3 nets : `CRM_CUSTOM_FIELDS_MANAGE/DELETE` + `BOOKING_ICAL_MANAGE/ADMIN` ; `BOOKING_APPOINTMENTS_OVERRIDE_WORKFLOW` reutilise).
+
+**Migrations Sprint 8** : 016-025 (10 nouvelles, toutes additives over Sprint 7.5b).
+
+**Tests cumules** : ~1006+ pour CRM + Booking + Auth (post-Sprint 8 Phase 1 dette).
+
+**Tech debt resolu Phase 1** :
+- Constraints-crm hook timeouts (`createTestDataSource` guards re-runs).
+- 13 `TENANT_REQUIRED` tests skipped re-actives (TS default-parameter trap fixe via `''` sentinel).
+- `CustomFieldsValidator` hooks integration dans 4 services CRM (Companies/Contacts/Deals/Interactions via `@Optional()` DI).
+
+**Heritage decisions** :
+- EXCLUDE GIST DB defense + service-layer buffer Option B.
+- AES-256-GCM tokens encryption (TypeORM ValueTransformer).
+- Placeholders + HTTP 503 pour OAuth disabled.
+- Event-emitter + `skipExternalSync` flag pour calendar sync loop prevention.
+- SHA-256 token hash storage iCal (plain token displayed once, 404 obscurity).
+
+Reference : `repo/docs/sprint-08-summary.md`, `docs/setup-oauth-calendar.md`, `docs/setup-ical-feed.md`.
+
 ---
 
 

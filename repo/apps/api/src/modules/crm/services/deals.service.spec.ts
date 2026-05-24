@@ -157,7 +157,7 @@ const baseCreateDto = {
 
 describe('DealsService (Sprint 8 Tache 8.4)', () => {
   describe('create', () => {
-    it.skip('1. throws TENANT_REQUIRED if no tenant context (mock subtlety -- Sprint 8.14 integration)', async () => {
+    it('1. throws TENANT_REQUIRED if no tenant context', async () => {
       const service = buildService({ ctx: { tenantId: '' } });
       await expect(service.create(baseCreateDto, USER_A)).rejects.toThrow(BadRequestException);
     });

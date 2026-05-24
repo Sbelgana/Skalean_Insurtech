@@ -64,8 +64,10 @@ describe('CustomFieldsValidatorService (Sprint 8 Tache 8.7)', () => {
   });
 
   describe('buildSchemaForEntity / validate -- per field type', () => {
-    it.skip('1. throws TENANT_REQUIRED if no tenant context (mock subtlety -- Sprint 8.14 integration)', async () => {
-      const { service } = makeService([], undefined);
+    it('1. throws TENANT_REQUIRED if no tenant context', async () => {
+      // Empty string bypasses TS default-parameter substitution + trips
+      // buildTenantContext's falsy ternary. (Task 8.14 mock-subtlety fix.)
+      const { service } = makeService([], '');
       await expect(service.buildSchemaForEntity('company')).rejects.toThrow(
         BadRequestException,
       );

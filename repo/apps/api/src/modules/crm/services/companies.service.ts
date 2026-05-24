@@ -23,6 +23,7 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import { TenantContextService } from '@insurtech/auth';
 import {
@@ -33,6 +34,7 @@ import {
 } from '@insurtech/crm';
 import { CrmCompanyEntity, type DataSource } from '@insurtech/database';
 import { DATA_SOURCE_TOKEN } from '../../../database/data-source.provider.js';
+import { CustomFieldsValidatorService } from './custom-fields-validator.service.js';
 
 export interface PaginatedCompanies {
   readonly items: readonly CrmCompanyEntity[];
@@ -55,7 +57,24 @@ export class CompaniesService {
   constructor(
     @Inject(DATA_SOURCE_TOKEN) private readonly dataSource: DataSource,
     private readonly tenantContext: TenantContextService,
+    /**
+     * Optional : when provided, `customFields` payloads on create/update are
+     * validated against the tenant's `crm_custom_field_definitions` (Task 8.7).
+     * Optional so unit tests can construct the service without wiring the
+     * validator. Sprint 8 Task 8.14 (D3 -- hooks integration).
+     */
+    @Optional()
+    private readonly customFieldsValidator?: CustomFieldsValidatorService,
   ) {}
+
+  /** Validates dto.customFields if provided + validator is wired. */
+  private async resolveCustomFields(
+    customFields: Record<string, unknown> | undefined,
+  ): Promise<Record<string, unknown> | undefined> {
+    if (customFields === undefined) return undefined;
+    if (!this.customFieldsValidator) return customFields;
+    return this.customFieldsValidator.validate('company', customFields);
+  }
 
   private getRepo() {
     return this.dataSource.getRepository(CrmCompanyEntity);
@@ -104,6 +123,8 @@ export class CompaniesService {
       }
     }
 
+    const validatedCustom = await this.resolveCustomFields(dto.customFields);
+
     const entity = repo.create({
       tenantId,
       name: dto.name,
@@ -120,6 +141,7 @@ export class CompaniesService {
       ownerUserId: dto.ownerUserId ?? null,
       tags: dto.tags ?? [],
       notes: dto.notes ?? null,
+      ...(validatedCustom !== undefined ? { customFields: validatedCustom } : {}),
       createdBy: createdByUserId,
       updatedBy: createdByUserId,
     });
@@ -238,6 +260,9 @@ export class CompaniesService {
     if (dto.ownerUserId !== undefined) updates['owner_user_id'] = dto.ownerUserId ?? null;
     if (dto.tags !== undefined) updates['tags'] = dto.tags;
     if (dto.notes !== undefined) updates['notes'] = dto.notes ?? null;
+    if (dto.customFields !== undefined) {
+      updates['custom_fields'] = await this.resolveCustomFields(dto.customFields);
+    }
 
     await repo
       .createQueryBuilder()

@@ -103,8 +103,12 @@ const baseCreate = {
 
 describe('RoomsService (Sprint 8 Tache 8.8)', () => {
   describe('create', () => {
-    it.skip('1. throws TENANT_REQUIRED if no tenant context (mock subtlety -- Sprint 8.14 integration)', async () => {
-      const service = buildService(buildRepo(), undefined);
+    it('1. throws TENANT_REQUIRED if no tenant context', async () => {
+      // Pass empty string instead of `undefined` so the TS default parameter
+      // (`= TENANT_A`) doesn't substitute the value. Empty string then trips
+      // the falsy branch inside buildTenantContext -> getCurrentContext returns
+      // undefined -> requireTenantId throws. (Task 8.14 mock-subtlety fix.)
+      const service = buildService(buildRepo(), '');
       await expect(service.create(baseCreate, USER_A)).rejects.toThrow(
         BadRequestException,
       );

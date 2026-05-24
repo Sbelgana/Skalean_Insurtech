@@ -151,9 +151,11 @@ describe('StagesService (Sprint 8 Tache 8.3)', () => {
   });
 
   describe('create', () => {
-    it.skip('3. throws TENANT_REQUIRED if no tenant context (mock subtlety -- Sprint 8.14 integration)', async () => {
+    it('3. throws TENANT_REQUIRED if no tenant context', async () => {
       const stageRepo = buildRepo();
-      const service = buildService(stageRepo, undefined, undefined);
+      // Empty string bypasses TS default-parameter substitution + trips
+      // buildTenantContext's falsy ternary. (Task 8.14 mock-subtlety fix.)
+      const service = buildService(stageRepo, undefined, '');
       await expect(
         service.create(
           PIPELINE_ID,

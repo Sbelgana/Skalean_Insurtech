@@ -116,7 +116,7 @@ describe('AvailabilityService (Sprint 8 Tache 8.11)', () => {
   });
 
   describe('findFreeSlots -- happy paths', () => {
-    it.skip('1. throws TENANT_REQUIRED if no tenant context (mock subtlety -- Sprint 8.14)', async () => {
+    it('1. throws TENANT_REQUIRED if no tenant context', async () => {
       const { service } = buildService({ tenantId: '' });
       await expect(
         service.findFreeSlots({

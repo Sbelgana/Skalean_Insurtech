@@ -102,8 +102,10 @@ describe('CalendarSyncTokenService (Sprint 8 Tache 8.10 foundation)', () => {
   });
 
   describe('saveTokens', () => {
-    it.skip('1. throws TENANT_REQUIRED if no tenant context (mock subtlety -- Sprint 8.14)', async () => {
-      const service = buildService(buildRepo(), undefined);
+    it('1. throws TENANT_REQUIRED if no tenant context', async () => {
+      // Empty string bypasses TS default-parameter substitution + trips the
+      // falsy ternary inside buildTenantContext. (Task 8.14 mock-subtlety fix.)
+      const service = buildService(buildRepo(), '');
       await expect(service.saveTokens(USER_A, baseSaveDto)).rejects.toThrow(
         BadRequestException,
       );

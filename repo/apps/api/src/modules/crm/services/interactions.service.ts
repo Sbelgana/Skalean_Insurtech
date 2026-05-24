@@ -35,6 +35,7 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import {
   HierarchyResolver,
@@ -57,6 +58,7 @@ import {
   type EntityManager,
 } from '@insurtech/database';
 import { DATA_SOURCE_TOKEN } from '../../../database/data-source.provider.js';
+import { CustomFieldsValidatorService } from './custom-fields-validator.service.js';
 
 export interface PaginatedInteractions {
   readonly items: readonly CrmInteractionEntity[];
@@ -87,7 +89,21 @@ export class InteractionsService {
   constructor(
     @Inject(DATA_SOURCE_TOKEN) private readonly dataSource: DataSource,
     private readonly tenantContext: TenantContextService,
+    /**
+     * Optional : when provided, `customFields` payloads are validated against
+     * tenant definitions. Sprint 8 Task 8.14 (D3).
+     */
+    @Optional()
+    private readonly customFieldsValidator?: CustomFieldsValidatorService,
   ) {}
+
+  private async resolveCustomFields(
+    customFields: Record<string, unknown> | undefined,
+  ): Promise<Record<string, unknown> | undefined> {
+    if (customFields === undefined) return undefined;
+    if (!this.customFieldsValidator) return customFields;
+    return this.customFieldsValidator.validate('interaction', customFields);
+  }
 
   private getRepo() {
     return this.dataSource.getRepository(CrmInteractionEntity);
@@ -194,6 +210,8 @@ export class InteractionsService {
         }
       }
 
+      const validatedCustom = await this.resolveCustomFields(dto.customFields);
+
       const entity = em.getRepository(CrmInteractionEntity).create({
         tenantId,
         companyId: dto.companyId ?? null,
@@ -207,6 +225,7 @@ export class InteractionsService {
         durationMinutes: dto.durationMinutes ?? null,
         status: dto.status ?? null,
         parentInteractionId: dto.parentInteractionId ?? null,
+        ...(validatedCustom !== undefined ? { customFields: validatedCustom } : {}),
         createdBy: createdByUserId,
       });
       const saved = await em.getRepository(CrmInteractionEntity).save(entity);

@@ -49,6 +49,8 @@ export const CreateDealSchema = z.object({
   expectedCloseDate: z.coerce.date().optional(),
   ownerUserId: z.string().uuid(),
   description: z.string().max(5000).nullable().optional(),
+  /** Tenant-defined custom fields. Sprint 8 Task 8.14 (D3). */
+  customFields: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type CreateDealDto = z.infer<typeof CreateDealSchema>;
@@ -66,6 +68,8 @@ export const UpdateDealSchema = z.object({
   expectedCloseDate: z.coerce.date().nullable().optional(),
   ownerUserId: z.string().uuid().optional(),
   description: z.string().max(5000).nullable().optional(),
+  /** Tenant-defined custom fields. Sprint 8 Task 8.14 (D3). */
+  customFields: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type UpdateDealDto = z.infer<typeof UpdateDealSchema>;

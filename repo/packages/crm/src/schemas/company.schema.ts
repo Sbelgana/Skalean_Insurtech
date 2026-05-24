@@ -43,6 +43,12 @@ export const CreateCompanySchema = z.object({
   ownerUserId: z.string().uuid().optional(),
   tags: z.array(z.string().max(50)).max(20).default([]),
   notes: z.string().max(5000).optional(),
+  /**
+   * Tenant-defined custom fields. Validated at runtime by
+   * CustomFieldsValidatorService against `crm_custom_field_definitions`
+   * for entityType='company'. Sprint 8 Task 8.14 (D3).
+   */
+  customFields: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type CreateCompanyDto = z.infer<typeof CreateCompanySchema>;

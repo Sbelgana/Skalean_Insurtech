@@ -169,7 +169,7 @@ const baseCreate = {
 
 describe('InteractionsService (Sprint 8 Tache 8.5)', () => {
   describe('create', () => {
-    it.skip('1. throws TENANT_REQUIRED if no tenant context (mock subtlety -- Sprint 8.14 integration)', async () => {
+    it('1. throws TENANT_REQUIRED if no tenant context', async () => {
       const service = buildService({ ctx: { tenantId: '' } });
       await expect(
         service.create({ ...baseCreate, contactId: CONTACT_ID }, USER_A),

@@ -77,9 +77,11 @@ function validIce(first13: string): string {
 
 describe('CompaniesService (Sprint 8 Tache 8.1)', () => {
   describe('create', () => {
-    it.skip('1. throws TENANT_REQUIRED if no tenant context (mock subtlety -- valider via integration test Sprint 8.14)', async () => {
+    it('1. throws TENANT_REQUIRED if no tenant context', async () => {
       const repo = buildRepo();
-      const service = buildService(repo, undefined);
+      // Empty string bypasses TS default-parameter substitution + trips
+      // buildTenantContext's falsy ternary. (Task 8.14 mock-subtlety fix.)
+      const service = buildService(repo, '');
       await expect(
         service.create({ name: 'Test', tags: [], country: 'MA' }, USER_A),
       ).rejects.toThrow(BadRequestException);

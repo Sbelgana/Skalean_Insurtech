@@ -57,10 +57,35 @@ export async function createTestDataSource(opts: TestDataSourceOptions = {}): Pr
   await ds.initialize();
 
   if (opts.migrationsRun) {
+    // Task 8.14.D1 -- guard against re-running migrations on a DB that is
+    // already populated (typical of `pnpm db:reset` upstream). Without this
+    // check the second call attempts to CREATE TYPE / CREATE TABLE on
+    // pre-existing objects and explodes with `tenant_type already exists`,
+    // which surfaces here as a 5s `beforeAll` hook timeout in test specs
+    // (TypeORM error happens after the migration runner started).
+    if (await typeormMigrationsAlreadyRun(ds)) {
+      return ds;
+    }
     await ds.runMigrations();
   }
 
   return ds;
+}
+
+/**
+ * Returns true when the migrations history table already contains entries.
+ * Treats absence of the table itself as "not yet migrated" -- the migration
+ * runner will create it on its first invocation.
+ */
+async function typeormMigrationsAlreadyRun(ds: DataSource): Promise<boolean> {
+  try {
+    const rows = await ds.query(
+      `SELECT 1 FROM typeorm_migrations LIMIT 1`,
+    );
+    return Array.isArray(rows) && rows.length > 0;
+  } catch {
+    return false;
+  }
 }
 
 export async function dropAllTables(ds: DataSource): Promise<void> {

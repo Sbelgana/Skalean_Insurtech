@@ -27,6 +27,7 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import { TenantContextService } from '@insurtech/auth';
 import {
@@ -39,6 +40,7 @@ import {
 } from '@insurtech/crm';
 import { CrmCompanyEntity, CrmContactEntity, type DataSource } from '@insurtech/database';
 import { DATA_SOURCE_TOKEN } from '../../../database/data-source.provider.js';
+import { CustomFieldsValidatorService } from './custom-fields-validator.service.js';
 
 export interface PaginatedContacts {
   readonly items: readonly CrmContactEntity[];
@@ -64,7 +66,21 @@ export class ContactsService {
   constructor(
     @Inject(DATA_SOURCE_TOKEN) private readonly dataSource: DataSource,
     private readonly tenantContext: TenantContextService,
+    /**
+     * Optional : when provided, `customFields` payloads on create/update are
+     * validated against tenant definitions. Sprint 8 Task 8.14 (D3).
+     */
+    @Optional()
+    private readonly customFieldsValidator?: CustomFieldsValidatorService,
   ) {}
+
+  private async resolveCustomFields(
+    customFields: Record<string, unknown> | undefined,
+  ): Promise<Record<string, unknown> | undefined> {
+    if (customFields === undefined) return undefined;
+    if (!this.customFieldsValidator) return customFields;
+    return this.customFieldsValidator.validate('contact', customFields);
+  }
 
   private getRepo() {
     return this.dataSource.getRepository(CrmContactEntity);
@@ -162,6 +178,8 @@ export class ContactsService {
       }
     }
 
+    const validatedCustom = await this.resolveCustomFields(dto.customFields);
+
     const entity = repo.create({
       tenantId,
       companyId: dto.companyId ?? null,
@@ -174,6 +192,7 @@ export class ContactsService {
       preferredChannel: dto.preferredChannel,
       tags: dto.tags ?? [],
       notes: dto.notes ?? null,
+      ...(validatedCustom !== undefined ? { customFields: validatedCustom } : {}),
       createdBy: createdByUserId,
       updatedBy: createdByUserId,
     });
@@ -382,6 +401,9 @@ export class ContactsService {
     }
     if (dto.tags !== undefined) updates['tags'] = dto.tags;
     if (dto.notes !== undefined) updates['notes'] = dto.notes ?? null;
+    if (dto.customFields !== undefined) {
+      updates['custom_fields'] = await this.resolveCustomFields(dto.customFields);
+    }
 
     await repo
       .createQueryBuilder()

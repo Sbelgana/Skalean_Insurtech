@@ -62,8 +62,10 @@ function buildService(
 
 describe('CrmSearchService (Sprint 8 Tache 8.6)', () => {
   describe('globalSearch', () => {
-    it.skip('1. throws TENANT_REQUIRED if no tenant context (mock subtlety -- Sprint 8.14 integration)', async () => {
-      const { service } = buildService({}, undefined);
+    it('1. throws TENANT_REQUIRED if no tenant context', async () => {
+      // Empty string bypasses TS default-parameter substitution + trips
+      // buildTenantContext's falsy ternary. (Task 8.14 mock-subtlety fix.)
+      const { service } = buildService({}, '');
       await expect(
         service.globalSearch({
           q: 'Casa',

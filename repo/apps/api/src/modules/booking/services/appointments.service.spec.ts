@@ -164,7 +164,7 @@ const baseCreate = {
 
 describe('AppointmentsService (Sprint 8 Tache 8.9)', () => {
   describe('create', () => {
-    it.skip('1. throws TENANT_REQUIRED if no tenant context (mock subtlety -- Sprint 8.14)', async () => {
+    it('1. throws TENANT_REQUIRED if no tenant context', async () => {
       const { service } = buildService({ ctx: { tenantId: '' } });
       await expect(service.create(baseCreate, USER_A)).rejects.toThrow(BadRequestException);
     });

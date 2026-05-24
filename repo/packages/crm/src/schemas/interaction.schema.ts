@@ -77,6 +77,8 @@ const baseCreateInteractionShape = z.object({
   dealId: z.string().uuid().optional(),
   /** For annotate-pattern correction : reference an existing interaction. */
   parentInteractionId: z.string().uuid().optional(),
+  /** Tenant-defined custom fields. Sprint 8 Task 8.14 (D3). */
+  customFields: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const CreateInteractionSchema = baseCreateInteractionShape

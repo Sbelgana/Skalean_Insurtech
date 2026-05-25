@@ -13,7 +13,7 @@ import type { CrmContactEntity } from '../crm/crm-contact.entity.js';
 import { CommTemplateEntity } from './comm-template.entity.js';
 
 export type CommDirection = 'inbound' | 'outbound';
-export type CommStatus = 'pending' | 'queued' | 'sent' | 'delivered' | 'read' | 'failed';
+export type CommStatus = 'pending' | 'queued' | 'sent' | 'delivered' | 'read' | 'failed' | 'bounced';
 export type CommProvider = 'meta' | 'twilio' | 'sendgrid' | 'mailgun';
 
 @Entity({ name: 'comm_messages' })
@@ -75,7 +75,7 @@ export class CommMessageEntity {
 
   @Column({
     type: 'enum',
-    enum: ['pending', 'queued', 'sent', 'delivered', 'read', 'failed'],
+    enum: ['pending', 'queued', 'sent', 'delivered', 'read', 'failed', 'bounced'],
     enumName: 'comm_status_enum',
     default: 'pending',
   })

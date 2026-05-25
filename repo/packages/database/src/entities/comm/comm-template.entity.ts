@@ -12,7 +12,7 @@ import { AuthTenant } from '../system/auth-tenant.entity.js';
 
 export type CommChannel = 'whatsapp' | 'email' | 'sms' | 'voice';
 export type CommTemplateCategory = 'marketing' | 'transactional' | 'reminder';
-export type CommLanguage = 'fr' | 'ar-MA' | 'ar';
+export type CommLanguage = 'fr' | 'ar-MA' | 'ar' | 'en';
 export type CommMetaTemplateStatus = 'draft' | 'pending_review' | 'approved' | 'rejected';
 
 export interface VariablesSchema {
@@ -53,7 +53,7 @@ export class CommTemplateEntity {
 
   @Column({
     type: 'enum',
-    enum: ['fr', 'ar-MA', 'ar'],
+    enum: ['fr', 'ar-MA', 'ar', 'en'],
     enumName: 'comm_language_enum',
   })
   language!: CommLanguage;

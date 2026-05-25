@@ -1361,6 +1361,9 @@ importers:
 
   packages/comm:
     dependencies:
+      '@insurtech/database':
+        specifier: workspace:*
+        version: link:../database
       '@nestjs/common':
         specifier: 10.4.15
         version: 10.4.15(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -1373,6 +1376,12 @@ importers:
       reflect-metadata:
         specifier: 0.2.2
         version: 0.2.2
+      typeorm:
+        specifier: 0.3.20
+        version: 0.3.20(ioredis@5.4.2)(pg@8.13.1)(ts-node@10.9.2(@swc/core@1.15.40)(@types/node@22.10.5)(typescript@5.7.3))
+      zod:
+        specifier: 3.24.1
+        version: 3.24.1
     devDependencies:
       '@types/node':
         specifier: 22.10.5

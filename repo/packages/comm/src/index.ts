@@ -129,3 +129,11 @@ export type { UpdateStatusOptions } from './services/messages-repository.service
 
 // Sprint 9 WhatsApp provider Tache 3.2.2
 export * from './providers/whatsapp/index.js';
+
+// Sprint 9 Template Manager Tache 3.2.5
+export {
+  TemplateManagerService,
+  COMM_TEMPLATES_REPO_TOKEN,
+} from './services/template-manager.service.js';
+export type { TemplateRow, TemplateSeed } from './services/template-manager.service.js';
+export { SPRINT9_TEMPLATE_SEEDS, countSeedVariants } from './seeds/templates.seed.js';

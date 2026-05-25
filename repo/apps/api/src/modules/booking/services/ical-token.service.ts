@@ -235,9 +235,9 @@ export class IcalTokenService {
       .update(BookingIcalTokenEntity)
       .set({
         active: false,
-        revoked_at: new Date(),
-        revoked_by_user_id: userId,
-      } as unknown as Record<string, unknown>)
+        revokedAt: new Date(),
+        revokedByUserId: userId,
+      })
       .where('id = :id', { id })
       .execute();
     this.logger.log(

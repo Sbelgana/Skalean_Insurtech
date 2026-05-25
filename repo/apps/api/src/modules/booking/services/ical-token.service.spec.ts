@@ -189,8 +189,8 @@ describe('IcalTokenService (Sprint 8 Tache 8.13)', () => {
       expect(qb.set).toHaveBeenCalledWith(
         expect.objectContaining({
           active: false,
-          revoked_at: expect.any(Date),
-          revoked_by_user_id: USER_A,
+          revokedAt: expect.any(Date),
+          revokedByUserId: USER_A,
         }),
       );
     });

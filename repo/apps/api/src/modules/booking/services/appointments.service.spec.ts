@@ -135,6 +135,7 @@ function buildService(opts: ServiceBuildOpts = {}): {
   const txEm = {
     getRepository: dispatcher,
     createQueryBuilder: vi.fn(() => txQb),
+    query: vi.fn().mockResolvedValue(undefined),
   };
   const dataSource = {
     getRepository: dispatcher,

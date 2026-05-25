@@ -458,7 +458,7 @@ export class DealsService {
       await em
         .createQueryBuilder()
         .update(CrmDealEntity)
-        .set({ stage_id: targetStage.id, updated_by: updatedByUserId })
+        .set({ stageId: targetStage.id, updatedBy: updatedByUserId })
         .where('id = :id', { id })
         .execute();
 
@@ -519,9 +519,9 @@ export class DealsService {
 
       const closedAt = new Date();
       const updates: Record<string, unknown> = {
-        closed_won: won,
-        closed_at: closedAt,
-        updated_by: updatedByUserId,
+        closedWon: won,
+        closedAt,
+        updatedBy: updatedByUserId,
       };
       if (dto.actualAmount !== undefined) {
         updates['amount'] = String(dto.actualAmount);
@@ -618,10 +618,10 @@ export class DealsService {
         .createQueryBuilder()
         .update(CrmDealEntity)
         .set({
-          closed_won: null,
-          closed_at: null,
-          stage_id: targetStageId,
-          updated_by: updatedByUserId,
+          closedWon: null,
+          closedAt: null,
+          stageId: targetStageId,
+          updatedBy: updatedByUserId,
         })
         .where('id = :id', { id })
         .execute();

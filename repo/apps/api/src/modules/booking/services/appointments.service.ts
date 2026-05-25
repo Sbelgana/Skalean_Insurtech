@@ -443,12 +443,12 @@ export class AppointmentsService {
 
   async complete(id: string, userId: string): Promise<BookingAppointmentEntity> {
     return this.transitionStatus(id, 'completed', userId, {
-      completed_at: new Date(),
+      completedAt: new Date(),
     });
   }
 
   async markNoShow(id: string, userId: string): Promise<BookingAppointmentEntity> {
-    return this.transitionStatus(id, 'no_show', userId, { no_show_at: new Date() });
+    return this.transitionStatus(id, 'no_show', userId, { noShowAt: new Date() });
   }
 
   async cancel(
@@ -459,9 +459,9 @@ export class AppointmentsService {
   ): Promise<BookingAppointmentEntity> {
     const tenantId = this.requireTenantId();
     const result = await this.transitionStatus(id, 'cancelled', userId, {
-      cancelled_at: new Date(),
-      cancelled_by_user_id: userId,
-      cancel_reason: dto.reason,
+      cancelledAt: new Date(),
+      cancelledByUserId: userId,
+      cancelReason: dto.reason,
     });
     this.emitLifecycle(
       APPOINTMENT_EVENTS.CANCELLED,
@@ -566,9 +566,9 @@ export class AppointmentsService {
         .update(BookingAppointmentEntity)
         .set({
           status: 'scheduled',
-          cancelled_at: null,
-          cancel_reason: null,
-          cancelled_by_user_id: null,
+          cancelledAt: null,
+          cancelReason: null,
+          cancelledByUserId: null,
         })
         .where('id = :id', { id })
         .execute();
@@ -647,12 +647,10 @@ export class AppointmentsService {
         });
       }
 
-      await em
-        .createQueryBuilder()
-        .update(BookingAppointmentEntity)
-        .set({ time_range: `[${dto.newStartAt.toISOString()},${dto.newEndAt.toISOString()})` })
-        .where('id = :id', { id })
-        .execute();
+      await em.query(
+        `UPDATE booking_appointments SET time_range = $1::tstzrange WHERE id = $2`,
+        [`[${dto.newStartAt.toISOString()},${dto.newEndAt.toISOString()})`, id],
+      );
       const updated = await repo.findOne({ where: { id, tenantId } });
       this.logger.log(
         `booking_appointment_rescheduled id=${id} new_range=[${dto.newStartAt.toISOString()},${dto.newEndAt.toISOString()}) reason="${dto.reason ?? ''}" by=${userId}`,

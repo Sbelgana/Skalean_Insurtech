@@ -219,11 +219,37 @@ export class AllExceptionsFilter implements ExceptionFilter {
       },
     };
 
-    // FastifyReply uses `.code(n)` ; `.status(n)` exists as a deprecated
-    // alias in some Fastify versions but the strict @nestjs/platform-fastify
-    // types don't expose it. Sprint 8 Task 8.14b Session C fix : align with
-    // canonical Fastify API. (Heritage : Express used `.status()` ; the
-    // initial filter was Express-first and never ported.)
-    void reply.code(statusCode).send(response);
+    // Multi-shape response handling (Sprint 8 Task 8.14b Session C) :
+    //   1. FastifyReply.code(n).send(body) -- canonical Fastify route handler.
+    //   2. FastifyReply.status(n).send(body) -- Express-style alias (older versions).
+    //   3. Node ServerResponse (raw) -- when inject()-simulated requests
+    //      surface the underlying HTTP res. Pattern : statusCode + setHeader + end.
+    // The original filter was Express-first (`reply.status`) and never ported
+    // to Fastify ; this dual-API approach unblocks both production (Fastify
+    // canonical) and in-process E2E (`app.inject()` raw ServerResponse).
+    const replyAny = reply as unknown as {
+      code?: (s: number) => { send: (b: unknown) => unknown };
+      status?: (s: number) => { send: (b: unknown) => unknown };
+      send?: (b: unknown) => unknown;
+      setHeader?: (name: string, value: string) => void;
+      end?: (chunk?: unknown) => void;
+      statusCode?: number;
+    };
+    if (typeof replyAny.code === 'function') {
+      void replyAny.code(statusCode).send(response);
+    } else if (typeof replyAny.status === 'function') {
+      void replyAny.status(statusCode).send(response);
+    } else if (
+      typeof replyAny.end === 'function' &&
+      typeof replyAny.setHeader === 'function'
+    ) {
+      // Raw Node ServerResponse (inject() simulated path).
+      replyAny.statusCode = statusCode;
+      replyAny.setHeader('content-type', 'application/json; charset=utf-8');
+      replyAny.end(JSON.stringify(response));
+    } else if (typeof replyAny.send === 'function') {
+      replyAny.statusCode = statusCode;
+      void replyAny.send(response);
+    }
   }
 }

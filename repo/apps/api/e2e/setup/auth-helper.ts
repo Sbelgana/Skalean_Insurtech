@@ -60,6 +60,8 @@ export function signTestToken(
 ): string {
   const userId = opts.userId ?? randomUUID();
   const email = opts.email ?? `${opts.role}-${userId}@assurflow.test`;
+  // signAccessToken returns a branded `SignedJwt` -- runtime it IS the JWT
+  // string (jose's `jwt.sign(...)` output). Coerce explicitly.
   const signed = jwt.signAccessToken({
     sub: userId,
     tenant_id: opts.tenantId,
@@ -68,7 +70,7 @@ export function signTestToken(
     mfa_verified: opts.mfaVerified ?? true,
     sid: randomUUID(),
   });
-  return signed.token;
+  return signed as unknown as string;
 }
 
 // ===========================================================================

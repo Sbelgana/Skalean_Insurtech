@@ -27,6 +27,8 @@ import { createBrokerAdminToken } from '../setup/auth-helper.js';
 // UUID v4 format required by TenantIdHeaderSchema (version digit '4' at pos 14).
 const TENANT_ID = '00000000-0000-4000-8000-0000e2eebe01';
 const TENANT_NAME = 'E2E Broker Casa';
+// Stable user UUID seeded into auth_users so crm_companies.created_by_fkey passes.
+const USER_ID = '00000000-0000-4000-8000-0000e2eebe02';
 
 /**
  * STATUS (Session D iteration 2) -- describe.skip-ed pending Session E.
@@ -84,7 +86,7 @@ const TENANT_NAME = 'E2E Broker Casa';
  *
  * Tracked as Sprint 9 hardening dette in e2e-test-conventions.md.
  */
-describe.skip('CRM Companies E2E (Sprint 8 Task 8.14b Session D -- Entity metadata pending)', () => {
+describe('CRM Companies E2E (Sprint 8 Task 8.14b Session E)', () => {
   let ctx: TestAppContext;
   let token: string;
 
@@ -104,16 +106,42 @@ describe.skip('CRM Companies E2E (Sprint 8 Task 8.14b Session D -- Entity metada
       [TENANT_ID, TENANT_NAME],
     );
 
+    // Seed auth_users so crm_companies.created_by FK is satisfied.
+    // password_hash is a placeholder (bcrypt/argon2 format not needed here).
+    await ctx.dataSource.query(
+      `INSERT INTO auth_users (id, tenant_id, email, password_hash, display_name)
+       VALUES ($1, $2, $3, '$argon2id$v=0$test-placeholder', 'E2E Admin')
+       ON CONFLICT (id) DO NOTHING`,
+      [USER_ID, TENANT_ID, `admin@e2e-${TENANT_ID}.test`],
+    );
+
+    // Seed auth_tenant_users so TenantContextMiddleware.getUserAccess passes.
+    await ctx.dataSource.query(
+      `INSERT INTO auth_tenant_users (tenant_id, user_id, role)
+       VALUES ($1, $2, 'tenant_admin')
+       ON CONFLICT (tenant_id, user_id) DO NOTHING`,
+      [TENANT_ID, USER_ID],
+    );
+
     const jwtService = ctx.app.get(JwtService);
-    token = createBrokerAdminToken(jwtService, TENANT_ID);
+    // Pass stable USER_ID so JWT sub matches seeded auth_users row.
+    token = createBrokerAdminToken(jwtService, TENANT_ID, { userId: USER_ID });
   });
 
   afterAll(async () => {
     if (ctx?.dataSource?.isInitialized) {
+      await ctx.dataSource.query(`SET app.is_super_admin = 'true'`);
       await ctx.dataSource.query(
         `DELETE FROM crm_companies WHERE tenant_id = $1`,
         [TENANT_ID],
       );
+      await ctx.dataSource.query(
+        `DELETE FROM auth_tenant_users WHERE tenant_id = $1`,
+        [TENANT_ID],
+      );
+      await ctx.dataSource.query(`DELETE FROM auth_users WHERE id = $1`, [
+        USER_ID,
+      ]);
       await ctx.dataSource.query(`DELETE FROM auth_tenants WHERE id = $1`, [
         TENANT_ID,
       ]);
@@ -141,14 +169,16 @@ describe.skip('CRM Companies E2E (Sprint 8 Task 8.14b Session D -- Entity metada
     });
 
     expect(res.statusCode).toBe(201);
-    const body = JSON.parse(res.body) as { id?: string; name?: string };
-    expect(body.id).toBeDefined();
-    expect(body.name).toBe(uniqueName);
+    // ResponseInterceptor wraps payload: { success: true, data: {...}, meta: {...} }
+    const body = JSON.parse(res.body) as { data?: { id?: string; name?: string } };
+    const company = body.data ?? (body as { id?: string; name?: string });
+    expect(company.id).toBeDefined();
+    expect(company.name).toBe(uniqueName);
 
     // Verify persistence at the DB layer (not just response shape).
     const dbRow = await ctx.dataSource.query(
       `SELECT id, name, tenant_id FROM crm_companies WHERE id = $1`,
-      [body.id],
+      [company.id],
     );
     expect(dbRow).toHaveLength(1);
     expect(dbRow[0].tenant_id).toBe(TENANT_ID);
@@ -184,7 +214,9 @@ describe.skip('CRM Companies E2E (Sprint 8 Task 8.14b Session D -- Entity metada
       payload: { name: `E2E Round-trip ${randomUUID().slice(0, 6)}`, country: 'MA' },
     });
     expect(createRes.statusCode).toBe(201);
-    const { id } = JSON.parse(createRes.body) as { id: string };
+    // Unwrap ResponseInterceptor envelope.
+    const createBody = JSON.parse(createRes.body) as { data?: { id: string } } | { id: string };
+    const id = ('data' in createBody && createBody.data?.id) ? createBody.data.id : (createBody as { id: string }).id;
 
     // Read
     const readRes = await ctx.app.inject({
@@ -196,7 +228,8 @@ describe.skip('CRM Companies E2E (Sprint 8 Task 8.14b Session D -- Entity metada
       },
     });
     expect(readRes.statusCode).toBe(200);
-    const readBody = JSON.parse(readRes.body) as { id: string; country: string };
+    const readEnvelope = JSON.parse(readRes.body) as { data?: { id: string; country: string } } | { id: string; country: string };
+    const readBody = ('data' in readEnvelope && readEnvelope.data) ? readEnvelope.data : readEnvelope as { id: string; country: string };
     expect(readBody.id).toBe(id);
     expect(readBody.country).toBe('MA');
   });

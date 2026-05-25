@@ -117,7 +117,9 @@ export class TenantAccessCacheService {
       }
     }
 
-    const repo = this.dataSource.getRepository(AuthTenant);
+    // String lookup bypasses class-identity issue in vitest E2E (same fix as
+    // getTenantExists). Sprint 8 Task 8.14b Session E.
+    const repo = this.dataSource.getRepository<typeof AuthTenant.prototype>('AuthTenant');
     const tenant = await repo.findOne({ where: { id: tenantId } });
     if (!tenant) return null;
 
@@ -144,7 +146,13 @@ export class TenantAccessCacheService {
     if (cached === '1') return true;
     if (cached === '0') return false;
 
-    const repo = this.dataSource.getRepository(AuthTenant);
+    // Use entity name string instead of class reference to bypass class
+    // identity issues : in vitest E2E, the @insurtech/database package may
+    // load entities from two paths (dist/ + workspace symlink to src/),
+    // making `getRepository(AuthTenant)` fail even though "AuthTenant" IS
+    // in entityMetadatas. The string lookup uses metadata-by-name and is
+    // identical in production. Sprint 8 Task 8.14b Session E.
+    const repo = this.dataSource.getRepository<typeof AuthTenant.prototype>('AuthTenant');
     const tenant = await repo.findOne({
       where: { id: tenantId },
       withDeleted: false,
@@ -166,7 +174,9 @@ export class TenantAccessCacheService {
       return cached;
     }
 
-    const repo = this.dataSource.getRepository(AuthTenant);
+    // String lookup bypasses class-identity issue in vitest E2E (same fix as
+    // getTenantExists). Sprint 8 Task 8.14b Session E.
+    const repo = this.dataSource.getRepository<typeof AuthTenant.prototype>('AuthTenant');
     const tenant = await repo.findOne({ where: { id: tenantId }, withDeleted: true });
     if (!tenant) return null;
 

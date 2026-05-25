@@ -89,7 +89,10 @@ export function createBrokerAdminToken(
   return signTestToken(jwt, {
     role: AuthRole.BrokerAdmin,
     tenantId,
-    userId: opts.userId ?? `${tenantId}-admin`,
+    // randomUUID() ensures valid UUID v4 -- previous `${tenantId}-admin`
+    // pattern produced an invalid UUID causing QueryFailedError.
+    // Sprint 8 Task 8.14b Session E.
+    userId: opts.userId ?? randomUUID(),
     email: opts.email ?? `admin@${tenantId}.test`,
     mfaVerified: opts.mfaVerified,
   });
@@ -104,7 +107,7 @@ export function createBrokerUserToken(
   return signTestToken(jwt, {
     role: AuthRole.BrokerUser,
     tenantId,
-    userId: opts.userId ?? `${tenantId}-user`,
+    userId: opts.userId ?? randomUUID(),
     email: opts.email ?? `user@${tenantId}.test`,
     mfaVerified: opts.mfaVerified,
   });
@@ -119,7 +122,7 @@ export function createBrokerAssistantToken(
   return signTestToken(jwt, {
     role: AuthRole.BrokerAssistant,
     tenantId,
-    userId: opts.userId ?? `${tenantId}-assistant`,
+    userId: opts.userId ?? randomUUID(),
     email: opts.email ?? `assistant@${tenantId}.test`,
     mfaVerified: opts.mfaVerified,
   });

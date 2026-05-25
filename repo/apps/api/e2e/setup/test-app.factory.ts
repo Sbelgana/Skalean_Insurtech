@@ -9,8 +9,10 @@
  *     production module graph (19 modules : Auth + CRM + Booking + ...).
  *   - FastifyAdapter is used (matches main.ts) so plugin-specific behavior
  *     (header parsing, RouteGuards, ResponseInterceptor wrapping) is exercised.
- *   - Fragile externals (Sentry telemetry, Kafka producer) are mocked at the
- *     `vi.mock()` level in the spec file or via vi.spyOn after init.
+ *   - DATA_SOURCE_TOKEN is overridden with testDataSource (explicit entity
+ *     class imports via vitest's module resolver -- fixes TypeORM
+ *     EntityMetadataNotFoundError caused by glob vs vitest dual module
+ *     loading). Sprint 8 Task 8.14b Session E.
  *   - Test DB connection comes from DATABASE_URL pointing to the 5433
  *     test stack ; migrations run separately via `pnpm db:reset` (Sprint 7.5b).
  *
@@ -36,12 +38,17 @@ import {
   type NestFastifyApplication,
 } from '@nestjs/platform-fastify';
 import { Test, type TestingModule } from '@nestjs/testing';
-import type { DataSource } from 'typeorm';
+import type { DataSource } from '@insurtech/database';
 import { AllExceptionsFilter } from '../../src/filters/all-exceptions.filter.js';
 import { ResponseInterceptor } from '../../src/interceptors/response.interceptor.js';
 import { ZodValidationPipe } from '../../src/pipes/zod-validation.pipe.js';
 import { AppModule } from '../../src/app.module.js';
 import { DATA_SOURCE_TOKEN } from '../../src/database/data-source.provider.js';
+import {
+  initTestDataSource,
+  closeTestDataSource,
+  testDataSource,
+} from './test-data-source.js';
 
 export interface TestAppContext {
   readonly app: NestFastifyApplication;
@@ -62,9 +69,20 @@ export interface CreateTestAppOptions {
 export async function createTestApp(
   opts: CreateTestAppOptions = {},
 ): Promise<TestAppContext> {
+  // Initialize the test DataSource (explicit entity class imports via vitest
+  // module resolver) BEFORE compiling AppModule. This ensures the singleton
+  // DataSource is ready when the DATA_SOURCE_TOKEN provider factory runs.
+  await initTestDataSource();
+
   const moduleRef: TestingModule = await Test.createTestingModule({
     imports: [AppModule],
-  }).compile();
+  })
+    // Override DATA_SOURCE_TOKEN to use testDataSource (explicit entities,
+    // single module-load path). Fixes EntityMetadataNotFoundError in vitest E2E.
+    // Sprint 8 Task 8.14b Session E.
+    .overrideProvider(DATA_SOURCE_TOKEN)
+    .useValue(testDataSource)
+    .compile();
 
   const app = moduleRef.createNestApplication<NestFastifyApplication>(
     new FastifyAdapter({ logger: false }),
@@ -95,6 +113,9 @@ export async function createTestApp(
  */
 export async function closeTestApp(ctx: TestAppContext): Promise<void> {
   await ctx.app.close();
+  // Close the test DataSource separately (it outlives the NestJS app lifecycle
+  // since it's injected as a value, not managed by the NestJS DI lifecycle).
+  await closeTestDataSource();
 }
 
 /** Re-export for convenience. */

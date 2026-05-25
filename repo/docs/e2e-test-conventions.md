@@ -72,6 +72,78 @@ import. It cascades through :
 | Redis    | 6380 | skalean-redis-test      | password : `skalean_redis_test`      |
 | Kafka    | 9095 | skalean-kafka-test      | KRaft mode (no Zookeeper)            |
 
+## Session D root cause analysis (commit pending)
+
+The TenantContextMiddleware DI failure (`this.jwtService`, `this.tenantContext`,
+`this.tenantAccessCache` all `undefined`) traced through 7 sessions was rooted
+in a single transform-layer behavior :
+
+### Symptom
+NestJS middleware applied via `consumer.apply(MiddlewareClass).forRoutes('*')`
+instantiates the middleware via DI when the class is a registered provider.
+In vitest E2E, all constructor params arrived `undefined` despite the class
+being correctly registered in `AppModule.providers` and dependencies being
+exported by imported `@Global()` modules.
+
+### Root cause
+Vitest 2.x uses **esbuild** to transform TypeScript. esbuild deliberately
+does NOT emit the `design:paramtypes` decorator metadata, even with
+`experimentalDecorators: true` and `emitDecoratorMetadata: true` in tsconfig.
+NestJS DI relies entirely on that metadata to map constructor parameter
+positions to provider tokens. Without it, NestJS instantiates the class
+with `new MiddlewareClass()` (no DI), leaving all `private readonly` params
+unbound.
+
+Why other services worked : the unit test specs instantiate services
+manually (`new CompaniesService(mockDataSource, mockTenantContext)`) and
+never go through NestJS DI. The integration smoke test reaches
+`createTestingModule(AppModule)` but its `app.inject({ url: '/' })` hits a
+404 route that never instantiates any decorated services that need DI.
+
+### Fix applied (vitest.e2e.config.ts)
+Install `unplugin-swc` + `@swc/core`. Configure as a vite plugin :
+
+```typescript
+import swc from 'unplugin-swc';
+
+export default defineConfig({
+  plugins: [
+    swc.vite({
+      module: { type: 'es6' },
+      jsc: {
+        parser: { syntax: 'typescript', decorators: true },
+        transform: {
+          legacyDecorator: true,
+          decoratorMetadata: true,  // <-- THE FIX
+        },
+      },
+    }),
+  ],
+  test: { ... },
+});
+```
+
+SWC's `decoratorMetadata` emits the `Reflect.metadata('design:paramtypes', ...)`
+calls that NestJS expects, mirroring `tsc` production behavior.
+
+### Reference
+https://docs.nestjs.com/recipes/swc#vitest
+
+### Remaining Session E investigation
+With DI working, `TenantAccessCacheService.getTenantExists` is reached but
+TypeORM throws `EntityMetadataNotFoundError "AuthTenant"`. Likely : vitest
+loads `@insurtech/database` entities via TWO different module resolution
+paths (compiled dist vs workspace symlink to src), creating duplicate
+classes that TypeORM's class-identity check rejects.
+
+Approaches to try in Session E :
+1. `resolve.alias` enforcing `dist/` paths for all `@insurtech/*` packages.
+2. `vite-tsconfig-paths` plugin.
+3. Refactor production `TenantAccessCacheService` to use string entity
+   names instead of class references (low impact, broad reach).
+4. Pivot D : service-level integration tests (bypass HTTP + DI entirely,
+   exercise services directly).
+
 ## Session B achievements (commit d56d524)
 
 The smoke spec passes reliably (2/2) -- AppModule boots in <1s after first

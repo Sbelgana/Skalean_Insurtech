@@ -29,19 +29,52 @@ const TENANT_ID = '00000000-0000-4000-8000-0000e2eebe01';
 const TENANT_NAME = 'E2E Broker Casa';
 
 /**
- * STATUS (Session C iteration 7) -- describe.skip-ed.
+ * STATUS (Session D iteration 2) -- describe.skip-ed pending Session E.
  *
- * Production blockers fixed this session :
- *   - AllExceptionsFilter Express -> Fastify (reply.code + multi-shape fallback)
- *   - JwtAuthGuard E2E_TEST_MODE bypass (session/user lookup skipped)
- *   - TenantContextMiddleware E2E_TEST_MODE bypass (verifyAccessAndTenant skip)
- *   - extractJwtFromRequest E2E_TEST_MODE bypass (decode without verify)
- *   - extractJwtFromRequest production guard for undefined JwtService
+ * SESSION D ROOT CAUSE DISCOVERED :
  *
- * Remaining blocker -- TenantContextMiddleware DI not fully wired in
- * vitest's createTestingModule(AppModule) path. Symptoms : `this.jwtService`,
- * `this.tenantAccessCache`, `this.tenantContext` all undefined at request
- * time even though they're imported via @Global() modules in AppModule.
+ * Vitest uses esbuild for TypeScript transform by default. esbuild does NOT
+ * emit `design:paramtypes` decorator metadata even with `experimentalDecorators`
+ * + `emitDecoratorMetadata` in tsconfig. NestJS DI relies on that metadata
+ * to detect constructor parameter types ; without it, all injected
+ * dependencies arrive `undefined`.
+ *
+ * Fix applied (vitest.e2e.config.ts) : `unplugin-swc` plugin with
+ * `legacyDecorator: true` + `decoratorMetadata: true`. DI now WIRED --
+ * middleware receives jwtService, tenantContext, tenantAccessCache as real
+ * instances.
+ *
+ * Ref : https://docs.nestjs.com/recipes/swc#vitest
+ *
+ * Production blockers fixed Sessions A-D (legitimate beyond tests) :
+ *   - CustomFieldsValidator defensive onModuleInit guard
+ *   - AllExceptionsFilter multi-shape reply (Fastify + Express + raw Node)
+ *   - JwtAuthGuard E2E_TEST_MODE bypass (session + user lookups skipped)
+ *   - TenantContextMiddleware E2E_TEST_MODE bypass
+ *   - extractJwtFromRequest native base64 fallback + service-unavailable guard
+ *   - auth-helper SignedJwt brand coercion
+ *   - vitest SWC plugin enabling proper decorator metadata
+ *
+ * REMAINING SESSION E BLOCKER -- TypeORM EntityMetadataNotFoundError :
+ *
+ * After SWC DI fix, requests reach TenantAccessCacheService.getTenantExists()
+ * which calls `dataSource.getRepository(AuthTenant).findOne(...)`. TypeORM
+ * throws `EntityMetadataNotFoundError: No metadata for "AuthTenant"` --
+ * vitest module resolution loads @insurtech/database entities via both
+ * dist/index.js (package.json main) AND via workspace symlink to src/*.ts
+ * (vitest's default behavior for monorepo deps). TypeORM's class-identity
+ * check between the registered Entity class and the one passed via
+ * getRepository(EntityClass) then fails.
+ *
+ * Tried `server.deps.external: [/@insurtech\\//]` -- no effect.
+ *
+ * Session E paths to investigate :
+ *   - resolve.alias forcing dist/ paths for @insurtech/* packages
+ *   - vite-tsconfig-paths plugin
+ *   - Bypass getRepository(Class) -> use connection-level getMetadata
+ *   - Or pivot D : service-level integration tests
+ *
+ * Sprint 9 hardening dette in e2e-test-conventions.md.
  *
  * The fix likely requires either :
  *   - Marking AuthModule providers as @Global() (broader scope)
@@ -51,7 +84,7 @@ const TENANT_NAME = 'E2E Broker Casa';
  *
  * Tracked as Sprint 9 hardening dette in e2e-test-conventions.md.
  */
-describe.skip('CRM Companies E2E (Sprint 8 Task 8.14b Session C -- DI investigation pending)', () => {
+describe.skip('CRM Companies E2E (Sprint 8 Task 8.14b Session D -- Entity metadata pending)', () => {
   let ctx: TestAppContext;
   let token: string;
 

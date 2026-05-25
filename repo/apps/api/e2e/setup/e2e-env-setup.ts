@@ -15,6 +15,13 @@
  *   - Calendar OAuth providers return 503 cleanly (controller fallback path)
  */
 
+// CRITICAL : import reflect-metadata as the VERY first import in the vitest
+// process. NestJS DI relies on `design:paramtypes` decorator metadata being
+// written at class-definition time. If reflect-metadata is polyfilled AFTER
+// the middleware/service classes are imported, the metadata is never written
+// and DI silently provides `undefined` for all constructor params.
+// Sprint 8 Task 8.14b Session D root cause.
+import 'reflect-metadata';
 import { generateKeyPairSync } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';

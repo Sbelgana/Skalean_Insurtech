@@ -34,14 +34,14 @@ import { sentryCaptureException } from '../sentry/sentry.config';
 // Helpers
 // ============================================================================
 
-/** Cree un faux ArgumentsHost Fastify. */
+/** Cree un faux ArgumentsHost Fastify. (Task 8.14b Session C : code() not status()) */
 function makeMockHost(overrides: {
   method?: string;
   url?: string;
 }): ArgumentsHost {
   const send = vi.fn();
-  const status = vi.fn(() => ({ send }));
-  const reply = { status, send };
+  const code = vi.fn(() => ({ send }));
+  const reply = { code, send };
   const request = {
     method: overrides.method ?? 'GET',
     url: overrides.url ?? '/test',
@@ -56,17 +56,17 @@ function makeMockHost(overrides: {
 
 /** Extrait le corps envoye depuis le mock host. */
 function getSentBody(host: ArgumentsHost): ApiErrorResponse {
-  const reply = host.switchToHttp().getResponse<{ status: ReturnType<typeof vi.fn> }>();
-  const statusMock = reply.status as ReturnType<typeof vi.fn>;
-  const sendMock = statusMock.mock.results[0]?.value?.send as ReturnType<typeof vi.fn>;
+  const reply = host.switchToHttp().getResponse<{ code: ReturnType<typeof vi.fn> }>();
+  const codeMock = reply.code as ReturnType<typeof vi.fn>;
+  const sendMock = codeMock.mock.results[0]?.value?.send as ReturnType<typeof vi.fn>;
   return sendMock?.mock.calls[0]?.[0] as ApiErrorResponse;
 }
 
 /** Extrait le code HTTP utilise. */
 function getSentStatusCode(host: ArgumentsHost): number {
-  const reply = host.switchToHttp().getResponse<{ status: ReturnType<typeof vi.fn> }>();
-  const statusMock = reply.status as ReturnType<typeof vi.fn>;
-  return statusMock.mock.calls[0]?.[0] as number;
+  const reply = host.switchToHttp().getResponse<{ code: ReturnType<typeof vi.fn> }>();
+  const codeMock = reply.code as ReturnType<typeof vi.fn>;
+  return codeMock.mock.calls[0]?.[0] as number;
 }
 
 // ============================================================================

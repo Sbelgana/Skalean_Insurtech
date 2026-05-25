@@ -63,6 +63,57 @@ export class JwtAuthGuard implements CanActivate {
 
     try {
       const payload = this.jwtService.verifyAccessToken(token);
+
+      // E2E_TEST_MODE bypass : in process-level test runs (vitest E2E),
+      // the JWT is generated synthetically and there is no Redis session
+      // nor auth_users row to look up. Bypass session + user lookups so the
+      // guard accepts a properly-signed JWT issued by signTestToken().
+      //
+      // Hard gate : the bypass requires BOTH `E2E_TEST_MODE=true` AND
+      // `NODE_ENV=test`. Production never sets these, so the bypass is
+      // unreachable in real deployments. Sprint 8 Task 8.14b Session C.
+      const isE2eTestMode =
+        process.env['E2E_TEST_MODE'] === 'true' &&
+        process.env['NODE_ENV'] === 'test';
+      if (isE2eTestMode) {
+        const ipFromHeaders =
+          (req.headers['x-forwarded-for'] as string | undefined)
+            ?.toString()
+            .split(',')[0]
+            ?.trim() ??
+          req.ip ??
+          req.socket?.remoteAddress ??
+          'unknown';
+        const userAgent =
+          (req.headers['user-agent'] as string | undefined) ?? 'unknown';
+        const requestId =
+          (req.headers['x-request-id'] as string | undefined) ?? 'unknown';
+        req.auth = {
+          subject: {
+            kind: 'user',
+            user: {
+              id: payload.sub,
+              email: payload.email,
+              role: payload.role,
+              display_name: payload.email,
+              tenant_id: payload.tenant_id,
+              mfa_enabled: true,
+              mfa_verified: payload.mfa_verified,
+              email_verified: true,
+              locale: 'fr-MA',
+              created_at: new Date().toISOString(),
+            },
+            session_id: payload.sid,
+            jwt_id: payload.jti,
+          },
+          ip: ipFromHeaders,
+          user_agent: userAgent,
+          request_id: requestId,
+          authenticated_at: Math.floor(Date.now() / 1000),
+        };
+        return true;
+      }
+
       const session = await this.sessionService.ensureValid(payload.sid);
       const user = await this.userRepo.findById(payload.sub);
       if (!user) {

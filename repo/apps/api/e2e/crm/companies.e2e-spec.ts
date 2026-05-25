@@ -28,23 +28,18 @@ const TENANT_ID = '00000000-0000-0000-0000-00000000be01';
 const TENANT_NAME = 'E2E Broker Casa';
 
 /**
- * STATUS (Session B iteration 2) :
- * - Tests reach Fastify HTTP layer cleanly (no setup errors).
- * - Guards execute correctly (return 401 on no-JWT request).
- * - Tenant seed via raw SQL works.
- * - JWT generated via signTestToken returns 401 -- claim shape needs tuning
- *   for JwtAuthGuard compatibility (likely session check in Redis or
- *   audience/issuer mismatch). Tracked as Sprint 9 hardening dette.
- *
- * Marked describe.skip so test:e2e:unit pipeline stays green. Un-skip in
- * Session C after JWT auth path is debugged.
+ * STATUS (Session C iteration 1) :
+ * - AllExceptionsFilter Express -> Fastify fix landed (reply.code).
+ * - JwtAuthGuard E2E_TEST_MODE bypass landed (session + user lookups
+ *   skipped when NODE_ENV=test AND E2E_TEST_MODE=true).
+ * - Should now PASS through guards + persist to DB.
  */
-describe.skip('CRM Companies E2E (Sprint 8 Task 8.14b Session B)', () => {
+describe('CRM Companies E2E (Sprint 8 Task 8.14b Session C)', () => {
   let ctx: TestAppContext;
   let token: string;
 
   beforeAll(async () => {
-    ctx = await createTestApp({ skipGlobals: true });
+    ctx = await createTestApp();
 
     // Seed a minimal tenant via raw SQL so the foreign-key on
     // crm_companies.tenant_id is satisfied. RLS bypass via session flag.

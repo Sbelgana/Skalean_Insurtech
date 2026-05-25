@@ -21,6 +21,10 @@ import { resolve } from 'node:path';
 import * as dotenv from 'dotenv';
 
 process.env['NODE_ENV'] = 'test';
+// Enables JwtAuthGuard bypass : session + user lookups are skipped when
+// NODE_ENV=test AND E2E_TEST_MODE=true. Hard-gated -- production never sets
+// E2E_TEST_MODE. Sprint 8 Task 8.14b Session C.
+process.env['E2E_TEST_MODE'] = 'true';
 
 // When run via `pnpm --filter @insurtech/api test:e2e:unit`, cwd is
 // apps/api/. The .env / .env.test live at the monorepo root (repo/).

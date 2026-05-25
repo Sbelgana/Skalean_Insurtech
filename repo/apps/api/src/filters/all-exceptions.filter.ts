@@ -219,6 +219,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
       },
     };
 
-    void reply.status(statusCode).send(response);
+    // FastifyReply uses `.code(n)` ; `.status(n)` exists as a deprecated
+    // alias in some Fastify versions but the strict @nestjs/platform-fastify
+    // types don't expose it. Sprint 8 Task 8.14b Session C fix : align with
+    // canonical Fastify API. (Heritage : Express used `.status()` ; the
+    // initial filter was Express-first and never ported.)
+    void reply.code(statusCode).send(response);
   }
 }

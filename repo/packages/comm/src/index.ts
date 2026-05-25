@@ -137,3 +137,6 @@ export {
 } from './services/template-manager.service.js';
 export type { TemplateRow, TemplateSeed } from './services/template-manager.service.js';
 export { SPRINT9_TEMPLATE_SEEDS, countSeedVariants } from './seeds/templates.seed.js';
+
+// Sprint 9 Email provider Tache 3.2.6
+export * from './providers/email/index.js';

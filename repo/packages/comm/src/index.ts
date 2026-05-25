@@ -126,3 +126,6 @@ export {
   COMM_MESSAGES_REPO,
 } from './services/messages-repository.service.js';
 export type { UpdateStatusOptions } from './services/messages-repository.service.js';
+
+// Sprint 9 WhatsApp provider Tache 3.2.2
+export * from './providers/whatsapp/index.js';
